@@ -10,7 +10,6 @@ enum class ExprType {
     Sub,
     Mul,
     Div,
-    Rem,
     Pow,
     Neg,
     Gr,
@@ -19,7 +18,6 @@ enum class ExprType {
     LsEq,
     And,
     Or,
-    Xor,
     Not,
     Eq,
     NotEq,
@@ -35,7 +33,6 @@ enum class ExprType {
     SubEq,
     MulEq,
     DivEq,
-    RemEq,
     PowEq,
     Skip,
     Break,
@@ -91,11 +88,6 @@ struct ExprMul : ExprBinary {
 
 struct ExprDiv : ExprBinary {
     ExprDiv(Expr * a, Expr * b, uint line);
-    Ref Execute() override;
-};
-
-struct ExprRem : ExprBinary {
-    ExprRem(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 
@@ -234,11 +226,6 @@ struct ExprMulEq : ExprBinary {
 
 struct ExprDivEq : ExprBinary {
     ExprDivEq(Expr * a, Expr * b, uint line);
-    Ref Execute() override;
-};
-
-struct ExprRemEq : ExprBinary {
-    ExprRemEq(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 

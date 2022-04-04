@@ -17,13 +17,15 @@
 enum class TokenType {
     Undefined,
 
+    // Not all tokens are used. Some of them are just reserved.
+
     // Different kinds of brackets
-    LeftParenthesis,  // (
-    RightParenthesis, // )
-    LeftBracket,      // [
-    RightBracket,     // ]
-    LeftBrace,        // {
-    RightBrace,       // }
+    L_Parenthesis, // (
+    R_Parenthesis, // )
+    L_Bracket,     // [
+    R_Bracket,     // ]
+    L_Brace,       // {
+    R_Brace,       // }
 
     // Single character tokens
     Comma,        // ,
@@ -50,13 +52,10 @@ enum class TokenType {
     Less,         // <
     LessEqual,    // <=
 
-    AndEq,        // &=
-    OrEq,         // |=
     PlusEq,       // +=
     MinusEq,      // -=
     MultEq,       // *=
     DivEq,        // /=
-    RemEq,        // %=
     PowEq,        // ^=
 
     // Literals
@@ -71,7 +70,6 @@ enum class TokenType {
     False,
     And,
     Or,
-    Xor,
     Not,
     Assert,
     If,
@@ -146,7 +144,6 @@ class Tokenizer {
         {"false",  TokenType::False},
         {"and",    TokenType::And},
         {"or",     TokenType::Or},
-        {"xor",    TokenType::Xor},
         {"not",    TokenType::Not},
         {"assert", TokenType::Assert},
         {"if",     TokenType::If},

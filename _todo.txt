@@ -1,5 +1,3 @@
-Доделать Parser::Parse_Assert
-
 В Expr заменить BUBBLE_UP_IF_NULLREF_OR_ERROR на BUBBLE_UP_IF_ERROR (т.е разрешить none)
 
 Добавить and or xor not в качестве ключевых слов

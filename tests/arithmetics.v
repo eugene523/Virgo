@@ -1,7 +1,7 @@
 ##
 In this test we are testing basic arithmetic operations:
-(+, -, *, /, %, ^)
-(+=, -=, *=, /=, %=, ^=)
+(+, -, *, /, ^)
+(+=, -=, *=, /=, ^=)
 (> , >=, <, <=)
 and some tricky expressions performed on integer and real value types.
 Sometimes we are adding some extra parentheses and plus/minus signs before terms
@@ -156,8 +156,8 @@ c = (((((a))) / (((b)))))
 assert(near(c, 0.857142857142857, delta))
 
 # Remainder (%) ---------------------------------------------------------------
-assert(5 % 2 = 1)
-assert(-5 % 3 = 1)
+assert(rem(5, 2) = 1)
+assert(rem(-5, 3) = 1)
 
 # Power (^) -------------------------------------------------------------------
 assert(near(3 ^ 2, 9, delta))
@@ -186,11 +186,6 @@ a = -3.5
 b = 1.7
 a /= -b
 assert(near(a, 2.05882352941176, delta))
-
-# Remainder-equal (%=) --------------------------------------------------------
-a = 5
-a %= 3
-assert(a = 2)
 
 # Power-equal (^=) ------------------------------------------------------------
 a = 3.0

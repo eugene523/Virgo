@@ -63,7 +63,7 @@ if a < 100
     a2 = 2
   a1 = 1
 
-assert(b       and
+assert(b      and
        a1 = 1 and
        a2 = 2 and
        a3 = 3 and

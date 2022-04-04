@@ -17,6 +17,8 @@ add_executable(Virgo
         Str.h Str.cpp
         List.h List.cpp
         Iter.h Iter.cpp
+        Class.h Class.cpp
+        Object.h Object.cpp
         IDefObj.h
         Skip.h Skip.cpp
         Break.h Break.cpp

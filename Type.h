@@ -10,7 +10,6 @@ struct OpTable {
     Ref (*OpSub)       (Ref a, Ref b) {};
     Ref (*OpMul)       (Ref a, Ref b) {};
     Ref (*OpDiv)       (Ref a, Ref b) {};
-    Ref (*OpRem)       (Ref a, Ref b) {};
     Ref (*OpPow)       (Ref a, Ref b) {};
     Ref (*OpNeg)       (Ref a) {};
     Ref (*OpGr)        (Ref a, Ref b) {};
@@ -19,7 +18,6 @@ struct OpTable {
     Ref (*OpLsEq)      (Ref a, Ref b) {};
     Ref (*OpAnd)       (Ref a, Ref b) {};
     Ref (*OpOr)        (Ref a, Ref b) {};
-    Ref (*OpXor)       (Ref a, Ref b) {};
     Ref (*OpNot)       (Ref a) {};
     Ref (*OpEq)        (Ref a, Ref b) {};
     Ref (*OpNotEq)     (Ref a, Ref b) {};

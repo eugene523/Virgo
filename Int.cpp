@@ -111,27 +111,6 @@ Ref Int_OpDiv(Ref a, Ref b) {
     return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
 }
 
-Ref Int_OpRem(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-
-    if (!(b_obj->Is(Int::t)))
-        return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
-
-    v_int a_val { ((Int*)a_obj)->val };
-    v_int b_val { ((Int*)b_obj)->val };
-    v_int r = a_val % b_val;
-    if (r < 0)
-        r += b_val;
-    return NEW_REF(new Int(r));
-}
-
 Ref Int_OpPow(Ref a, Ref b) {
     Obj * a_obj = GET_OBJ(a);
     if (a_obj == nullptr)
@@ -318,12 +297,11 @@ Type * Int::t;
 
 void Int::InitType() {
     Int::t = new Type("int");
-    auto ot = t->opTable;
+    auto ot = Int::t->opTable;
     ot->OpAdd   = &Int_OpAdd;
     ot->OpSub   = &Int_OpSub;
     ot->OpMul   = &Int_OpMul;
     ot->OpDiv   = &Int_OpDiv;
-    ot->OpRem   = &Int_OpRem;
     ot->OpPow   = &Int_OpPow;
     ot->OpNeg   = &Int_OpNeg;
     ot->OpGr    = &Int_OpGr;

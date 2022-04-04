@@ -224,15 +224,6 @@ Ref ExprDiv::Execute() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprRem::ExprRem(Expr * a, Expr * b, uint line) :
-ExprBinary{ExprType::Rem, a, b, line} {}
-
-Ref ExprRem::Execute() {
-    EXPR_BINARY_IMPL(OpRem, "%")
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 ExprPow::ExprPow(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Pow, a, b, line} {}
 
@@ -301,15 +292,6 @@ ExprBinary{ExprType::Or, a, b, line} {}
 
 Ref ExprOr::Execute() {
     EXPR_BINARY_IMPL(OpOr, "or")
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-ExprXor::ExprXor(Expr * a, Expr * b, uint line) :
-ExprBinary{ExprType::Xor, a, b, line} {}
-
-Ref ExprXor::Execute() {
-    EXPR_BINARY_IMPL(OpXor, "xor")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,15 +635,6 @@ ExprBinary{ExprType::DivEq, a, b, line} {}
 
 Ref ExprDivEq::Execute() {
     EXPR_BINARY_EQ_IMPL(OpDiv, "/")
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-ExprRemEq::ExprRemEq(Expr * a, Expr * b, uint line) :
-ExprBinary{ExprType::RemEq, a, b, line} {}
-
-Ref ExprRemEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpRem, "%")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

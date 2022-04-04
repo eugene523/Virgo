@@ -15,6 +15,7 @@
 #include "Break.h"
 #include "Return.h"
 #include "Fun.h"
+#include "Object.h"
 #include "Invoker.h"
 #include "Script.h"
 #include "Builtins.h"
@@ -41,6 +42,7 @@ void VM::Init() {
     Return::InitType();
     Fun::InitType();
     NFun::InitType();
+    Object::InitType();
     Invoker::InitType();
     Script::InitType();
 

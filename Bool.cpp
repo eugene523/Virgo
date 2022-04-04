@@ -44,24 +44,6 @@ Ref Bool_OpOr(Ref a, Ref b) {
     return BOOL_REF(a_val || b_val);
 }
 
-Ref Bool_OpXor(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Bool::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-
-    if (!(b_obj->Is(Bool::t)))
-        return NEW_REF(new Err(ERROR_LOG_EXPR));
-
-    bool a_val = ((Bool*)a_obj)->val;
-    bool b_val = ((Bool*)b_obj)->val;
-    return BOOL_REF(a_val xor b_val);
-}
-
 Ref Bool_OpNot(Ref a) {
     Obj * a_obj = GET_OBJ(a);
     if (a_obj == nullptr)
@@ -129,7 +111,6 @@ void Bool::InitType() {
     auto ot = t->opTable;
     ot->OpAnd   = &Bool_OpAnd;
     ot->OpOr    = &Bool_OpOr;
-    ot->OpXor   = &Bool_OpXor;
     ot->OpNot   = &Bool_OpNot;
     ot->OpEq    = &Bool_OpEq;
     ot->OpNotEq = &Bool_OpNotEq;

@@ -4,14 +4,14 @@
 
 std::map<TokenType, std::string> TokenTypeNames =
 {
-    { TokenType::Undefined,        "Undefined"},
+    { TokenType::Undefined,     "Undefined"},
     //
-    { TokenType::LeftParenthesis,  "LeftParenthesis"},
-    { TokenType::RightParenthesis, "RightParenthesis"},
-    { TokenType::LeftBracket,      "LeftBracket"},
-    { TokenType::RightBracket,     "RightBracket"},
-    { TokenType::LeftBrace,        "LeftBrace"},
-    { TokenType::RightBrace,       "RightBrace"},
+    { TokenType::L_Parenthesis, "L_Parenthesis"},
+    { TokenType::R_Parenthesis, "R_Parenthesis"},
+    { TokenType::L_Bracket,     "L_Bracket"},
+    { TokenType::R_Bracket,     "R_Bracket"},
+    { TokenType::L_Brace,       "L_Brace"},
+    { TokenType::R_Brace,       "R_Brace"},
     //
     { TokenType::Comma,         "Comma"},
     { TokenType::Dot,           "Dot"},
@@ -36,13 +36,10 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::Less,          "Less"},
     { TokenType::LessEqual,     "LessEqual"},
     //
-    { TokenType::AndEq,         "AndEq"},
-    { TokenType::OrEq,          "OrEq"},
     { TokenType::PlusEq,        "PlusEq"},
     { TokenType::MinusEq,       "MinusEq"},
     { TokenType::MultEq,        "MultEq"},
     { TokenType::DivEq,         "DivEq"},
-    { TokenType::RemEq,         "RemEq"},
     { TokenType::PowEq,         "PowEq"},
     //
     { TokenType::Int,           "Int"},
@@ -55,7 +52,6 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::False,         "False"},
     { TokenType::And,           "And"},
     { TokenType::Or,            "Or"},
-    { TokenType::Xor,           "Xor"},
     { TokenType::Not,           "Not"},
     { TokenType::Assert,        "Assert"},
     { TokenType::If,            "If"},
@@ -353,12 +349,12 @@ void Tokenizer::Process_EndOfFile() {
 void Tokenizer::ScanToken() {
     char c = Advance();
     switch (c) {
-        case '(' : n_opened++; AddToken(TokenType::LeftParenthesis);  break;
-        case ')' : n_opened--; AddToken(TokenType::RightParenthesis); break;
-        case '[' : n_opened++; AddToken(TokenType::LeftBracket);      break;
-        case ']' : n_opened--; AddToken(TokenType::RightBracket);     break;
-        case '{' : n_opened++; AddToken(TokenType::LeftBrace);        break;
-        case '}' : n_opened--; AddToken(TokenType::RightBrace);       break;
+        case '(' : n_opened++; AddToken(TokenType::L_Parenthesis);  break;
+        case ')' : n_opened--; AddToken(TokenType::R_Parenthesis); break;
+        case '[' : n_opened++; AddToken(TokenType::L_Bracket);      break;
+        case ']' : n_opened--; AddToken(TokenType::R_Bracket);     break;
+        case '{' : n_opened++; AddToken(TokenType::L_Brace);        break;
+        case '}' : n_opened--; AddToken(TokenType::R_Brace);       break;
         case ',' : AddToken(TokenType::Comma);     break;
         case '.' : AddToken(TokenType::Dot);       break;
         case ':' : AddToken(TokenType::Colon);     break;
@@ -368,10 +364,7 @@ void Tokenizer::ScanToken() {
         case '-' : Match('=') ? AddToken(TokenType::MinusEq)      : AddToken(TokenType::Minus);     break;
         case '*' : Match('=') ? AddToken(TokenType::MultEq)       : AddToken(TokenType::Star);      break;
         case '/' : Match('=') ? AddToken(TokenType::DivEq)        : AddToken(TokenType::Slash);     break;
-        case '%' : Match('=') ? AddToken(TokenType::RemEq)        : AddToken(TokenType::Percent);   break;
         case '^' : Match('=') ? AddToken(TokenType::PowEq)        : AddToken(TokenType::Caret);     break;
-        case '|' : Match('=') ? AddToken(TokenType::OrEq)         : AddToken(TokenType::VertLine);  break;
-        case '&' : Match('=') ? AddToken(TokenType::AndEq)        : AddToken(TokenType::Ampersand); break;
         case '=' : Match('=') ? AddToken(TokenType::DoubleEqual)  : AddToken(TokenType::Equal);     break;
         case '!' : Match('=') ? AddToken(TokenType::BangEqual)    : AddToken(TokenType::Bang);      break;
         case '>' : Match('=') ? AddToken(TokenType::GreaterEqual) : AddToken(TokenType::Greater);   break;

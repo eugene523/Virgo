@@ -131,6 +131,34 @@ Ref Random::Execute(Ref args) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+Rem::Rem() : NFun{"rem"} {}
+
+Ref Rem::Execute(Ref args) {
+    auto argsObj = GET_OBJ(args);
+    assert(argsObj->Is(ArgList::t));
+    auto argList = (ArgList*)argsObj;
+
+    if (argList->NumOfArguments() != 2)
+        return NEW_REF(new Err("Wrong call for 'rem' function. 'rem' function requires 2 arguments."));
+
+    Obj * left = GET_OBJ(argList->Get(0));
+    if (!left->Is(Int::t))
+        return NEW_REF(new Err("Wrong call for 'rem' function. First argument must be an integer."));
+
+    Obj * right = GET_OBJ(argList->Get(1));
+    if (!right->Is(Int::t))
+        return NEW_REF(new Err("Wrong call for 'rem' function. Second argument must be an integer."));
+
+    v_int a_val { ((Int*)left)->val };
+    v_int b_val { ((Int*)right)->val };
+    v_int r = a_val % b_val;
+    if (r < 0)
+        r += b_val;
+    return NEW_REF(new Int(r));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 Len::Len() : NFun{"len"} {}
 
 Ref Len::Execute(Ref args) {
@@ -204,6 +232,7 @@ void ZeroNamespace::Init() {
     CreateBuiltinObj("eu",          new Real(2.71828182'84590452'35360287'47135266'2497L));
     CreateBuiltinObj("near",        new Near());
     CreateBuiltinObj("random",      new Random());
+    CreateBuiltinObj("rem",         new Rem());
     CreateBuiltinObj("len",         new Len());
     CreateBuiltinObj("seg",         new CSeg());
     CreateBuiltinObj("VmStat",      new VmStat());
