@@ -1,7 +1,4 @@
-myfun(n)
-  return n^3
+cube(x = 5)
+  return x ^ 3
 
-invoke(f, x)
-  return f(x)
-
-print(invoke(myfun, 5))
+print(cube())

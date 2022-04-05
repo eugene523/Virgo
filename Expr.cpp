@@ -7,30 +7,17 @@
 #include "Str.h"
 #include "List.h"
 #include "Iter.h"
-#include "ArgValPair.h"
-#include "ArgList.h"
+#include "ArgPair.h"
+#include "Args.h"
 #include "Skip.h"
 #include "Break.h"
 #include "Return.h"
 #include "Fun.h"
 #include "NFun.h"
+#include "Class.h"
 #include "VM.h"
 
 const char * ERR_EXPR_ARG_IS_NULL = "Null reference passed as an argument of the expression.";
-
-#define BUBBLE_UP_IF_NULLREF_OR_ERROR(ref)                \
-{                                                         \
-    Obj * obj = GET_OBJ(ref);                             \
-    if (obj == nullptr)                                   \
-        return NEW_REF(new Err("Null reference.", 0));    \
-    if (obj->Is(Err::t))                                  \
-    {                                                     \
-        auto err = (Err*)obj;                             \
-        if (err->line == 0)                               \
-            err->line = line;                             \
-        return ref;                                       \
-    }                                                     \
-}                                                         \
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -377,7 +364,30 @@ Ref ExprFieldAccess::Execute() {
 }
 
 Ref ExprFieldAccess::Set(Ref value) {
-    return Ref::none;
+    Ref targetRef = targetExpr->Execute();
+    Obj * targetObj = GET_OBJ(targetRef);
+
+    if (targetObj == nullptr)
+        return NEW_REF(new Err("Can't perform field access operation on null object.", line));
+
+    if (targetObj->Is(Err::t)) {
+        auto err = (Err*)targetObj;
+        if (err->line == 0)
+            err->line = line;
+        return targetRef;
+    }
+    PUSH_TEMP(targetRef);
+
+    Ref result;
+    auto op = targetObj->type->opTable->SetField;
+    if (op == nullptr) {
+        POP_TEMP;
+        return Err_NoSuchOperation(targetObj, "GetField", line);
+    }
+
+    result = op(targetRef, fieldName, value);
+    POP_TEMP;
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,6 +440,18 @@ Ref ExprCallAccess::Execute() {
         POP_TEMP;
         POP_TEMP;
         return result;
+    }
+    else if (targetObj->Is(Class::t)) {
+        auto cl = (Class*)targetObj;
+        result = cl->CreateInstance(argsRef);
+        POP_TEMP;
+        POP_TEMP;
+        return result;
+    }
+    else {
+        POP_TEMP;
+        POP_TEMP;
+        return NEW_REF(new Err("Object is not callable"));
     }
 
     auto op = targetObj->type->opTable->Get;
@@ -491,24 +513,24 @@ Ref ExprCallAccess::Set(Ref value) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprEvalArgValPair::ExprEvalArgValPair(Ref name, Expr * evalValPair, uint line) :
-Expr{ExprType::EvalArgValPair, line}, name{name}, evalValExpr{evalValPair} {}
+ExprArgPair::ExprArgPair(Ref name, Expr * evalValPair, uint line) :
+Expr{ExprType::ArgPair, line}, name{name}, evalValExpr{evalValPair} {}
 
-Ref ExprEvalArgValPair::Execute() {
+Ref ExprArgPair::Execute() {
     Ref val = evalValExpr->Execute();
-    return NEW_REF(new ArgValPair(name, val));
+    return NEW_REF(new ArgPair(name, val));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprEvalArgList::ExprEvalArgList(uint line) :
-Expr{ExprType::EvalArgList, line} {}
+ExprArgs::ExprArgs(uint line) :
+Expr{ExprType::Args, line} {}
 
-Ref ExprEvalArgList::Execute() {
+Ref ExprArgs::Execute() {
     uint numOfItems = 0;
     Ref result;
-    auto * argList = new ArgList();
-    for (auto i : exprList) {
+    auto * argList = new Args();
+    for (auto i : exprArgs) {
         Ref argRef = i->Execute();
         Obj * argObj = GET_OBJ(argRef);
         if (argObj->Is(Err::t)) {
@@ -531,15 +553,15 @@ Ref ExprEvalArgList::Execute() {
     return result;
 }
 
-void ExprEvalArgList::AddExpr(Expr* expr) {
-    exprList.push_back(expr);
+void ExprArgs::AddExpr(Expr * expr) {
+    exprArgs.push_back(expr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprEvalList::ExprEvalList(uint line) : Expr{ExprType::EvalList, line} {}
+ExprList::ExprList(uint line) : Expr{ExprType::List, line} {}
 
-Ref ExprEvalList::Execute() {
+Ref ExprList::Execute() {
     uint numOfItems = 0;
     Ref result;
     auto * list = new List();
@@ -566,11 +588,11 @@ Ref ExprEvalList::Execute() {
     return result;
 }
 
-void ExprEvalList::AddExpr(Expr * expr) {
+void ExprList::AddExpr(Expr * expr) {
     exprList.push_back(expr);
 }
 
-uint ExprEvalList::NumOfElements() {
+uint ExprList::NumOfElements() {
     return exprList.size();
 }
 

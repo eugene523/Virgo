@@ -1,7 +1,7 @@
 #include <cassert>
 #include "List.h"
 #include "Type.h"
-#include "ArgList.h"
+#include "Args.h"
 #include "Int.h"
 #include "Str.h"
 #include "Invoker.h"
@@ -43,8 +43,8 @@ Ref List_Get(Ref a, Ref argsRef) {
     if (b_obj == nullptr)
         return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
 
-    assert(b_obj->Is(ArgList::t));
-    auto * argsObj = (ArgList*)b_obj;
+    assert(b_obj->Is(Args::t));
+    auto * argsObj = (Args*)b_obj;
     Ref indexRef = argsObj->Get(0);
     Obj * indexObj = GET_OBJ(indexRef);
     if (indexObj->Is(Int::t)) {
@@ -65,8 +65,8 @@ Ref List_Set(Ref a, Ref argsRef, Ref val) {
     if (b_obj == nullptr)
         return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
 
-    assert(b_obj->Is(ArgList::t));
-    auto * argsObj = (ArgList*)b_obj;
+    assert(b_obj->Is(Args::t));
+    auto * argsObj = (Args*)b_obj;
     Ref indexRef = argsObj->Get(0);
     Obj * indexObj = GET_OBJ(indexRef);
     if (indexObj->Is(Int::t)) {
@@ -95,7 +95,7 @@ Ref List_GetField(Ref self, Ref fieldName) {
 
 Ref List_Method_Add(Obj * self, Ref args) {
     auto * listObj = (List*)self;
-    auto * argsObj = (ArgList*)GET_OBJ(args);
+    auto * argsObj = (Args*)GET_OBJ(args);
     if (argsObj->NumOfArguments() == 0)
         return NEW_REF(new Err("No arguments provided for 'Add' method of the list object."));
     listObj->elements.push_back(argsObj->Get(0));

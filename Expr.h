@@ -25,9 +25,9 @@ enum class ExprType {
     NameAccess,
     FieldAccess,
     CallAccess,
-    EvalArgValPair,
-    EvalArgList,
-    EvalList,
+    ArgPair,
+    Args,
+    List,
     Assign,
     AddEq,
     SubEq,
@@ -131,11 +131,6 @@ struct ExprOr : ExprBinary {
     Ref Execute() override;
 };
 
-struct ExprXor : ExprBinary {
-    ExprXor(Expr * a, Expr * b, uint line);
-    Ref Execute() override;
-};
-
 struct ExprNot : ExprUnary {
     ExprNot(Expr * a, uint line);
     Ref Execute() override;
@@ -180,23 +175,23 @@ struct ExprCallAccess : ExprAccess {
     Ref Set(Ref value) override;
 };
 
-struct ExprEvalArgValPair : Expr {
+struct ExprArgPair : Expr {
     Ref name {};
     Expr * evalValExpr {};
-    ExprEvalArgValPair(Ref name, Expr * evalValExpr, uint line);
+    ExprArgPair(Ref name, Expr * evalValExpr, uint line);
     Ref Execute() override;
 };
 
-struct ExprEvalArgList : Expr {
-    std::vector<Expr*> exprList;
-    explicit ExprEvalArgList(uint line);
+struct ExprArgs : Expr {
+    std::vector<Expr*> exprArgs;
+    explicit ExprArgs(uint line);
     void AddExpr(Expr * expr);
     Ref Execute() override;
 };
 
-struct ExprEvalList : Expr {
+struct ExprList : Expr {
     std::vector<Expr*> exprList;
-    explicit ExprEvalList(uint line);
+    explicit ExprList(uint line);
     void AddExpr(Expr * expr);
     uint NumOfElements();
     Ref Execute() override;

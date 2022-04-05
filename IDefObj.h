@@ -5,10 +5,10 @@
 #include "Mem.h"
 
 struct IDefObj {
-    virtual void SetParentDefinition(Ref parent) = 0;
-    virtual Ref  GetParentDefinition() = 0;
-    virtual void AddChildDefinition(Ref childName, Ref child) = 0;
-    virtual Ref  GetChildDefinition(Ref childName) = 0;
+    virtual void SetParentDef(Ref parent) = 0;
+    virtual Ref  GetParentDef() = 0;
+    virtual void AddChildDef(Ref childName, Ref child) = 0;
+    virtual Ref  GetChildDef(Ref childName) = 0;
 };
 
 #endif //PROTON_IDEFOBJ_H

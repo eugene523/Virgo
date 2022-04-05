@@ -5,8 +5,8 @@
 #include "Type.h"
 #include "Err.h"
 #include "Str.h"
-#include "ArgValPair.h"
-#include "ArgList.h"
+#include "ArgPair.h"
+#include "Args.h"
 #include "Return.h"
 #include "VM.h"
 
@@ -39,15 +39,15 @@ void Fun::AddExpression(Expr * expr) {
     expressions.push_back(expr);
 }
 
-void Fun::SetParentDefinition(Ref parent) {
+void Fun::SetParentDef(Ref parent) {
     parentDefinition = parent;
 }
 
-Ref Fun::GetParentDefinition() {
+Ref Fun::GetParentDef() {
     return parentDefinition;
 }
 
-void Fun::AddChildDefinition(Ref childName, Ref child) {
+void Fun::AddChildDef(Ref childName, Ref child) {
     auto * childFunc = (Fun*)GET_OBJ(child);
     assert(childFunc->Is(Fun::t));
     childFunc->parentDefinition = self;
@@ -63,7 +63,7 @@ void Fun::AddChildDefinition(Ref childName, Ref child) {
     childDefinitions.emplace(childName, child);
 }
 
-Ref Fun::GetChildDefinition(Ref childName) {
+Ref Fun::GetChildDef(Ref childName) {
     return childDefinitions[childName];
 }
 
@@ -78,8 +78,8 @@ Ref Fun::ValidateArguments(Ref argList) {
         if (numOfRequiredArgs > 0)
             return Err_NotEnoughArgs(0);
     } else {
-        auto * argListObj = (ArgList*)GET_OBJ(argList);
-        assert(argListObj->Is(ArgList::t));
+        auto * argListObj = (Args*)GET_OBJ(argList);
+        assert(argListObj->Is(Args::t));
         int numOfPassedArgs = argListObj->NumOfArguments();
 
         if (numOfPassedArgs < numOfRequiredArgs)
@@ -91,19 +91,19 @@ Ref Fun::ValidateArguments(Ref argList) {
     return Ref::none;
 }
 
-Ref Fun::PrepareArguments(Ref argList) {
+Ref Fun::PrepareArguments(Ref argsRef) {
     if (numOfArgs != 0) {
         std::vector<bool> settedArgs;
         settedArgs.resize(numOfArgs, false);
 
-        auto argsListObj = (ArgList*)GET_OBJ(argList);
+        auto argsListObj = (Args*)GET_OBJ(argsRef);
         uint numOfPassedArgs = argsListObj->NumOfArguments();
 
         for (uint i = 0; i < numOfPassedArgs; i++) {
             auto argRef = (argsListObj->Get(i));
             auto argObj = GET_OBJ(argRef);
-            if (argObj->Is(ArgValPair::t)) {
-                auto pair = (ArgValPair*)argObj;
+            if (argObj->Is(ArgPair::t)) {
+                auto pair = (ArgPair*)argObj;
                 if (std::find(argNames.begin(), argNames.end(), pair->name) == argNames.end())
                     return Err_NoSuchArg(pair->name);
                 VM::contextStack.Last()->SetVariable(pair->name, pair->val);
@@ -165,7 +165,7 @@ Ref Fun::Execute(Ref argList) {
 
 Ref Fun::Err_NotEnoughArgs(uint numOfPassedArgs) {
     std::stringstream s;
-    s << "Error. Not enough arguments. Function '"
+    s << "Not enough arguments. Function '"
       << REF_TO_STD_STRING(name) << "' requires " << numOfRequiredArgs
       << " arguments, but " << numOfPassedArgs << " was passed.";
     return NEW_REF(new Err(s.str()));
@@ -173,7 +173,7 @@ Ref Fun::Err_NotEnoughArgs(uint numOfPassedArgs) {
 
 Ref Fun::Err_NoSuchArg(Ref passedArgName) {
     std::stringstream s;
-    s << "Error. No such argument '"
+    s << "No such argument '"
       << REF_TO_STD_STRING(passedArgName)
       << "' in function '" << REF_TO_STD_STRING(name) << "' declaration.";
     return NEW_REF(new Err(s.str()));
@@ -181,7 +181,7 @@ Ref Fun::Err_NoSuchArg(Ref passedArgName) {
 
 Ref Fun::Err_TooManyArgs(uint numOfPassedArgs) {
    std::stringstream s;
-   s << "Error. Too many arguments. Function '"
+   s << "Too many arguments. Function '"
      << REF_TO_STD_STRING(name) << "' requires " << numOfRequiredArgs
      << " arguments, but " << numOfPassedArgs << " was passed.";
    return NEW_REF(new Err(s.str()));
@@ -189,7 +189,7 @@ Ref Fun::Err_TooManyArgs(uint numOfPassedArgs) {
 
 Ref Fun::Err_ArgIsNotSet(Ref argName) {
     std::stringstream s;
-    s << "Error. In function '" << REF_TO_STD_STRING(name)
+    s << "In function '" << REF_TO_STD_STRING(name)
       << "' argument '" << REF_TO_STD_STRING(argName) << "' is not setted.";
     return NEW_REF(new Err(s.str()));
 }

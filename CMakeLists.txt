@@ -23,8 +23,8 @@ add_executable(Virgo
         Skip.h Skip.cpp
         Break.h Break.cpp
         Return.h Return.cpp
-        ArgValPair.h ArgValPair.cpp
-        ArgList.h ArgList.cpp
+        ArgPair.h ArgPair.cpp
+        Args.h Args.cpp
         Seg.h Seg.cpp
         Expr.h Expr.cpp
         Fun.h Fun.cpp

@@ -9,8 +9,8 @@
 #include "List.h"
 #include "Seg.h"
 #include "Iter.h"
-#include "ArgList.h"
-#include "ArgValPair.h"
+#include "Args.h"
+#include "ArgPair.h"
 #include "Skip.h"
 #include "Break.h"
 #include "Return.h"
@@ -35,8 +35,8 @@ void VM::Init() {
     List::InitType();
     Seg::InitType();
     Iter::InitType();
-    ArgList::InitType();
-    ArgValPair::InitType();
+    Args::InitType();
+    ArgPair::InitType();
     Skip::InitType();
     Break::InitType();
     Return::InitType();

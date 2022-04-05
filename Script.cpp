@@ -3,6 +3,7 @@
 #include "Type.h"
 #include "Expr.h"
 #include "Fun.h"
+#include "Class.h"
 #include "VM.h"
 #include "Str.h"
 #include "Err.h"
@@ -21,19 +22,20 @@ void Script::AddExpr(Expr * expr) {
     expressions.push_back(expr);
 }
 
-void Script::SetParentDefinition(Ref parent) {
+void Script::SetParentDef(Ref parent) {
     parentDefinition = parent;
 }
 
-Ref Script::GetParentDefinition() {
+Ref Script::GetParentDef() {
     return parentDefinition;
 }
 
-void Script::AddChildDefinition(Ref childName, Ref child) {
+void Script::AddChildDef(Ref childName, Ref child) {
     auto * childObj = GET_OBJ(child);
-    assert(childObj->Is(Fun::t));
-    Fun * childFun = (Fun*)childObj;
-    childFun->SetParentDefinition(self);
+    if (childObj->Is(Fun::t))
+        ((Fun*) childObj)->SetParentDef(self);
+    else if (childObj->Is(Class::t))
+        ((Class*) childObj)->SetParentDef(self);
 
     if (childDefinitions.count(childName) != 0) {
         std::cerr << "Duplicate definition of " << ((Str*)GET_OBJ(childName))->val << " in script.";
@@ -42,7 +44,7 @@ void Script::AddChildDefinition(Ref childName, Ref child) {
     childDefinitions.emplace(childName, child);
 }
 
-Ref Script::GetChildDefinition(Ref childName) {
+Ref Script::GetChildDef(Ref childName) {
     return childDefinitions[childName];
 }
 

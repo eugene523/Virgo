@@ -20,18 +20,18 @@ Ref Context::GetVariable(Ref name) {
     Obj * execOwnerObj = GET_OBJ(executionOwner);
     if (execOwnerObj->Is(Fun::t)) {
         auto * fun = (Fun*)execOwnerObj;
-        Ref childRef = fun->GetChildDefinition(name);
+        Ref childRef = fun->GetChildDef(name);
         if (childRef != Ref::none)
             return childRef;
-        auto * parent = GET_OBJ(fun->GetParentDefinition());
+        auto * parent = GET_OBJ(fun->GetParentDef());
         assert(parent->Is(Script::t));
-        childRef = ((Script*)parent)->GetChildDefinition(name);
+        childRef = ((Script*) parent)->GetChildDef(name);
         if (childRef != Ref::none)
             return childRef;
         return Builtins::ZeroNamespace::Get(name);
     } else if (execOwnerObj->Is(Script::t)) {
         auto * script = (Script*)execOwnerObj;
-        Ref childRef = script->GetChildDefinition(name);
+        Ref childRef = script->GetChildDef(name);
         if (childRef != Ref::none)
             return childRef;
         return Builtins::ZeroNamespace::Get(name);

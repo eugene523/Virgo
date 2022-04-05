@@ -38,10 +38,10 @@ public:
     void SetSelf(Ref selfRef);
     void AddArgument(Ref argName, Ref argDefaultValue = Ref::none);
     void AddExpression(Expr * expr);
-    void SetParentDefinition(Ref parent) override;
-    Ref  GetParentDefinition() override;
-    void AddChildDefinition(Ref childName, Ref child) override;
-    Ref  GetChildDefinition(Ref childName) override;
+    void SetParentDef(Ref parent) override;
+    Ref  GetParentDef() override;
+    void AddChildDef(Ref childName, Ref child) override;
+    Ref  GetChildDef(Ref childName) override;
     Ref  Execute(Ref argList);
 };
 

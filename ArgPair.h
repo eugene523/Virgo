@@ -5,14 +5,14 @@
 #include "Obj.h"
 #include "Mem.h"
 
-struct ArgValPair : public Obj {
+struct ArgPair : public Obj {
     const Ref name;
     const Ref val;
 
     static Type * t;
     static void InitType();
-    ArgValPair(Ref name, Ref val);
-    ~ArgValPair() override;
+    ArgPair(Ref name, Ref val);
+    ~ArgPair() override;
     void Mark() override;
 };
 

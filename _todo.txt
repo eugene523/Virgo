@@ -2,19 +2,19 @@
 
 Добавить and or xor not в качестве ключевых слов
 
-Доделать Parser::Parse_Pair
+Доделать Parser::Parse_ArgPair
 
 Вывод дерева экспрессий
 
 Подумать над тем, не заменить ли self(Ref) на this?
 
-Убрать Eval из ExprEvalList ExprEvalArgsList
+Убрать Eval из ExprList ExprEvalArgsList
 
 Set-метод в Context должен возвращать результат
 
 Проверить ExprIf на ошибки с temp-переменными
 
-ExprEvalList, ExprArgList нет temp-переменных.
+ExprList, ExprArgList нет temp-переменных.
 
 Доделать деструкторы
 

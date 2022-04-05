@@ -16,10 +16,10 @@ public:
     Script();
     ~Script() override;
     void AddExpr(Expr * expr);
-    void SetParentDefinition(Ref parent) override;
-    Ref GetParentDefinition() override;
-    void AddChildDefinition(Ref childName, Ref childRef) override;
-    Ref GetChildDefinition(Ref childName) override;
+    void SetParentDef(Ref parent) override;
+    Ref GetParentDef() override;
+    void AddChildDef(Ref childName, Ref childRef) override;
+    Ref GetChildDef(Ref childName) override;
 
     void PreExecution();
     static void PostExecution();

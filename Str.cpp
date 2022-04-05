@@ -4,7 +4,7 @@
 #include "Str.h"
 #include "Bool.h"
 #include "Int.h"
-#include "ArgList.h"
+#include "Args.h"
 #include "Err.h"
 #include "ErrorMessages.h"
 
@@ -72,8 +72,8 @@ Ref Str_Get(Ref a, Ref b) {
     Obj * b_obj = GET_OBJ(b);
     if (b_obj == nullptr)
         return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-    assert(b_obj->Is(ArgList::t));
-    auto * argsObj = (ArgList*)b_obj;
+    assert(b_obj->Is(Args::t));
+    auto * argsObj = (Args*)b_obj;
     Ref indexRef = argsObj->Get(0);
     Obj * indexObj = GET_OBJ(indexRef);
     if (indexObj->Is(Int::t)) {

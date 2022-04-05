@@ -87,7 +87,7 @@ Token::Token(TokenType   tokenType,
              std::string lexeme  /* = "" */,
              Ref         literal /* = Ref::none */,
              uint        line    /* = 0 */) :
-tokenType{tokenType}, lexeme{std::move(lexeme)}, literal{literal}, line{line} {}
+        type{tokenType}, lexeme{std::move(lexeme)}, literal{literal}, line{line} {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +138,7 @@ void Tokenizer::PrintTokens() {
             std::cout << std::endl;
             currLine = i->line;
         }
-        Printw(TokenTypeToString(i->tokenType), width);
+        Printw(TokenTypeToString(i->type), width);
         Printw(i->lexeme, width);
         Printw(i->literal != Ref::none ? GET_OBJ(i->literal)->ToStr() : "-", width);
         Printw(std::to_string(i->line), width);

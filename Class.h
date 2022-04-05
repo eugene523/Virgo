@@ -16,10 +16,11 @@ public:
     static void InitType();
     explicit Class(Ref name);
     void Mark() override;
-    void SetParentDefinition(Ref parent) override;
-    Ref  GetParentDefinition() override;
-    void AddChildDefinition(Ref childName, Ref child) override;
-    Ref  GetChildDefinition(Ref childName) override;
+    void SetSelf(Ref selfRef);
+    void SetParentDef(Ref parent) override;
+    Ref  GetParentDef() override;
+    void AddChildDef(Ref childName, Ref child) override;
+    Ref  GetChildDef(Ref childName) override;
     void AddField(Ref fieldName);
     Ref CreateInstance(Ref args);
 };

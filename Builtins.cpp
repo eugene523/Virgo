@@ -3,7 +3,7 @@
 #include "Builtins.h"
 #include "VM.h"
 #include "Type.h"
-#include "ArgList.h"
+#include "Args.h"
 #include "Err.h"
 #include "Bool.h"
 #include "Int.h"
@@ -19,8 +19,8 @@ Assert::Assert() : NFun{"assert"} {}
 Ref Assert::Execute(Ref args) {
     auto argListObj = GET_OBJ(args);
     assert(argListObj != nullptr);
-    assert(argListObj->Is(ArgList::t));
-    auto argList = (ArgList*)argListObj;
+    assert(argListObj->Is(Args::t));
+    auto argList = (Args*)argListObj;
     assert(argList->NumOfArguments() == 2);
 
     auto intObj = GET_OBJ(argList->Get(1));
@@ -46,8 +46,8 @@ Print::Print() : NFun{"print"} {}
 Ref Print::Execute(Ref args) {
     auto argListObj = GET_OBJ(args);
     assert(argListObj != nullptr);
-    assert(argListObj->Is(ArgList::t));
-    auto argList = (ArgList*)argListObj;
+    assert(argListObj->Is(Args::t));
+    auto argList = (Args*)argListObj;
 
     std::cout << '\n';
     uint numOfArguments = argList->NumOfArguments();
@@ -87,8 +87,8 @@ bool nearly_equal(v_real a, v_real b, v_real delta) {
 Ref Near::Execute(Ref args) {
     auto argsObj = GET_OBJ(args);
     assert(argsObj != nullptr);
-    assert(argsObj->Is(ArgList::t));
-    auto argList = (ArgList*)argsObj;
+    assert(argsObj->Is(Args::t));
+    auto argList = (Args*)argsObj;
 
     if (argList->NumOfArguments() < 3)
         return NEW_REF(new Err("Not enough arguments for 'near' function."));
@@ -121,8 +121,8 @@ Random::Random() : NFun{"random"} {}
 
 Ref Random::Execute(Ref args) {
     auto argsObj = GET_OBJ(args);
-    assert(argsObj->Is(ArgList::t));
-    auto argList = (ArgList*)argsObj;
+    assert(argsObj->Is(Args::t));
+    auto argList = (Args*)argsObj;
 
     if (argList->NumOfArguments() == 0)
         return NEW_REF(new Int(std::rand()));
@@ -135,8 +135,8 @@ Rem::Rem() : NFun{"rem"} {}
 
 Ref Rem::Execute(Ref args) {
     auto argsObj = GET_OBJ(args);
-    assert(argsObj->Is(ArgList::t));
-    auto argList = (ArgList*)argsObj;
+    assert(argsObj->Is(Args::t));
+    auto argList = (Args*)argsObj;
 
     if (argList->NumOfArguments() != 2)
         return NEW_REF(new Err("Wrong call for 'rem' function. 'rem' function requires 2 arguments."));
@@ -163,8 +163,8 @@ Len::Len() : NFun{"len"} {}
 
 Ref Len::Execute(Ref args) {
     auto argsObj = GET_OBJ(args);
-    assert(argsObj->Is(ArgList::t));
-    auto argList = (ArgList*)argsObj;
+    assert(argsObj->Is(Args::t));
+    auto argList = (Args*)argsObj;
 
     if (argList->NumOfArguments() != 1)
         return NEW_REF(new Err("Wrong call for 'len' function."));
@@ -180,8 +180,8 @@ CSeg::CSeg() : NFun{"seg"} {}
 
 Ref CSeg::Execute(Ref args) {
     auto argsObj = GET_OBJ(args);
-    assert(argsObj->Is(ArgList::t));
-    auto argList = (ArgList*)argsObj;
+    assert(argsObj->Is(Args::t));
+    auto argList = (Args*)argsObj;
 
     if (argList->NumOfArguments() < 2)
         return NEW_REF(new Err("'seg' function requires at least 2 parameters."));

@@ -1,6 +1,7 @@
 #include "Class.h"
 #include "Str.h"
 #include "Type.h"
+#include "Object.h"
 
 Type * Class::t;
 
@@ -8,15 +9,19 @@ void Class::InitType() {
     Class::t = new Type("class");
 }
 
-void Class::SetParentDefinition(Ref parent) {
+void Class::SetSelf(Ref selfRef) {
+    self = selfRef;
+}
+
+void Class::SetParentDef(Ref parent) {
     parentDefinition = parent;
 }
 
-Ref Class::GetParentDefinition() {
+Ref Class::GetParentDef() {
     return parentDefinition;
 }
 
-void Class::AddChildDefinition(Ref childName, Ref child) {
+void Class::AddChildDef(Ref childName, Ref child) {
     /*
     auto * childFunc = (Fun*)GET_OBJ(child);
     assert(childFunc->Is(Fun::t));
@@ -34,7 +39,7 @@ void Class::AddChildDefinition(Ref childName, Ref child) {
     */
 }
 
-Ref Class::GetChildDefinition(Ref childName) {
+Ref Class::GetChildDef(Ref childName) {
     return childDefinitions[childName];
 }
 
@@ -45,3 +50,11 @@ void Class::AddField(Ref fieldName) {
 }
 
 void Class::Mark() {}
+
+Ref Class::CreateInstance(Ref args) {
+    auto * object = new Object();
+    for (auto f : fieldNames) {
+        object->fields[f] = Ref::none;
+    }
+    return NEW_REF(object);
+}

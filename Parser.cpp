@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Parser.h"
 #include "Obj.h"
 #include "Type.h"
@@ -5,7 +6,7 @@
 #include "Str.h"
 #include "Bool.h"
 #include "Fun.h"
-#include "ArgValPair.h"
+#include "ArgPair.h"
 #include "Class.h"
 #include "Script.h"
 #include "Builtins.h"
@@ -33,7 +34,7 @@ void Parser::Interpret(const std::string & source) {
     auto * script = (Script*)GET_OBJ(scriptRef);
     script->self = scriptRef;
 
-    while (CurrentToken()->tokenType != TokenType::EndOfFile) {
+    while (CurrentToken()->type != TokenType::EndOfFile) {
         Expr * expr = Parse_Expr();
         if (expr == nullptr)
             continue;
@@ -70,7 +71,7 @@ int Parser::CurrentLine() {
 }
 
 bool Parser::Match(TokenType tokenType) {
-    if (CurrentToken()->tokenType == tokenType) {
+    if (CurrentToken()->type == tokenType) {
         currentPosition++;
         return true;
     }
@@ -98,7 +99,7 @@ Expr * Parser::Parse_Expr() {
         return new ExprSkip(CurrentLine());
 
     if (Match(TokenType::Return)) {
-        Expr * retBody = Parse_List();
+        Expr * retBody = Parse_Logical();
         Expr * ret = new ExprReturn(retBody, CurrentLine());
         return ret;
     }
@@ -109,7 +110,8 @@ Expr * Parser::Parse_Expr() {
     if (IsFunDef())
         return Parse_FunDef();
 
-    //if (IsClassDef())
+    if (IsClassDef())
+        return Parse_ClassDef();
 
     return Parse_Assignment();
 }
@@ -134,26 +136,26 @@ Expr * Parser::Parse_If() {
     exprIf->condition = condition;
 
     // By now empty IFs are not allowed.
-    if (CurrentToken()->tokenType != TokenType::EnterScope)
+    if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Empty \"if\" statements are not allowed.", CurrentLine());
 
     currentPosition++;
 
     // Parsing IF body statements.
     Expr * expr {nullptr};
-    while (CurrentToken()->tokenType != TokenType::ExitScope) {
+    while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
         exprIf->trueBranch.push_back(expr);
     }
     currentPosition++;
 
     // Parsing possible ELSE branch statements.
-    if (CurrentToken()->tokenType == TokenType::Else) {
+    if (CurrentToken()->type == TokenType::Else) {
         currentPosition++;
-        if (CurrentToken()->tokenType == TokenType::EnterScope) {
+        if (CurrentToken()->type == TokenType::EnterScope) {
             // Parsing ordinary 'else' branch.
             currentPosition++;
-            while (CurrentToken()->tokenType != TokenType::ExitScope) {
+            while (CurrentToken()->type != TokenType::ExitScope) {
                 expr = Parse_Expr();
                 exprIf->falseBranch.push_back(expr);
             }
@@ -177,14 +179,14 @@ Expr * Parser::Parse_For() {
     exprFor->condition = condition;
 
     // By now empty 'for' loops are not allowed.
-    if (CurrentToken()->tokenType != TokenType::EnterScope)
+    if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Empty 'for' loops are not allowed.", CurrentLine());
 
     currentPosition++;
 
     // Parsing 'for' loop body statements.
     Expr * expr {nullptr};
-    while (CurrentToken()->tokenType != TokenType::ExitScope) {
+    while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
         exprFor->expressions.push_back(expr);
     }
@@ -222,14 +224,14 @@ Expr * Parser::Parse_ForC() {
         ReportError("Can't find closing right brace of the 'for' (C-styled) loop header.", savedLine);
 
     // By now empty FORs are not allowed.
-    if (CurrentToken()->tokenType != TokenType::EnterScope)
+    if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Empty 'for' loops are not allowed.", CurrentLine());
 
     currentPosition++;
 
     // Parsing FOR's body statements.
     Expr * expr {nullptr};
-    while (CurrentToken()->tokenType != TokenType::ExitScope) {
+    while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
         exprForC->expressions.push_back(expr);
     }
@@ -241,10 +243,10 @@ bool Parser::IsForIn() {
     // for x in list
     //     ^--- we are at x (identifier)
     int pos = currentPosition;
-    if (tokens.at(pos)->tokenType != TokenType::Identifier)
+    if (tokens.at(pos)->type != TokenType::Identifier)
         return false;
     pos++;
-    return tokens.at(pos)->tokenType == TokenType::In;
+    return tokens.at(pos)->type == TokenType::In;
 }
 
 Expr * Parser::Parse_ForIn() {
@@ -255,7 +257,7 @@ Expr * Parser::Parse_ForIn() {
     exprForIn->name = token->literal;
     currentPosition++;
 
-    if (CurrentToken()->tokenType != TokenType::In)
+    if (CurrentToken()->type != TokenType::In)
         ReportError("Internal error 'in' keyword not found.", CurrentLine());
     currentPosition++;
 
@@ -263,14 +265,14 @@ Expr * Parser::Parse_ForIn() {
     exprForIn->iterableExpr = iterableExpr;
 
     // By now empty 'for' loops are not allowed.
-    if (CurrentToken()->tokenType != TokenType::EnterScope)
+    if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Empty 'for' loops are not allowed.", CurrentLine());
 
     currentPosition++;
 
     // Parsing 'for' loop body statements.
     Expr * expr {nullptr};
-    while (CurrentToken()->tokenType != TokenType::ExitScope) {
+    while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
         exprForIn->expressions.push_back(expr);
     }
@@ -284,7 +286,7 @@ Expr * Parser::Parse_Break() {
 
 Expr * Parser::Parse_Assert() {
     int savedLine = CurrentLine();
-    auto * args = (ExprEvalList*)Parse_ArgList();
+    auto * args = (ExprArgs*) Parse_Args();
     args->AddExpr(new ExprLiteral(VM::GetConstant_Int(savedLine), savedLine));
     auto * funName = new ExprNameAccess(VM::GetConstant_Str("assert"), savedLine);
     return new ExprCallAccess(funName, args, savedLine);
@@ -292,23 +294,21 @@ Expr * Parser::Parse_Assert() {
 
 bool Parser::IsFunDef() {
     int pos = currentPosition;
-    if (tokens.at(pos)->tokenType != TokenType::Identifier)
+    if (tokens.at(pos)->type != TokenType::Identifier)
         return false;
     pos++;
-    if (tokens.at(pos)->tokenType != TokenType::L_Parenthesis)
+    if (tokens.at(pos)->type != TokenType::L_Parenthesis)
         return false;
     pos++;
     int numOfOpened = 1;
-    while (tokens.at(pos)->tokenType != TokenType::EndOfFile && numOfOpened > 0) {
-        if (tokens.at(pos)->tokenType == TokenType::L_Parenthesis ||
-            tokens.at(pos)->tokenType == TokenType::L_Bracket)
+    while (tokens.at(pos)->type != TokenType::EndOfFile && numOfOpened > 0) {
+        if (tokens.at(pos)->type == TokenType::L_Parenthesis)
             numOfOpened++;
-        else if (tokens.at(pos)->tokenType == TokenType::R_Parenthesis ||
-                 tokens.at(pos)->tokenType == TokenType::R_Bracket)
+        else if (tokens.at(pos)->type == TokenType::R_Parenthesis)
             numOfOpened--;
         pos++;
     }
-    return tokens.at(pos)->tokenType == TokenType::EnterScope;
+    return tokens.at(pos)->type == TokenType::EnterScope;
 }
 
 Expr * Parser::Parse_FunDef() {
@@ -323,23 +323,32 @@ Expr * Parser::Parse_FunDef() {
     if (!parent->Is(Script::t))
         ReportError("By now, functions can be defined only in scripts.", CurrentLine());
 
-    ((Script*)parent)->AddChildDefinition(funName, funRef);
+    ((Script*) parent)->AddChildDef(funName, funRef);
     PushDef(funRef);
 
     // Parsing declared arguments
     currentPosition += 2;
-    while (CurrentToken()->tokenType != TokenType::EndOfFile) {
+    while (CurrentToken()->type != TokenType::EndOfFile) {
         // It's possible that function has no arguments.
-        if (CurrentToken()->tokenType == TokenType::R_Parenthesis) {
+        if (CurrentToken()->type == TokenType::R_Parenthesis) {
             currentPosition++;
             break;
         }
-        if (CurrentToken()->tokenType != TokenType::Identifier)
+        if (CurrentToken()->type != TokenType::Identifier)
             ReportError("Can't find argument name in a function declaration.", CurrentLine());
-        fun->AddArgument(CurrentToken()->literal);
+        Ref argName = CurrentToken()->literal;
+        Ref argDefaultVal = Ref::none;
         currentPosition++;
-        if (CurrentToken()->tokenType != TokenType::Comma) {
-            if (CurrentToken()->tokenType != TokenType::R_Parenthesis) {
+        if (CurrentToken()->type == TokenType::Equal) {
+            // TODO: Allow only constant expressions for default values.
+            currentPosition++;
+            argDefaultVal = CurrentToken()->literal;
+            currentPosition++;
+        }
+        fun->AddArgument(argName, argDefaultVal);
+
+        if (CurrentToken()->type != TokenType::Comma) {
+            if (CurrentToken()->type != TokenType::R_Parenthesis) {
                 ReportError("Can't find closing right bracket.", CurrentLine());
             }
             currentPosition++;
@@ -349,11 +358,11 @@ Expr * Parser::Parse_FunDef() {
     }
 
     // Parsing function body
-    if (CurrentToken()->tokenType != TokenType::EnterScope)
+    if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Function has no body.", CurrentLine());
     currentPosition++;
 
-    while(CurrentToken()->tokenType != TokenType::ExitScope) {
+    while(CurrentToken()->type != TokenType::ExitScope) {
         Expr * expr = Parse_Expr();
         if (expr == nullptr)
             continue;
@@ -366,15 +375,15 @@ Expr * Parser::Parse_FunDef() {
 
 bool Parser::IsClassDef() {
     int pos = currentPosition;
-    if (tokens.at(pos)->tokenType != TokenType::Identifier)
+    if (tokens.at(pos)->type != TokenType::Identifier)
         return false;
     pos++;
     /*
-    if (tokens.at(pos)->tokenType != TokenType::Class)
+    if (tokens.at(pos)->type != TokenType::Class)
         return false;
     pos++;
     */
-    return tokens.at(pos)->tokenType == TokenType::EnterScope;
+    return tokens.at(pos)->type == TokenType::EnterScope;
 }
 
 Expr * Parser::Parse_ClassDef() {
@@ -383,29 +392,45 @@ Expr * Parser::Parse_ClassDef() {
     Ref clName = CurrentToken()->literal;
     auto * cl = new Class(clName);
     Ref clRef = NEW_PRESERVED_REF(cl);
+    cl->SetSelf(clRef);
+
+    auto * parent = GET_OBJ(GetLastDef());
+    if (!parent->Is(Script::t))
+        ReportError("By now, classes can be defined only in scripts.", CurrentLine());
+
+    ((Script*) parent)->AddChildDef(clName, clRef);
+    PushDef(clRef);
+
+    // Parsing class body.
+    currentPosition += 2;
+    while (CurrentToken()->type != TokenType::ExitScope) {
+        auto token = CurrentToken();
+        if (token->type != TokenType::Identifier)
+            ReportError("Class member did not recognized", CurrentLine());
+        cl->AddField(token->literal);
+        currentPosition++;
+    }
     currentPosition++;
-    while (Cu)
+    PopDef();
+    return nullptr;
 }
 
 Expr * Parser::Parse_Assignment() {
-//*************************************************************************
-// Possible cases:
-// ________________________________________________________________________
-// 1) E -> A ~ T
-// where A is strictly an accessor term.
-//       T is an accessor or an arithmentic/logic term.
-//       ~ is (=, +=, -=, *=, /=, ^=)
-// ________________________________________________________________________
-// 2) E -> A
-// No operation i.e. A is just a lonely accessor.
-// In this case this accessor is treated as a declaration of a variable.
-//________________________________________________________________________
+    // Possible cases:
+    // 1) E -> A ~ T
+    // where A is strictly an accessor term.
+    //       T is an accessor or an arithmentic/logic term.
+    //       ~ is (=, +=, -=, *=, /=, ^=)
+    //
+    // 2) E -> A
+    // No operation i.e. A is just a lonely accessor.
+    // In this case this accessor is treated as a declaration of a variable.
 
     Expr * a = Parse_Accessor();
     int savedLine = CurrentLine();
 
     Expr * b {nullptr};
-    switch (CurrentToken()->tokenType) {
+    switch (CurrentToken()->type) {
         case TokenType::Equal:
             currentPosition++;
             b = Parse_Logical();
@@ -442,51 +467,57 @@ Expr * Parser::Parse_Assignment() {
 }
 
 Expr * Parser::Parse_List() {
-// E -> [ A, A, A, ..., A ]
-//      ^ - we are here, exactly on a bracket.
-// where A is an expression or a list
-
-    if (Match(TokenType::L_Bracket)) {
-        auto * evalList = new ExprEvalList(CurrentLine());
-        if (Match(TokenType::R_Bracket))
-            return evalList;
-        // EvalList can contain EvalLists as its own elements.
-        auto * a = Parse_List();
-        evalList->exprList.push_back(a);
-        while (Match(TokenType::Comma)) {
-            a = Parse_List();
-            evalList->AddExpr(a);
-        }
-        if (!Match(TokenType::R_Bracket))
-            ReportError("Can't find closing right bracket.", CurrentLine());
-        return evalList;
+    // E -> [ A, A, A, ..., A ]
+    //      ^ - we are here, exactly on a bracket.
+    // where A is an expression or a list.
+    assert(Match(TokenType::L_Bracket));
+    auto * exprList = new ExprList(CurrentLine());
+    if (Match(TokenType::R_Bracket))
+        return exprList;
+    auto * a = Parse_Logical();
+    exprList->exprList.push_back(a);
+    while (Match(TokenType::Comma)) {
+        a = Parse_Logical();
+        exprList->AddExpr(a);
     }
-    return Parse_Pair();
+    if (!Match(TokenType::R_Bracket))
+        ReportError("Can't find closing right bracket.", CurrentLine());
+    return exprList;
 }
 
-Expr * Parser::Parse_ArgList() {
-// E -> (A, A, A, ..., A)
-// where A is an expression or a list
-
-    if (Match(TokenType::L_Parenthesis)) {
-        auto * initList = new ExprEvalArgList(CurrentLine());
-        if (Match(TokenType::R_Parenthesis))
-            return initList;
-        Expr * a = Parse_List();
-        initList->AddExpr(a);
-        while (Match(TokenType::Comma)) {
-            a = Parse_List();
-            initList->AddExpr(a);
-        }
-        if (!Match(TokenType::R_Parenthesis)) {
-            ReportError("Can't find closing right parenthesis.", CurrentLine());
-        }
-        return initList;
+Expr * Parser::Parse_Args() {
+    // E -> ( A, A, A, ..., A )
+    //      ^--- we are here
+    // where A is an expression or a pair.
+    assert(Match(TokenType::L_Parenthesis));
+    auto * exprArgs = new ExprArgs(CurrentLine());
+    if (Match(TokenType::R_Parenthesis))
+        return exprArgs;
+    Expr * a = Parse_ArgPair();
+    exprArgs->AddExpr(a);
+    while (Match(TokenType::Comma)) {
+        a = Parse_ArgPair();
+        exprArgs->AddExpr(a);
     }
-    return Parse_Logical();
+    if (!Match(TokenType::R_Parenthesis)) {
+        ReportError("Can't find closing right parenthesis.", CurrentLine());
+    }
+    return exprArgs;
 }
 
-Expr * Parser::Parse_Pair() {
+Expr * Parser::Parse_ArgPair() {
+    // Detect possible argument-value pair
+    if (tokens.at(currentPosition)->type == TokenType::Identifier &&
+        tokens.at(currentPosition + 1)->type == TokenType::Equal) {
+        int savedLine = CurrentLine();
+        Ref name = CurrentToken()->literal;
+        currentPosition += 2;
+        Expr * valExpr = Parse_Logical();
+        Expr * exprPair = new ExprArgPair(name, valExpr, savedLine);
+        return exprPair;
+    }
+
+    // It's just an expression.
     Expr * a = Parse_Logical(); /*
     auto a_access = std::dynamic_pointer_cast<ExprGet>(a);
     if (a_access != nullptr && a_access->IsSingleNameAccess()) {
@@ -494,16 +525,16 @@ Expr * Parser::Parse_Pair() {
 
         // Parsing possible argument-value pair.
         // E.g. perimeter[length = 1 + 3.0, width = a + b]
-        if (CurrentToken()->tokenType == TokenType::Equal) {
+        if (CurrentToken()->type == TokenType::Equal) {
             currentPosition++;
             Optr b = Parse_EvalList();
             BUBBLE_UP_IF_ERROR(b)
-            return ArgValPair::S(argName, b);
+            return ArgPair::S(argName, b);
         }
 
         // Parsing possible key-value pair.
         // E.g. ["length" : 1 + 3.0, "width" : a + b]
-        if (CurrentToken()->tokenType == TokenType::Colon) {
+        if (CurrentToken()->type == TokenType::Colon) {
             currentPosition++;
             Optr b = Parse_List();
             BUBBLE_UP_IF_ERROR(b)
@@ -512,7 +543,6 @@ Expr * Parser::Parse_Pair() {
         // It's a single name access.
         return a;
     } */
-    // It's an expression.
     return a;
 }
 
@@ -521,13 +551,13 @@ Expr * Parser::Parse_Logical() {
     // where ~ is (and, or)
     Expr * a = Parse_Equality();
     Token* op = CurrentToken();
-    while (op->tokenType == TokenType::And ||
-           op->tokenType == TokenType::Or)
+    while (op->type == TokenType::And ||
+           op->type == TokenType::Or)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Equality();
-        if (op->tokenType == TokenType::And)
+        if (op->type == TokenType::And)
             a = new ExprAnd(a, b, savedLine);
         else
             a = new ExprOr(a, b, savedLine);
@@ -540,13 +570,13 @@ Expr * Parser::Parse_Equality() {
     // E -> T (=, !=) T
     Expr * a = Parse_Order();
     Token * op = CurrentToken();
-    if (op->tokenType == TokenType::Equal ||
-        op->tokenType == TokenType::BangEqual)
+    if (op->type == TokenType::Equal ||
+        op->type == TokenType::BangEqual)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Order();
-        if (op->tokenType == TokenType::Equal)
+        if (op->type == TokenType::Equal)
             a = new ExprEq(a, b, savedLine);
         else
             a = new ExprNotEq(a, b, savedLine);
@@ -555,19 +585,18 @@ Expr * Parser::Parse_Equality() {
 }
 
 Expr * Parser::Parse_Order() {
-// E -> T (>, >=, <, <=) T
-
+    // E -> T (>, >=, <, <=) T
     Expr * a = Parse_Add();
     Token * op = CurrentToken();
-    if (op->tokenType == TokenType::Greater ||
-        op->tokenType == TokenType::GreaterEqual ||
-        op->tokenType == TokenType::Less ||
-        op->tokenType == TokenType::LessEqual)
+    if (op->type == TokenType::Greater ||
+        op->type == TokenType::GreaterEqual ||
+        op->type == TokenType::Less ||
+        op->type == TokenType::LessEqual)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Add();
-        switch(op->tokenType) {
+        switch(op->type) {
             case TokenType::Greater :      a = new ExprGr(a, b, savedLine);   break;
             case TokenType::GreaterEqual : a = new ExprGrEq(a, b, savedLine); break;
             case TokenType::Less :         a = new ExprLs(a, b, savedLine);   break;
@@ -579,19 +608,18 @@ Expr * Parser::Parse_Order() {
 }
 
 Expr * Parser::Parse_Add() {
-// E -> (+, -) T ~ T ~ T ~ ... ~ T
-// where ~ is (+, -)
-// Notice possible leading sign before the first term.
-
+    // E -> (+, -) T ~ T ~ T ~ ... ~ T
+    // where ~ is (+, -)
+    // Notice possible leading sign before the first term.
     Expr * a = Parse_Mult();
     Token * op = CurrentToken();
-    while (op->tokenType == TokenType::Plus ||
-           op->tokenType == TokenType::Minus)
+    while (op->type == TokenType::Plus ||
+           op->type == TokenType::Minus)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Mult();
-        if (op->tokenType == TokenType::Plus)
+        if (op->type == TokenType::Plus)
             a = new ExprAdd(a, b, savedLine);
         else
             a = new ExprSub(a, b, savedLine);
@@ -601,19 +629,18 @@ Expr * Parser::Parse_Add() {
 }
 
 Expr * Parser::Parse_Mult() {
-// M -> P ~ P ~ P ~ ... ~ P
-// where ~ is (*, /)
-
+    // M -> P ~ P ~ P ~ ... ~ P
+    // where ~ is (*, /)
     Expr * a = Parse_Pow();
     Token * op = CurrentToken();
-    while (op->tokenType == TokenType::Star ||
-           op->tokenType == TokenType::Slash ||
-           op->tokenType == TokenType::Percent)
+    while (op->type == TokenType::Star ||
+           op->type == TokenType::Slash ||
+           op->type == TokenType::Percent)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Pow();
-        switch (op->tokenType) {
+        switch (op->type) {
             case TokenType::Star :  a = new ExprMul(a, b, savedLine); break;
             case TokenType::Slash : a = new ExprDiv(a, b, savedLine); break;
             default: break;
@@ -624,11 +651,10 @@ Expr * Parser::Parse_Mult() {
 }
 
 Expr * Parser::Parse_Pow() {
-// P -> T ^ T ^ T ^ ... ^ T
-
+    // P -> T ^ T ^ T ^ ... ^ T
     Expr * a = Parse_Term();
-    Token* op = CurrentToken();
-    while (op->tokenType == TokenType::Caret) {
+    Token * op = CurrentToken();
+    while (op->type == TokenType::Caret) {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Term();
@@ -643,31 +669,31 @@ Expr * Parser::Parse_Term() {
 
     // Process possible parentheses.
     // That means that the parsing term is actually an expression.
-    if (CurrentToken()->tokenType == TokenType::L_Parenthesis) {
+    if (CurrentToken()->type == TokenType::L_Parenthesis) {
         currentPosition++;
         a = Parse_Logical();
-        if (CurrentToken()->tokenType != TokenType::R_Parenthesis) {
+        if (CurrentToken()->type != TokenType::R_Parenthesis) {
             ReportError("Right parethesis not found.", CurrentLine());
         }
         currentPosition++;
         return a;
     }
 
-    if (CurrentToken()->tokenType == TokenType::L_Bracket) {
+    // Process possible list.
+    if (CurrentToken()->type == TokenType::L_Bracket) {
         a = Parse_List();
         return a;
     }
 
     // Process possible 'not' or '-' sign.
-    TokenType op = CurrentToken()->tokenType;
-    if (op == TokenType::Not || op == TokenType::Minus)
-    {
+    TokenType op = CurrentToken()->type;
+    if (op == TokenType::Not || op == TokenType::Minus) {
         int savedLine = CurrentLine();
         currentPosition++;
-        if (CurrentToken()->tokenType == TokenType::L_Parenthesis) {
+        if (CurrentToken()->type == TokenType::L_Parenthesis) {
             currentPosition++;
             a = Parse_Logical();
-            if (CurrentToken()->tokenType != TokenType::R_Parenthesis) {
+            if (CurrentToken()->type != TokenType::R_Parenthesis) {
                 ReportError("Right parethesis not found.", CurrentLine());
             }
             currentPosition++;
@@ -685,7 +711,7 @@ Expr * Parser::Parse_Term() {
     while(Match(TokenType::Plus));
 
     // Literal or identifier
-    switch (CurrentToken()->tokenType) {
+    switch (CurrentToken()->type) {
         case TokenType::Int :
         case TokenType::Real :
         case TokenType::String :
@@ -714,11 +740,11 @@ Expr * Parser::Parse_Term() {
 }
 
 Expr * Parser::Parse_Accessor() {
-// E -> A ~ ~ ~ ~ ... ~
-// where A is an identifier
-// where ~ is a pair of parentheses () or brackets [].
+    // E -> A ~ ~ ~ ~ ... ~
+    // where A is an identifier
+    // where ~ is a pair of parentheses () or brackets [] or a dot.
 
-    if (CurrentToken()->tokenType != TokenType::Identifier)
+    if (CurrentToken()->type != TokenType::Identifier)
         ReportError("Undefined accessor term.", CurrentLine());
 
     Token * t = CurrentToken();
@@ -729,8 +755,8 @@ Expr * Parser::Parse_Accessor() {
     while (true)
     {
         // Function call
-        if (t->tokenType == TokenType::L_Parenthesis) {
-            Expr * b = Parse_ArgList();
+        if (t->type == TokenType::L_Parenthesis) {
+            Expr * b = Parse_Args();
             a = new ExprCallAccess(a, b, CurrentLine());
             t = CurrentToken();
             continue;
@@ -738,7 +764,7 @@ Expr * Parser::Parse_Accessor() {
 
         // Access by index or key
         /*
-        if (t->tokenType == TokenType::L_Bracket) {
+        if (t->type == TokenType::L_Bracket) {
             Expr * b = Parse_List();
             a = new ExprCallAccess(a, b, CurrentLine());
             t = CurrentToken();
@@ -747,11 +773,11 @@ Expr * Parser::Parse_Accessor() {
         */
 
         // Field access
-        if (t->tokenType == TokenType::Dot) {
+        if (t->type == TokenType::Dot) {
             currentPosition++;
             t = CurrentToken();
 
-            if (t->tokenType != TokenType::Identifier)
+            if (t->type != TokenType::Identifier)
                 ReportError("Field name required after dot.", CurrentLine());
 
             a = new ExprFieldAccess(a, t->literal, CurrentLine());

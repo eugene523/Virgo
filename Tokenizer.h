@@ -98,7 +98,7 @@ std::string SubStr(const std::string & str, int start, int endExcluded);
 ///////////////////////////////////////////////////////////////////////////////
 
 struct Token {
-    const TokenType tokenType {};
+    const TokenType type {};
 
     // 'lexeme' is a piece of text, that represents some entity.
     // An entity can be:
