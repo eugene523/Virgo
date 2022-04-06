@@ -448,11 +448,6 @@ Ref ExprCallAccess::Execute() {
         POP_TEMP;
         return result;
     }
-    else {
-        POP_TEMP;
-        POP_TEMP;
-        return NEW_REF(new Err("Object is not callable"));
-    }
 
     auto op = targetObj->type->opTable->Get;
     if (op == nullptr) {
