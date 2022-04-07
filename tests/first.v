@@ -1,18 +1,10 @@
-MatMult(mat, x)
-  y = []
-  y.Add(mat(0)(0) * x(0) + mat(0)(1) * x(1))
-  y.Add(mat(1)(0) * x(0) + mat(1)(1) * x(1))
-  return y
+cube(x = 2)
+  return x^3
 
-PrintVect(x)
-  print("[", x(0), " ", x(1), "]")
+hyp(a = 2, b = 3)
+  return (a^2 + b^2)^0.5
 
-mat = [[0.8, 0.3],
-       [0.2, 0.7]]
+f(x, y)
+  return x * y + x
 
-x = [0, 1]
-
-for i in seg(0, 100)
-  PrintVect(x)
-  x = MatMult(mat, x)
-
+print(hyp(a = 2, 5))

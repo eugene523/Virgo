@@ -3,6 +3,7 @@
 #include <sstream>
 #include "Bool.h"
 #include "Mem.h"
+#include "Mem2.h"
 #include "VM.h"
 #include "Tokenizer.h"
 #include "Parser.h"
@@ -25,7 +26,12 @@ void runScript() {
     VM::PrintStatus();
 }
 
+void Mem2Test() {
+    std::cout << sizeof(ObjHnd);
+}
+
 int main() {
-    runScript();
+    //runScript();
+    Mem2Test();
     return 0;
 }

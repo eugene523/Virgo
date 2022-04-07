@@ -25,9 +25,9 @@ void Class::AddChildDef(Ref childName, Ref child) {
     /*
     auto * childFunc = (Fun*)GET_OBJ(child);
     assert(childFunc->Is(Fun::t));
-    childFunc->parentDefinition = self;
+    childFunc->parentDef = self;
 
-    if (childDefinitions.count(childName) != 0) {
+    if (childDefs.count(childName) != 0) {
         std::cerr << "Duplicate definition of "
                   << ((Str*)GET_OBJ(childName))->val
                   << " in "
@@ -35,7 +35,7 @@ void Class::AddChildDef(Ref childName, Ref child) {
                   << " function.";
         abort();
     }
-    childDefinitions.emplace(childName, child);
+    childDefs.emplace(childName, child);
     */
 }
 

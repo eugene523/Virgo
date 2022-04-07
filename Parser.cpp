@@ -328,22 +328,30 @@ Expr * Parser::Parse_FunDef() {
 
     // Parsing declared arguments
     currentPosition += 2;
+    bool mustSetDefaultValues = false;
     while (CurrentToken()->type != TokenType::EndOfFile) {
         // It's possible that function has no arguments.
         if (CurrentToken()->type == TokenType::R_Parenthesis) {
             currentPosition++;
             break;
         }
+
         if (CurrentToken()->type != TokenType::Identifier)
             ReportError("Can't find argument name in a function declaration.", CurrentLine());
         Ref argName = CurrentToken()->literal;
         Ref argDefaultVal = Ref::none;
         currentPosition++;
+
+        if (mustSetDefaultValues && CurrentToken()->type != TokenType::Equal) {
+            ReportError("Default argument value must be specified.", CurrentLine());
+        }
+
         if (CurrentToken()->type == TokenType::Equal) {
             // TODO: Allow only constant expressions for default values.
             currentPosition++;
             argDefaultVal = CurrentToken()->literal;
             currentPosition++;
+            mustSetDefaultValues = true;
         }
         fun->AddArgument(argName, argDefaultVal);
 
@@ -493,10 +501,17 @@ Expr * Parser::Parse_Args() {
     auto * exprArgs = new ExprArgs(CurrentLine());
     if (Match(TokenType::R_Parenthesis))
         return exprArgs;
+
+    bool mustSetDefaultValues = false;
     Expr * a = Parse_ArgPair();
+    if (a->exprType == ExprType::ArgPair)
+        mustSetDefaultValues = true;
     exprArgs->AddExpr(a);
     while (Match(TokenType::Comma)) {
         a = Parse_ArgPair();
+        if (mustSetDefaultValues && a->exprType != ExprType::ArgPair) {
+            ReportError("Value must be setted via argument's name.", CurrentLine());
+        }
         exprArgs->AddExpr(a);
     }
     if (!Match(TokenType::R_Parenthesis)) {

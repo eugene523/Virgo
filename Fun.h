@@ -13,8 +13,8 @@ class Fun : public Obj, public IDefObj {
     std::vector<Ref>    argNames;
     std::vector<Ref>    argDefaultValues;
     std::map<Ref, uint> argPositions;
-    Ref                 parentDefinition {};
-    std::map<Ref, Ref>  childDefinitions;
+    Ref                 parentDef {};
+    std::map<Ref, Ref>  childDefs;
     std::vector<Expr*>  expressions;
 
     void PrepareContext();

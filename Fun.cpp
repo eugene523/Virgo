@@ -29,7 +29,7 @@ void Fun::SetSelf(Ref selfRef) { self = selfRef; }
 void Fun::AddArgument(Ref argName, Ref argDefaultValue /* = Ref::none */) {
     argNames.push_back(argName);
     argDefaultValues.push_back(argDefaultValue);
-    argPositions.emplace(argName, numOfArgs);
+    argPositions[argName] = numOfArgs;
     if (argDefaultValue == Ref::none)
         numOfRequiredArgs++;
     numOfArgs++;
@@ -40,19 +40,19 @@ void Fun::AddExpression(Expr * expr) {
 }
 
 void Fun::SetParentDef(Ref parent) {
-    parentDefinition = parent;
+    parentDef = parent;
 }
 
 Ref Fun::GetParentDef() {
-    return parentDefinition;
+    return parentDef;
 }
 
 void Fun::AddChildDef(Ref childName, Ref child) {
     auto * childFunc = (Fun*)GET_OBJ(child);
     assert(childFunc->Is(Fun::t));
-    childFunc->parentDefinition = self;
+    childFunc->parentDef = self;
 
-    if (childDefinitions.count(childName) != 0) {
+    if (childDefs.count(childName) != 0) {
         std::cerr << "Duplicate definition of " 
                   << ((Str*)GET_OBJ(childName))->val
                   << " in "
@@ -60,11 +60,11 @@ void Fun::AddChildDef(Ref childName, Ref child) {
                   << " function.";
         abort();
     }
-    childDefinitions.emplace(childName, child);
+    childDefs[childName] = child;
 }
 
 Ref Fun::GetChildDef(Ref childName) {
-    return childDefinitions[childName];
+    return childDefs[childName];
 }
 
 void Fun::PrepareContext() {
@@ -117,7 +117,9 @@ Ref Fun::PrepareArguments(Ref argsRef) {
 
         for (uint i = 0; i < numOfArgs; i++) {
             if (!settedArgs[i]) {
-                return Err_ArgIsNotSet(argNames[i]);
+                if (argDefaultValues[i] == Ref::none)
+                    return Err_ArgIsNotSet(argNames[i]);
+                VM::contextStack.Last()->SetVariable(argNames[i], argDefaultValues[i]);
             }
         }
     }
