@@ -10,6 +10,8 @@ using uint   = unsigned int;
 
 struct Type;
 
+struct MemDom;
+
 struct Obj {
     const Type * const type;
 
@@ -21,6 +23,8 @@ struct Obj {
     virtual std::string ToStr() const;
 
     virtual void Mark() = 0;
+
+    virtual void Mark(MemDom * selfDomain);
 };
 
 #endif //PROTON_OBJ_H
