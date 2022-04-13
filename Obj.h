@@ -25,6 +25,7 @@ struct Obj {
     virtual void Mark() = 0;
 
     virtual void Mark(MemDom * selfDomain);
+    virtual void Delete(MemDom * selfDomain);
 };
 
 #endif //PROTON_OBJ_H

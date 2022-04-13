@@ -12,7 +12,7 @@ struct MemDom;
 struct ObjHnd {
     Obj * objPtr {};
     MemDom * domain {};
-    unsigned int numOfOwners {};
+    unsigned int numOfOwners {}; // This field holds owners from other domains.
     unsigned int generation  {};
 };
 
@@ -63,7 +63,8 @@ struct Heap {
     static std::vector<Rf> refStack;
     static int refStackTop;
 
-    static void (*MarkCallback) ();
+    static void (*PreCollectCallback) ();
+    static void (*PostCollectCallback) ();
 };
 
 

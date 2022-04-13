@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Mem2.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,6 +28,7 @@ MemDom::MemDom() {
     freeIndicesStack.resize(MemDomSize);
     for (int i = 0; i < MemDomSize; i++) {
         freeIndicesStack[i] = i;
+        handlers[i].domain = this;
     }
     freeIndicesStackTop = MemDomSize - 1;
 }
@@ -43,6 +45,21 @@ void MemDom::Mark() {
         if (handlers[i].numOfOwners > 0) {
             handlers[i].generation++;
             handlers[i].objPtr->Mark(this);
+        }
+    }
+}
+
+void MemDom::Sweep() {
+    for (int i = 0; i < MemDomSize; i++) {
+        if (handlers[i].generation < generation) {
+            assert(handlers[i].numOfOwners == 0);
+            freeIndicesStackTop++;
+            freeIndicesStack[freeIndicesStackTop] = i;
+            handlers[i].objPtr->Delete(this);
+
+            // It's not necessary, but never the less it's better to clean handlers.
+            handlers[i].objPtr = nullptr;
+            handlers[i].generation = 0;
         }
     }
 }
