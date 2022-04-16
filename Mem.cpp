@@ -147,7 +147,7 @@ void Mem::PrintStatus() {
     std::cout << "\nnumOfCreatedObjects = " << numOfCreatedObjects << std::endl;
     std::cout << "currentGeneration = " << currentGeneration << std::endl;
     std::cout << "numOfHandlers = " << handlers.size() << std::endl;
-    std::cout << "freeIndicesStackTop = " << freeIndicesStackTop << std::endl;
+    std::cout << "idxStackTop = " << freeIndicesStackTop << std::endl;
     std::cout << "tempRefStackTop = " << tempRefStackTop << std::endl;
 }
 
