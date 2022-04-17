@@ -51,17 +51,18 @@ struct Rf {
 
 // Memory domain
 struct MemDom {
+    bool isBabyDom {};
     static const unsigned int size;
     unsigned int generation {};
     std::vector<ObjHnd> handlers {};
-    std::vector<unsigned int> idxStack {};
-    int idxStackTop {};
+    std::vector<ObjHnd*> freeHandlersStack {};
+    int freeHandlersStackTop {};
 
     explicit MemDom();
     Rf NewRef(Obj * obj);
+    void FreeRef(Rf ref);
     void Mark();
     void Sweep();
-    void PullUp();
     void CollectGarbage();
     inline bool HasFreeHandlers();
 };
@@ -80,11 +81,14 @@ struct Heap {
     static std::vector<Rf> refStack;
     static int refStackTop;
 
+    static void Init();
+    static Rf NewRef(Obj * objPtr);
+    static void PushRefToTempStack(Rf rf);
+    static void PopRefFromTempStack();
     static void MarkTemp();
     static void UnMarkTemp();
     static void (*PreCollectCallback) ();
     static void (*PostCollectCallback) ();
-    static Rf NewRef(Obj * objPtr);
 };
 
 #endif //VIRGO_MEM2_H

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 #include "Mem2.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,22 +26,34 @@ const unsigned int MemDom::size = (1 << 8); // 256
 
 MemDom::MemDom() {
     handlers.resize(size);
-    idxStack.resize(size);
+    freeHandlersStack.resize(size);
     for (int i = 0; i < size; i++) {
-        idxStack[i] = i;
         handlers[i].domain = this;
+        freeHandlersStack[i] = &handlers[i];
     }
-    idxStackTop = size - 1;
+    freeHandlersStackTop = size - 1;
 }
 
 Rf MemDom::NewRef(Obj * objPtr) {
-    assert(idxStackTop >= 0);
-    int i = idxStack[idxStackTop];
-    handlers[i].objPtr = objPtr;
-    handlers[i].generation = generation;
-    Rf ref(&handlers[i]);
-    idxStackTop--;
+    assert(freeHandlersStackTop >= 0);
+    ObjHnd * objHndPtr = freeHandlersStack[freeHandlersStackTop];
+    objHndPtr->objPtr = objPtr;
+    objHndPtr->numOfOwners = 0;
+    objHndPtr->generation = generation;
+    Rf ref(objHndPtr);
+    freeHandlersStackTop--;
     return ref;
+}
+
+void MemDom::FreeRef(Rf ref) {
+    assert(ref.GetDomain() == this);
+    ObjHnd * objHndPtr = ref.objHndPtr;
+    freeHandlersStackTop++;
+    freeHandlersStack[freeHandlersStackTop] = objHndPtr;
+
+    objHndPtr->objPtr = nullptr;
+    objHndPtr->numOfOwners = 0;
+    objHndPtr->generation = 0;
 }
 
 void MemDom::Mark() {
@@ -59,37 +72,33 @@ void MemDom::Sweep() {
     for (int i = 0; i < size; i++) {
         if (handlers[i].generation < generation) {
             assert(handlers[i].numOfOwners == 0);
-            idxStackTop++;
-            idxStack[idxStackTop] = i;
+            freeHandlersStackTop++;
+            freeHandlersStack[freeHandlersStackTop] = &handlers[i];
             handlers[i].objPtr->Delete(this);
 
             // It's not necessary, but never the less it's better to clean handlers.
             handlers[i].objPtr = nullptr;
+            handlers[i].numOfOwners = 0;
             handlers[i].generation = 0;
         }
     }
 }
 
-void MemDom::PullUp() { }
-
 void MemDom::CollectGarbage() {
     Mark();
     Sweep();
-    //PullUp();
 }
 
 bool MemDom::HasFreeHandlers() {
-    return idxStackTop >= 0;
+    return freeHandlersStackTop >= 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Heap::MarkTemp() {
-    for (int i = 0; i <= refStackTop; i++) {
-        if (refStack[i].GetDomain() != activeDomain)
-            continue;
-        refStack[i].IncOwners();
-    }
+void Heap::Init() {
+    auto * memDom = new MemDom();
+    domains.push_back(memDom);
+    activeDomain = memDom;
 }
 
 Rf Heap::NewRef(Obj * objPtr) {
@@ -100,6 +109,7 @@ Rf Heap::NewRef(Obj * objPtr) {
     PreCollectCallback();
     activeDomain->CollectGarbage();
     PostCollectCallback();
+    UnMarkTemp();
     if (activeDomain->HasFreeHandlers())
         return activeDomain->NewRef(objPtr);
 
@@ -109,4 +119,33 @@ Rf Heap::NewRef(Obj * objPtr) {
     return memDom->NewRef(objPtr);
 }
 
+void Heap::PushRefToTempStack(Rf ref) {
+    if (refStackTop == RefStackCapacity) {
+        std::cerr << "Error. Stack overflow." << std::endl;
+        exit(1);
+    }
+    refStackTop++;
+    refStack[refStackTop] = ref;
+}
+
+void Heap::PopRefFromTempStack() {
+    assert(refStackTop >= 0);
+    refStackTop--;
+}
+
+void Heap::MarkTemp() {
+    for (int i = 0; i <= refStackTop; i++) {
+        if (refStack[i].GetDomain() != activeDomain)
+            continue;
+        refStack[i].IncOwners();
+    }
+}
+
+void Heap::UnMarkTemp() {
+    for (int i = 0; i <= refStackTop; i++) {
+        if (refStack[i].GetDomain() != activeDomain)
+            continue;
+        refStack[i].DecOwners();
+    }
+}
 
