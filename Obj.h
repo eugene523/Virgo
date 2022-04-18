@@ -10,7 +10,7 @@ using uint   = unsigned int;
 
 struct Type;
 
-struct MemDom;
+struct MemDomain;
 
 struct Obj {
     const Type * const type;
@@ -22,10 +22,10 @@ struct Obj {
     [[nodiscard]]
     virtual std::string ToStr() const;
 
-    virtual void Mark() = 0;
+    virtual void Mark() {};
 
-    virtual void Mark(MemDom * selfDom);
-    virtual void Delete(MemDom * selfDom);
+    //virtual void Mark(MemDomain * selfDom);
+    //virtual void Delete(MemDomain * selfDom);
 };
 
 #endif //PROTON_OBJ_H

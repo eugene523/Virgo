@@ -9,7 +9,6 @@ add_executable(Virgo
         Type.h Type.cpp
         Obj.h Obj.cpp
         Mem.h Mem.cpp
-        Mem2.h Mem2.cpp
         None.h None.cpp
         Err.h Err.cpp
         Bool.h Bool.cpp

@@ -1,172 +1,166 @@
 #include <cassert>
 #include <iostream>
-#include <iomanip>
 #include "Mem.h"
-#include "VM.h"
-
-ObjHandler::ObjHandler(Obj * objPtr, std::size_t gcGen) :
-objPtr{objPtr}, generation{gcGen} {}
 
 ///////////////////////////////////////////////////////////////////////////////
-
-Ref::Ref(std::size_t index) : index{index} {}
-
-bool Ref::operator==(const Ref & another) const {
-    return index == another.index;
-}
-
-bool Ref::operator!=(const Ref & another) const {
-    return index != another.index;
-}
-
-bool Ref::operator<(const Ref & another) const {
-    return index < another.index;
-}
 
 const Ref Ref::none{};
 
+Ref::Ref(ObjHnd * objHndPtr) : objHndPtr{objHndPtr} {}
+
+bool Ref::operator==(const Ref & another) const {
+    return objHndPtr == another.objHndPtr;
+}
+
+bool Ref::operator!=(const Ref & another) const {
+    return objHndPtr != another.objHndPtr;
+}
+
+bool Ref::operator<(const Ref & another) const {
+    return objHndPtr < another.objHndPtr;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-std::vector<ObjHandler>  Mem::handlers;
-std::vector<std::size_t> Mem::freeIndicesStack;
-long long int            Mem::freeIndicesStackTop;
-std::size_t              Mem::currentGeneration{1};
-std::size_t              Mem::numOfCreatedObjects;
-const std::size_t        Mem::maxTempRefSize{1024};
-std::vector<Ref>         Mem::tempRefStack;
-long long int            Mem::tempRefStackTop{-1};
+const unsigned int MemDomain::size = (1 << 8); // 256
 
-void (*Mem::MarkCallback) ();
-
-void Mem::Init() {
-    // Initial number of handlers
-    const std::size_t n = (1 << 16);
-    handlers.resize(n);
-    freeIndicesStack.resize(n);
-    for (std::size_t i = 0; i < n; i++) {
-        freeIndicesStack[i] = (n - 1) - i;
+MemDomain::MemDomain() {
+    handlers.resize(size);
+    freeHandlersStack.resize(size);
+    for (int i = 0; i < size; i++) {
+        handlers[i].domain = this;
+        freeHandlersStack[i] = &handlers[i];
     }
-    freeIndicesStackTop = n - 1;
-    tempRefStack.resize(maxTempRefSize);
+    freeHandlersStackTop = size - 1;
 }
 
-Ref Mem::NewRef(Obj * obj) {
-    if (freeIndicesStackTop == -1) {
-        MarkCallback();
-        MarkTemp();
-        Sweep();
-        if (freeIndicesStackTop == -1) {
-            Extend();
-            if (freeIndicesStackTop == -1) {
-                std::cerr << "Error. Not enough memory." << std::endl;
-                exit(1);
-            }
-        }
-    }
-    std::size_t index = freeIndicesStack[freeIndicesStackTop];
-    freeIndicesStack[freeIndicesStackTop] = 0; // Less UB.
-    freeIndicesStackTop--;
-    ObjHandler h(obj, currentGeneration);
-    handlers[index] = h;
-    numOfCreatedObjects++;
-    return Ref(index);
+Ref MemDomain::NewRef(Obj * objPtr) {
+    assert(freeHandlersStackTop >= 0);
+    ObjHnd * objHndPtr = freeHandlersStack[freeHandlersStackTop];
+    objHndPtr->objPtr = objPtr;
+    objHndPtr->numOfOwners = 0;
+    objHndPtr->generation = generation;
+    Ref ref(objHndPtr);
+    freeHandlersStackTop--;
+    return ref;
 }
 
-Ref Mem::NewPreservedRef(Obj* obj) {
-    Ref r = NewRef(obj);
-    MakeRefPreserved(r);
-    return r;
-}
+void MemDomain::FreeRef(Ref ref) {
+    assert(ref.GetDomain() == this);
+    ObjHnd * objHndPtr = ref.objHndPtr;
+    freeHandlersStackTop++;
+    freeHandlersStack[freeHandlersStackTop] = objHndPtr;
 
-void Mem::MakeRefPreserved(Ref ref) {
-    handlers[ref.index].preserve = true;
-}
-
-Obj * Mem::GetObj(Ref ref) {
-    return handlers[ref.index].objPtr;
-}
-
-void Mem::MarkRef(Ref ref) {
-    if (handlers[ref.index].generation == (currentGeneration + 1)) // It's already marked.
-        return;
-    handlers[ref.index].generation++;
-    handlers[ref.index].objPtr->Mark();
-}
-
-void Mem::MarkTemp() {
-    for (long long int i = 0; i <= tempRefStackTop; i++)
-        MarkRef(tempRefStack[i]);
-}
-
-void Mem::Sweep() {
-    for (std::size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].preserve)
-            continue;
-
-        if (handlers[i].generation > currentGeneration)
-            continue;
-
-        delete handlers[i].objPtr;
-        handlers[i].objPtr = nullptr;
-        handlers[i].generation = 0; // Less UB
-        freeIndicesStackTop++;
-        freeIndicesStack[freeIndicesStackTop] = i;
-        numOfCreatedObjects--;
-    }
-    currentGeneration++;
-}
-
-void Mem::Extend() {
-    std::size_t oldCap = handlers.capacity();
-    std::size_t addCap = oldCap; // Capacity will be twice as before.
-    std::size_t newCap = oldCap + addCap;
-    handlers.resize(newCap);
-    freeIndicesStack.resize(newCap);
-    for (std::size_t i = 0; i < addCap; i++) {
-        freeIndicesStack[freeIndicesStackTop + 1 + i] = (newCap - 1) - i;
-    }
-    freeIndicesStackTop += addCap;
-}
-
-void Mem::PushRefToTempStack(Ref ref) {
-    if (tempRefStackTop == maxTempRefSize) {
-        std::cerr << "Error. Stack overflow." << std::endl;
-        exit(1);
-    }
-    tempRefStackTop++;
-    tempRefStack[tempRefStackTop] = ref;
-}
-
-void Mem::PopRefFromTempStack() {
-    assert(tempRefStackTop >= 0);
-    tempRefStackTop--;
-}
-
-void Mem::PrintStatus() {
-    std::cout << "\nMemory status:";
-    std::cout << "\nnumOfCreatedObjects = " << numOfCreatedObjects << std::endl;
-    std::cout << "currentGeneration = " << currentGeneration << std::endl;
-    std::cout << "numOfHandlers = " << handlers.size() << std::endl;
-    std::cout << "freeHandlersStackTop = " << freeIndicesStackTop << std::endl;
-    std::cout << "tempRefStackTop = " << tempRefStackTop << std::endl;
+    objHndPtr->objPtr = nullptr;
+    objHndPtr->numOfOwners = 0;
+    objHndPtr->generation = 0;
 }
 
 #include "Type.h"
 
-void Mem::PrintMem() {
-    const int w = 10;
-    std::cout << "\nMemory content:";
-    for (std::size_t i = 0; i < handlers.size(); i++) {
-        std::cout << "\n";
-        std::cout << std::left << std::setw(w) << i;
-        std::string isPreserved = handlers[i].preserve ? "pres" : "-";
-        std::cout << std::left << std::setw(w) << isPreserved;
-        std::cout << std::left << std::setw(w) << handlers[i].generation;
-        std::cout << std::left << std::setw(w) << handlers[i].objPtr;
-        if (handlers[i].objPtr != nullptr) {
-            Type * t = (Type*)handlers[i].objPtr->type;
-            std::cout << std::left << std::setw(w) << t->ToStr();
-            std::cout << std::left << std::setw(w) << handlers[i].objPtr->ToStr();
+void MemDomain::Mark() {
+    for (int i = 0; i < size; i++) {
+        if (handlers[i].generation == generation)
+            continue;
+
+        if (handlers[i].numOfOwners > 0) {
+            handlers[i].generation++;
+            handlers[i].objPtr->Mark(this);
+            handlers[i].objPtr->type->opTable->Mark(handlers[i]);
         }
     }
 }
+
+void MemDomain::Sweep() {
+    for (int i = 0; i < size; i++) {
+        if (handlers[i].generation < generation) {
+            assert(handlers[i].numOfOwners == 0);
+            freeHandlersStackTop++;
+            freeHandlersStack[freeHandlersStackTop] = &handlers[i];
+            handlers[i].objPtr->->Delete(this);
+            handlers[i]
+
+            // It's not necessary, but never the less it's better to clean handlers.
+            handlers[i].objPtr = nullptr;
+            handlers[i].numOfOwners = 0;
+            handlers[i].generation = 0;
+        }
+    }
+}
+
+void MemDomain::CollectGarbage() {
+    Mark();
+    Sweep();
+}
+
+bool MemDomain::HasFreeHandlers() {
+    return freeHandlersStackTop >= 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Heap::Init() {
+    activeDomain = new MemDomain();
+    activeDomain->isActiveDomain = true;
+
+    constantDomain = new MemDomain();
+
+    auto * memDom = new MemDomain();
+    domains.push_back(memDom);
+    activeDomain = memDom;
+}
+
+Ref Heap::NewRef(Obj * objPtr) {
+    if (activeDomain->HasFreeHandlers())
+        return activeDomain->NewRef(objPtr);
+
+    MarkTemp();
+    PreCollectCallback();
+    activeDomain->CollectGarbage();
+    PostCollectCallback();
+    UnmarkTemp();
+    if (activeDomain->HasFreeHandlers())
+        return activeDomain->NewRef(objPtr);
+
+    auto * memDom = new MemDomain();
+    domains.push_back(memDom);
+    activeDomain = memDom;
+    return memDom->NewRef(objPtr);
+}
+
+Ref Heap::NewPreservedRef(Obj * objPtr) {
+    Ref ref = NewRef(objPtr);
+    ref.IncOwners();
+    return ref;
+}
+
+void Heap::PushRef(Ref ref) {
+    if (refStackTop == RefStackCapacity) {
+        std::cerr << "Error. Stack overflow." << std::endl;
+        exit(1);
+    }
+    refStackTop++;
+    refStack[refStackTop] = ref;
+}
+
+void Heap::PopRef() {
+    assert(refStackTop >= 0);
+    refStackTop--;
+}
+
+void Heap::MarkTemp() {
+    for (int i = 0; i <= refStackTop; i++) {
+        if (refStack[i].GetDomain() != activeDomain)
+            continue;
+        refStack[i].IncOwners();
+    }
+}
+
+void Heap::UnmarkTemp() {
+    for (int i = 0; i <= refStackTop; i++) {
+        if (refStack[i].GetDomain() != activeDomain)
+            continue;
+        refStack[i].DecOwners();
+    }
+}
+

@@ -1,75 +1,99 @@
-#ifndef PROTON_MEM_H
-#define PROTON_MEM_H
+#ifndef VIRGO_MEM_H
+#define VIRGO_MEM_H
 
+#include <cassert>
+#include <array>
 #include <vector>
-#include <map>
-#include <cstdint>
+#include <bitset>
 #include "Obj.h"
 
-struct ObjHandler {
-    Obj * objPtr {};
-    std::size_t generation {};
-    bool preserve {false};
+struct MemDomain;
 
-    ObjHandler() = default;
-    ObjHandler(Obj * objPtr, std::size_t gcGen);
+// Object handler
+struct ObjHnd {
+    Obj * objPtr {};
+    MemDomain * domain {};
+    unsigned int numOfOwners {}; // This field holds owners from other domains.
+    unsigned int generation  {};
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// Reference
 struct Ref {
-    std::size_t index {};
-
+    ObjHnd * objHndPtr {};
+    static const Ref none;
     Ref() = default;
-    explicit Ref(std::size_t index);
+    explicit Ref(ObjHnd * objHndPtr);
+    inline Obj * GetObj() { return objHndPtr->objPtr; }
+    inline MemDomain * GetDomain() { return objHndPtr->domain; }
+    inline void IncOwners() { objHndPtr->numOfOwners++; }
+    inline void DecOwners() {
+        assert(objHndPtr->numOfOwners > 0);
+        objHndPtr->numOfOwners--;
+    }
+
     bool operator==(const Ref & another) const;
     bool operator!=(const Ref & another) const;
-    bool operator<(const Ref & another) const;
-    static const Ref none;
+    bool operator<(const Ref & another)  const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct Mem {
-    static std::vector<ObjHandler> handlers;
-    static std::vector<std::size_t> freeIndicesStack;
-    static long long int freeIndicesStackTop;
-    static std::size_t currentGeneration;
-    static std::size_t numOfCreatedObjects;
+// Memory domain
+struct MemDomain {
+    bool isConstantDomain {};
+    bool isActiveDomain {};
+    static const unsigned int size;
+    unsigned int generation {};
+    std::vector<ObjHnd> handlers {};
+    std::vector<ObjHnd*> freeHandlersStack {};
+    int freeHandlersStackTop {};
+
+    explicit MemDomain();
+    Ref NewRef(Obj * obj);
+    void FreeRef(Ref ref);
+    void Mark();
+    void Sweep();
+    void CollectGarbage();
+    inline bool HasFreeHandlers();
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+struct Heap {
+    static std::vector<MemDomain*> domains;
+    static MemDomain * constantDomain;
+    static MemDomain * babyDomain;
+    static MemDomain * activeDomain;
 
     // Temporary references stack is used during evaluating expressions.
     // We push to this stack intermediate results of a currently evaluating expression,
     // so we can be sure that intermediate values will not be deleted if GC will start
     // in the middle of expression.
-    static const std::size_t maxTempRefSize;
-    static std::vector<Ref> tempRefStack;
-    static long long int tempRefStackTop;
-
-    static void (*MarkCallback) ();
+    static const int RefStackCapacity = (1 << 10); // 1024
+    static std::vector<Ref> refStack;
+    static int refStackTop;
 
     static void Init();
-    [[nodiscard]] static Ref NewRef(Obj * obj);
-    [[nodiscard]] static Ref NewPreservedRef(Obj * obj);
-    static void MakeRefPreserved(Ref ref);
-    static Obj * GetObj(Ref ref);
-    static void MarkRef(Ref ref);
+    static Ref NewRef(Obj * objPtr);
+    static Ref NewPreservedRef(Obj * objPtr);
+    static void PushRef(Ref rf);
+    static void PopRef();
     static void MarkTemp();
-    static void Sweep();
-    static void Extend();
-    static void PushRefToTempStack(Ref ref);
-    static void PopRefFromTempStack();
-    static void PrintStatus();
-    static void PrintMem();
+    static void UnmarkTemp();
+    static void (*PreCollectCallback) ();
+    static void (*PostCollectCallback) ();
 };
 
-#define GET_OBJ(ref) Mem::GetObj(ref)
+#define GET_OBJ(ref) ref.GetObj()
 
-#define NEW_REF(obj) Mem::NewRef(obj)
+#define NEW_REF(objPtr) Heap::NewRef(objPtr)
 
 #define NEW_PRESERVED_REF(obj) Mem::NewPreservedRef(obj)
 
-#define PUSH_TEMP(ref) Mem::PushRefToTempStack(ref)
+#define PUSH_TEMP(ref) Heap::PushRef(ref)
 
-#define POP_TEMP Mem::PopRefFromTempStack()
+#define POP_TEMP Heap::PopRef(ref)
 
-#endif //PROTON_MEM_H
+#endif //VIRGO_MEM_H

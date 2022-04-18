@@ -3,7 +3,7 @@
 #include <sstream>
 #include "Bool.h"
 #include "Mem.h"
-#include "Mem2.h"
+#include "Mem.h"
 #include "VM.h"
 #include "Tokenizer.h"
 #include "Parser.h"
