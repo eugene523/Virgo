@@ -41,6 +41,7 @@ Ref MemDomain::NewRef(Obj * objPtr) {
     objHndPtr->numOfOwners = 0;
     objHndPtr->generation = generation;
     Ref ref(objHndPtr);
+    freeHandlersStack[freeHandlersStackTop] = nullptr;
     freeHandlersStackTop--;
     return ref;
 }
@@ -65,8 +66,7 @@ void MemDomain::Mark() {
 
         if (handlers[i].numOfOwners > 0) {
             handlers[i].generation++;
-            handlers[i].objPtr->Mark(this);
-            handlers[i].objPtr->type->opTable->Mark(handlers[i]);
+            handlers[i].objPtr->type->opTable->Mark(this);
         }
     }
 }
@@ -77,8 +77,7 @@ void MemDomain::Sweep() {
             assert(handlers[i].numOfOwners == 0);
             freeHandlersStackTop++;
             freeHandlersStack[freeHandlersStackTop] = &handlers[i];
-            handlers[i].objPtr->->Delete(this);
-            handlers[i]
+            handlers[i].objPtr->type->opTable->Delete(this);
 
             // It's not necessary, but never the less it's better to clean handlers.
             handlers[i].objPtr = nullptr;
@@ -89,6 +88,7 @@ void MemDomain::Sweep() {
 }
 
 void MemDomain::CollectGarbage() {
+    assert(!isConstant);
     Mark();
     Sweep();
 }
@@ -100,25 +100,29 @@ bool MemDomain::HasFreeHandlers() {
 ///////////////////////////////////////////////////////////////////////////////
 
 void Heap::Init() {
-    activeDomain = new MemDomain();
-    activeDomain->isActiveDomain = true;
-
     constantDomain = new MemDomain();
+    constantDomain->isConstant = true;
 
-    auto * memDom = new MemDomain();
-    domains.push_back(memDom);
-    activeDomain = memDom;
+    babyDomain = new MemDomain();
+
+    domains.push_back(new MemDomain());
+    activeDomain = domains[0];
+}
+
+void Heap::CollectGarbageInDomain(MemDomain * targetDomain) {
+    MarkTemp();
+    PreCollectCallback();
+    targetDomain->CollectGarbage();
+    PostCollectCallback();
+    UnmarkTemp();
 }
 
 Ref Heap::NewRef(Obj * objPtr) {
     if (activeDomain->HasFreeHandlers())
         return activeDomain->NewRef(objPtr);
 
-    MarkTemp();
-    PreCollectCallback();
-    activeDomain->CollectGarbage();
-    PostCollectCallback();
-    UnmarkTemp();
+    CollectGarbageInDomain(activeDomain);
+
     if (activeDomain->HasFreeHandlers())
         return activeDomain->NewRef(objPtr);
 
@@ -128,10 +132,42 @@ Ref Heap::NewRef(Obj * objPtr) {
     return memDom->NewRef(objPtr);
 }
 
+Ref Heap::NewRefInDomain(Obj * objPtr, MemDomain * targetDomain) {
+    if (targetDomain->HasFreeHandlers())
+        return targetDomain->NewRef(objPtr);
+
+    CollectGarbageInDomain(targetDomain);
+
+    if (targetDomain->HasFreeHandlers())
+        return targetDomain->NewRef(objPtr);
+
+    return NewRef(objPtr);
+}
+
+Ref Heap::NewRefNeighbour(Obj * objPtr, Ref neighbour) {
+    return NewRefInDomain(objPtr, neighbour.GetDomain());
+}
+
 Ref Heap::NewPreservedRef(Obj * objPtr) {
     Ref ref = NewRef(objPtr);
     ref.IncOwners();
     return ref;
+}
+
+Ref Heap::NewConstantRef(Obj* objPtr) {
+    assert(constantDomain->HasFreeHandlers());
+    return constantDomain->NewRef(objPtr);
+}
+
+Ref Heap::TransferRef(Ref ref, MemDomain * targetDomain) {
+    if (ref.GetDomain()->isConstant) {
+        ref.IncOwners();
+        return ref;
+    }
+    assert(ref.GetDomain() == babyDomain);
+    Obj * objPtr = ref.GetObj();
+    babyDomain->FreeRef(ref);
+    return NewRefInDomain(objPtr, targetDomain);
 }
 
 void Heap::PushRef(Ref ref) {
@@ -145,6 +181,7 @@ void Heap::PushRef(Ref ref) {
 
 void Heap::PopRef() {
     assert(refStackTop >= 0);
+    refStack[refStackTop].objHndPtr = nullptr;
     refStackTop--;
 }
 
@@ -163,4 +200,3 @@ void Heap::UnmarkTemp() {
         refStack[i].DecOwners();
     }
 }
-

@@ -23,9 +23,6 @@ struct Obj {
     virtual std::string ToStr() const;
 
     virtual void Mark() {};
-
-    //virtual void Mark(MemDomain * selfDom);
-    //virtual void Delete(MemDomain * selfDom);
 };
 
 #endif //PROTON_OBJ_H

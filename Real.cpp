@@ -228,7 +228,7 @@ Ref Real_OpLsEq(Ref a, Ref b) {
 }
 
 Ref Real_OpEq(Ref a, Ref b) {
-    if (a.index == b.index)
+    if (a == b)
         return BOOL_REF(true);
 
     Obj * a_obj = GET_OBJ(a);
@@ -253,7 +253,7 @@ Ref Real_OpEq(Ref a, Ref b) {
 }
 
 Ref Real_OpNotEq(Ref a, Ref b) {
-    if (a.index == b.index)
+    if (a == b)
         return BOOL_REF(false);
 
     Obj * a_obj = GET_OBJ(a);

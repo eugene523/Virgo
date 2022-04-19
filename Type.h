@@ -26,8 +26,8 @@ struct OpTable {
     Ref  (*GetField)    (Ref self, Ref fieldName) {};
     Ref  (*SetField)    (Ref self, Ref fieldName, Ref val) {};
     Ref  (*ToStr)       (Ref self) {};
-    void (*Mark)        (ObjHnd * objHndPtr) {};
-    void (*Delete)      (ObjHnd * objHndPtr) {};
+    void (*Mark)        (MemDomain * selfDomain) {};
+    void (*Delete)      (MemDomain * selfDomain) {};
 };
 
 struct Type {

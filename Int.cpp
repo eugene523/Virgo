@@ -231,7 +231,7 @@ Ref Int_OpLsEq(Ref a, Ref b) {
 }
 
 Ref Int_OpEq(Ref a, Ref b) {
-    if (a.index == b.index)
+    if (a == b)
         return BOOL_REF(true);
 
     Obj * a_obj = GET_OBJ(a);
@@ -256,7 +256,7 @@ Ref Int_OpEq(Ref a, Ref b) {
 }
 
 Ref Int_OpNotEq(Ref a, Ref b) {
-    if (a.index == b.index)
+    if (a == b)
         return BOOL_REF(false);
 
     Obj * a_obj = GET_OBJ(a);

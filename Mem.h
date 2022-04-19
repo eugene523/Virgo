@@ -42,8 +42,7 @@ struct Ref {
 
 // Memory domain
 struct MemDomain {
-    bool isConstantDomain {};
-    bool isActiveDomain {};
+    bool isConstant {};
     static const unsigned int size;
     unsigned int generation {};
     std::vector<ObjHnd> handlers {};
@@ -76,8 +75,13 @@ struct Heap {
     static int refStackTop;
 
     static void Init();
+    static void CollectGarbageInDomain(MemDomain * targetDomain);
     static Ref NewRef(Obj * objPtr);
+    static Ref NewRefInDomain(Obj * objPtr, MemDomain * targetDomain);
+    static Ref NewRefNeighbour(Obj * objPtr, Ref neighbour);
     static Ref NewPreservedRef(Obj * objPtr);
+    static Ref NewConstantRef(Obj * objPtr);
+    static Ref TransferRef(Ref ref, MemDomain * targetDomain);
     static void PushRef(Ref rf);
     static void PopRef();
     static void MarkTemp();
@@ -90,7 +94,7 @@ struct Heap {
 
 #define NEW_REF(objPtr) Heap::NewRef(objPtr)
 
-#define NEW_PRESERVED_REF(obj) Mem::NewPreservedRef(obj)
+#define NEW_CONSTANT(objPtr) Heap::NewConstantRef(objPtr)
 
 #define PUSH_TEMP(ref) Heap::PushRef(ref)
 
