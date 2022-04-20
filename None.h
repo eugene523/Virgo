@@ -7,8 +7,6 @@ struct None : Obj {
     static Type * t;
     static void InitType();
     None();
-    [[nodiscard]] std::string ToStr() const override;
-    void Mark() override {}
 };
 
 #endif //VIRGO_NONE_H

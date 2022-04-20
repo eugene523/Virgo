@@ -1,6 +1,8 @@
 #include "None.h"
 #include "Type.h"
 
+Ref None_ToStr(Ref self) {}
+
 Type * None::t;
 
 void None::InitType() {
@@ -8,7 +10,3 @@ void None::InitType() {
 }
 
 None::None() : Obj{None::t} {}
-
-std::string None::ToStr() const {
-    return "none";
-}

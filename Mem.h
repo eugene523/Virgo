@@ -11,26 +11,26 @@ struct MemDomain;
 
 // Object handler
 struct ObjHnd {
-    Obj * objPtr {};
+    Obj * obj {};
     MemDomain * domain {};
-    unsigned int numOfOwners {}; // This field holds owners from other domains.
-    unsigned int generation  {};
+    uint numOfOwners {}; // This field holds owners from other domains.
+    uint generation  {};
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 // Reference
 struct Ref {
-    ObjHnd * objHndPtr {};
+    ObjHnd * objHnd {};
     static const Ref none;
     Ref() = default;
     explicit Ref(ObjHnd * objHndPtr);
-    inline Obj * GetObj() { return objHndPtr->objPtr; }
-    inline MemDomain * GetDomain() { return objHndPtr->domain; }
-    inline void IncOwners() { objHndPtr->numOfOwners++; }
+    inline Obj * GetObj() { return objHnd->obj; }
+    inline MemDomain * GetDomain() { return objHnd->domain; }
+    inline void IncOwners() { objHnd->numOfOwners++; }
     inline void DecOwners() {
-        assert(objHndPtr->numOfOwners > 0);
-        objHndPtr->numOfOwners--;
+        assert(objHnd->numOfOwners > 0);
+        objHnd->numOfOwners--;
     }
 
     bool operator==(const Ref & another) const;
@@ -44,7 +44,7 @@ struct Ref {
 struct MemDomain {
     bool isConstant {};
     static const unsigned int size;
-    unsigned int generation {};
+    uint generation {};
     std::vector<ObjHnd> handlers {};
     std::vector<ObjHnd*> freeHandlersStack {};
     int freeHandlersStackTop {};
@@ -55,7 +55,9 @@ struct MemDomain {
     void Mark();
     void Sweep();
     void CollectGarbage();
+    inline uint NumOfObjects() { return size - (freeHandlersStackTop + 1); }
     inline bool HasFreeHandlers();
+    void PrintStatus(const std::string & additionalMessage = "");
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,24 +72,25 @@ struct Heap {
     // We push to this stack intermediate results of a currently evaluating expression,
     // so we can be sure that intermediate values will not be deleted if GC will start
     // in the middle of expression.
-    static const int RefStackCapacity = (1 << 10); // 1024
+    static const int RefStackCapacity;
     static std::vector<Ref> refStack;
     static int refStackTop;
 
+    static void (*PreCollectCallback) ();
+    static void (*PostCollectCallback) ();
+
     static void Init();
     static void CollectGarbageInDomain(MemDomain * targetDomain);
-    static Ref NewRef(Obj * objPtr);
-    static Ref NewRefInDomain(Obj * objPtr, MemDomain * targetDomain);
-    static Ref NewRefNeighbour(Obj * objPtr, Ref neighbour);
-    static Ref NewPreservedRef(Obj * objPtr);
-    static Ref NewConstantRef(Obj * objPtr);
+    static Ref NewRef(Obj * obj);
+    static Ref NewRefInDomain(Obj * obj, MemDomain * targetDomain);
+    static Ref NewRefNeighbour(Obj * obj, Ref neighbour);
+    static Ref NewPreservedRef(Obj * obj);
+    static Ref NewConstantRef(Obj * obj);
     static Ref TransferRef(Ref ref, MemDomain * targetDomain);
     static void PushRef(Ref rf);
     static void PopRef();
     static void MarkTemp();
     static void UnmarkTemp();
-    static void (*PreCollectCallback) ();
-    static void (*PostCollectCallback) ();
 };
 
 #define GET_OBJ(ref) ref.GetObj()

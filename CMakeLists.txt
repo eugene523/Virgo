@@ -4,12 +4,12 @@ project(Virgo)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Virgo
-        main.cpp
         ErrorMessages.h ErrorMessages.cpp
         Type.h Type.cpp
         Obj.h Obj.cpp
         Mem.h Mem.cpp
         None.h None.cpp
+        #[[
         Err.h Err.cpp
         Bool.h Bool.cpp
         Int.h Int.cpp
@@ -36,4 +36,5 @@ add_executable(Virgo
         ContextStack.h ContextStack.cpp
         VM.h VM.cpp
         Tokenizer.h Tokenizer.cpp
-        Parser.h Parser.cpp)
+        Parser.h Parser.cpp]]
+        main.cpp)

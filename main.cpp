@@ -1,13 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "Mem.h"
+#include "None.h"
+/*
 #include "Bool.h"
-#include "Mem.h"
-#include "Mem.h"
 #include "VM.h"
 #include "Tokenizer.h"
 #include "Parser.h"
+*/
 
+/*
 void test() {
     VM::Init();
 }
@@ -29,9 +32,25 @@ void runScript() {
 void Mem2Test() {
     std::cout << sizeof(ObjHnd);
 }
+*/
 
 int main() {
-    //runScript();
-    Mem2Test();
+    None::InitType();
+
+    auto * m = new MemDomain();
+    m->PrintStatus("Just created.");
+
+    for (int k = 0; k < 10; k++) {
+        std::cout << "\nIteration " << k << "------------------------\n";
+
+        for (int i = 0; i < 256; i++) {
+            auto * obj = new None();
+            Ref r = m->NewRef(obj);
+        }
+        m->PrintStatus("Populated.");
+
+        m->CollectGarbage();
+        m->PrintStatus("Garbage collected.");
+    }
     return 0;
 }
