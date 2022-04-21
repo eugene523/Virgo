@@ -1,15 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cstdio>
 #include "Mem.h"
-#include "None.h"
-/*
 #include "Bool.h"
-#include "VM.h"
-#include "Tokenizer.h"
-#include "Parser.h"
-*/
-
+#include "Err.h"
 /*
 void test() {
     VM::Init();
@@ -35,22 +30,16 @@ void Mem2Test() {
 */
 
 int main() {
-    None::InitType();
-
-    auto * m = new MemDomain();
-    m->PrintStatus("Just created.");
-
-    for (int k = 0; k < 10; k++) {
-        std::cout << "\nIteration " << k << "------------------------\n";
-
-        for (int i = 0; i < 256; i++) {
-            auto * obj = new None();
-            Ref r = m->NewRef(obj);
-        }
-        m->PrintStatus("Populated.");
-
-        m->CollectGarbage();
-        m->PrintStatus("Garbage collected.");
-    }
+    int count = 10000;
+    std::uint64_t * nums = new std::uint64_t[count];
+    nums[0] = 0;
+    nums[1] = 1;
+    nums[2] = 2;
+    printf("%p : %i\n", nums, *nums);
+    printf("%p : %i\n", nums + 1, *(nums + 1));
+    printf("%p : %i\n", nums + 2, *(nums + 2));
+    printf("%p\n", nums);
+    std::uint64_t * newAddr = (std::uint64_t*)((((std::uintptr_t)nums >> 12) + 1) << 12);
+    printf("%p\n", newAddr);
     return 0;
 }

@@ -7,6 +7,10 @@
 #include <bitset>
 #include "Obj.h"
 
+struct Page {
+    uint chunkSize;
+};
+
 struct MemDomain;
 
 // Object handler

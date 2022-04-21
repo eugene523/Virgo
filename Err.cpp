@@ -11,6 +11,7 @@ void Err::InitType() {
 Err::Err(std::string message, uint line /* = 0 */) :
 Obj{Err::t}, message{std::move(message)}, line{line} {}
 
+/*
 std::string Err::ToStr() const {
     std::stringstream s;
     if (line > 0)
@@ -18,3 +19,4 @@ std::string Err::ToStr() const {
     s << "Error: " + message;
     return s.str();
 }
+*/

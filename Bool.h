@@ -13,12 +13,6 @@ struct Bool : Obj {
     static Ref False;
     Bool();
     explicit Bool(bool val);
-    ~Bool() override;
-
-    [[nodiscard]]
-    std::string ToStr() const override;
-
-    void Mark() override {}
 };
 
 #define BOOL_REF(val) ((val) ? Bool::True : Bool::False)

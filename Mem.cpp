@@ -68,7 +68,7 @@ void MemDomain::Mark() {
             handlers[i].generation++;
             auto * markFun = handlers[i].obj->type->opTable->Mark;
             if (markFun != nullptr)
-                markFun(this);
+                markFun(Ref(&handlers[i]));
         }
     }
 }
@@ -81,7 +81,7 @@ void MemDomain::Sweep() {
             freeHandlersStack[freeHandlersStackTop] = &handlers[i];
             auto * deleteFun = handlers[i].obj->type->opTable->Delete;
             if (deleteFun != nullptr)
-                deleteFun(this);
+                deleteFun(Ref(&handlers[i]));
 
             // It's not necessary, but never the less it's better to clean handlers.
             handlers[i].obj = nullptr;

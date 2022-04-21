@@ -18,6 +18,7 @@ Context * ContextStack::Last() {
 
 void ContextStack::Pop() {
     assert(!contextStack.empty());
+
     Context * c = contextStack.back();
     delete c;
     contextStack.pop_back();
