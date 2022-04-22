@@ -13,8 +13,8 @@ struct Type;
 
 struct Obj {
     const Type * const type;
-    std::uint32_t numOfOwners;
-    std::bitset<32> flags;
+    std::uint32_t      numOfOwners;
+    std::bitset<32>    flags;
     explicit Obj(Type * type);
     inline bool Is(Type * ofType) { return type == ofType; }
 };

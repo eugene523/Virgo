@@ -4,6 +4,52 @@
 #include "Mem.h"
 #include "Type.h"
 
+const std::uint64_t PAGE_MASK = ~0xFFFull;
+
+void Page_Init(std::byte * page, MemDomain * domain, uint chunkSize) {
+    const int PAGE_SIZE = 4096;
+    memset(page, 0, PAGE_SIZE);
+
+    auto * pageHeader = (PageHeader*)page;
+    pageHeader->domain = domain;
+    pageHeader->chunkSize = chunkSize;
+
+    int availableSpace = PAGE_SIZE - sizeof(PageHeader);
+    int numOfChunks = availableSpace / chunkSize;
+    std::byte * next = page + sizeof(PageHeader);
+    pageHeader->next = next;
+    for (int i = 0; i < (numOfChunks - 1); i++) {
+        *((std::byte**)next) = next + chunkSize;
+        next += chunkSize;
+    }
+    *((std::byte**)next) = nullptr;
+}
+
+std::byte * Page_GetChunk(PageHeader * page) {
+    if (page->next == nullptr)
+        return nullptr;
+    std::byte * chunk = page->next;
+    page->next = *((std::byte**)chunk);
+    return chunk;
+}
+
+void Page_FreeChunk(std::byte * chunk) {
+    PageHeader * page = GET_PAGE(chunk);
+    std::byte * next = page->next;
+    page->next = chunk;
+    *((std::byte**)chunk) = next;
+}
+
+int Page_GetNumOfFreeChunks(PageHeader * page) {
+    int numOfFreeChunks = 0;
+    std::byte * next = page->next;
+    while (next != nullptr) {
+        numOfFreeChunks++;
+        next = *((std::byte**)next);
+    }
+    return numOfFreeChunks;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 const Ref Ref::none{};

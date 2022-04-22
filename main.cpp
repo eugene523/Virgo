@@ -30,16 +30,11 @@ void Mem2Test() {
 */
 
 int main() {
-    int count = 10000;
-    std::uint64_t * nums = new std::uint64_t[count];
-    nums[0] = 0;
-    nums[1] = 1;
-    nums[2] = 2;
-    printf("%p : %i\n", nums, *nums);
-    printf("%p : %i\n", nums + 1, *(nums + 1));
-    printf("%p : %i\n", nums + 2, *(nums + 2));
-    printf("%p\n", nums);
-    std::uint64_t * newAddr = (std::uint64_t*)((((std::uintptr_t)nums >> 12) + 1) << 12);
-    printf("%p\n", newAddr);
+    std::byte * addr = (std::byte*)calloc(10000, 1);
+    std::byte * page = (std::byte*)(((((std::uint64_t)addr) >> 12) + 1) << 12);
+    Page_Init(page, nullptr, 32);
+    std::byte * c = Page_GetChunk((PageHeader*)page);
+    Page_FreeChunk(c);
+    std::cout << Page_GetNumOfFreeChunks((PageHeader*)page);
     return 0;
 }

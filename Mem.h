@@ -5,13 +5,30 @@
 #include <array>
 #include <vector>
 #include <bitset>
+#include <cstring>
 #include "Obj.h"
 
-struct Page {
+struct MemDomain;
+
+struct PageHeader {
+    MemDomain * domain;
     uint chunkSize;
+    std::byte * next;
 };
 
-struct MemDomain;
+void Page_Init(std::byte * page, MemDomain * domain, uint chunkSize);
+
+std::byte * Page_GetChunk(PageHeader * page);
+
+extern const std::uint64_t PAGE_MASK;
+
+#define GET_PAGE(ptr) (PageHeader*)((std::uintptr_t)ptr & PAGE_MASK)
+
+void Page_FreeChunk(std::byte * chunk);
+
+int Page_GetNumOfFreeChunks(PageHeader * page);
+
+///////////////////////////////////////////////////////////////////////////////
 
 // Object handler
 struct ObjHnd {
