@@ -2,33 +2,74 @@
 #define VIRGO_MEM_H
 
 #include <cassert>
+#include <cstring>
 #include <array>
 #include <vector>
+#include <list>
+#include <stack>
 #include <bitset>
-#include <cstring>
 #include "Obj.h"
+
+extern const unsigned int  PAGE_SIZE;
+extern const std::uint64_t PAGE_MASK;
+extern const unsigned int  ALIGNMENT;
+
+struct MemBank {
+    static std::vector<std::byte*> blocks;
+    static std::stack<std::byte*> freePages;
+
+    static void AllocateBlock();
+    static std::byte * GetPage();
+    static void AcceptPage(std::byte * page);
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 struct MemDomain;
 
-struct PageHeader {
+struct Page {
     MemDomain * domain;
-    uint chunkSize;
+    unsigned int chunkSize;
     std::byte * next;
+
+    static void Init(std::byte * pagePtr, MemDomain * domain, unsigned int chunkSize);
+    std::byte * GetChunk();
+    static void FreeChunk(std::byte * chunk);
+    unsigned int NumOfFreeChunks();
+    inline bool HasFreeChunk() { return next != nullptr; }
 };
 
-void Page_Init(std::byte * page, MemDomain * domain, uint chunkSize);
+std::byte * Page_GetChunk(Page * page);
 
-std::byte * Page_GetChunk(PageHeader * page);
-
-extern const std::uint64_t PAGE_MASK;
-
-#define GET_PAGE(ptr) (PageHeader*)((std::uintptr_t)ptr & PAGE_MASK)
+#define GET_PAGE(ptr) (Page*)((std::uint64_t)ptr & PAGE_MASK)
 
 void Page_FreeChunk(std::byte * chunk);
 
-int Page_GetNumOfFreeChunks(PageHeader * page);
+int Page_GetNumOfFreeChunks(Page * page);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+struct PageCluster {
+    MemDomain *  parentDomain{};
+    unsigned int chunkSize{};
+    std::list<Page*> pages{};
+    Page * activePage{};
+    void QueryPage();
+    void UpdateActivePage();
+};
+
+struct MemDomain {
+    // Every cluster has a chunkSize:
+    // chunkSize = (index + 3) * ALIGNMENT
+    // i.e. 24, 32, ..., 64
+    std::array<PageCluster, 6> clusters{};
+    explicit MemDomain();
+
+    [[nodiscard]]
+    std::byte * GetChunk(unsigned int chunkSize);
+
+    void PrintStatus();
+};
 
 // Object handler
 struct ObjHnd {
@@ -39,7 +80,7 @@ struct ObjHnd {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-
+/*
 // Reference
 struct Ref {
     ObjHnd * objHnd {};
@@ -80,6 +121,7 @@ struct MemDomain {
     inline bool HasFreeHandlers();
     void PrintStatus(const std::string & additionalMessage = "");
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -123,5 +165,5 @@ struct Heap {
 #define PUSH_TEMP(ref) Heap::PushRef(ref)
 
 #define POP_TEMP Heap::PopRef(ref)
-
+*/
 #endif //VIRGO_MEM_H

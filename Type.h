@@ -6,6 +6,7 @@
 #include "Mem.h"
 
 struct OpTable {
+    /*
     Ref  (*OpAdd)       (Ref a, Ref b) {};
     Ref  (*OpSub)       (Ref a, Ref b) {};
     Ref  (*OpMul)       (Ref a, Ref b) {};
@@ -28,6 +29,7 @@ struct OpTable {
     Ref  (*ToStr)       (Ref self) {};
     void (*Mark)        (Ref self) {};
     void (*Delete)      (Ref self) {};
+     */
 };
 
 struct Type {

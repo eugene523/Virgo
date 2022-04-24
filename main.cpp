@@ -3,8 +3,6 @@
 #include <sstream>
 #include <cstdio>
 #include "Mem.h"
-#include "Bool.h"
-#include "Err.h"
 /*
 void test() {
     VM::Init();
@@ -30,11 +28,11 @@ void Mem2Test() {
 */
 
 int main() {
-    std::byte * addr = (std::byte*)calloc(10000, 1);
-    std::byte * page = (std::byte*)(((((std::uint64_t)addr) >> 12) + 1) << 12);
-    Page_Init(page, nullptr, 32);
-    std::byte * c = Page_GetChunk((PageHeader*)page);
-    Page_FreeChunk(c);
-    std::cout << Page_GetNumOfFreeChunks((PageHeader*)page);
+    std::byte * page = (std::byte*)calloc(10000, 1);
+    Page::Init(page, nullptr, 32);
+    std::byte * c = ((Page*)page)->GetChunk();
+    std::cout << ((Page*)page)->NumOfFreeChunks();
+    //Page_FreeChunk(c);
+    //std::cout << Page_GetNumOfFreeChunks((Page*)page);
     return 0;
 }

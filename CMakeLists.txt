@@ -8,10 +8,11 @@ add_executable(Virgo
         Type.h Type.cpp
         Obj.h Obj.cpp
         Mem.h Mem.cpp
+        #[[
         None.h None.cpp
         Err.h Err.cpp
         Bool.h Bool.cpp
-        #[[
+
         Int.h Int.cpp
         Real.h Real.cpp
         Str.h Str.cpp
