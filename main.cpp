@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <chrono>
 #include "Mem.h"
 /*
 void test() {
@@ -28,11 +29,5 @@ void Mem2Test() {
 */
 
 int main() {
-    std::byte * page = (std::byte*)calloc(10000, 1);
-    Page::Init(page, nullptr, 32);
-    std::byte * c = ((Page*)page)->GetChunk();
-    std::cout << ((Page*)page)->NumOfFreeChunks();
-    //Page_FreeChunk(c);
-    //std::cout << Page_GetNumOfFreeChunks((Page*)page);
     return 0;
 }

@@ -7,17 +7,18 @@
 const unsigned int  PAGE_SIZE = 4096;
 const std::uint64_t PAGE_MASK = ~0xFFFull;
 const unsigned int  ALIGNMENT = 8;
+const unsigned int  BLOCK_SIZE = (1 << 24); // 16MB
+const unsigned int  BLOCK_SIZE_MB = 16;
 
 std::vector<std::byte*> MemBank::blocks;
 
 std::stack<std::byte*> MemBank::freePages;
 
 void MemBank::AllocateBlock() {
-    const unsigned int BLOCK_SIZE = (1 << 24); // 16MB
     std::byte * block = (std::byte*)calloc(BLOCK_SIZE, 1);
     blocks.push_back(block);
 
-    // Find a position in block which is aligned according to page size.
+    // Find a position in the block which is aligned according to the page size.
     const std::uint64_t mask = 0xFFF;
     std::byte * nextPage = nullptr;
     int numOfPages = 0;
@@ -47,6 +48,13 @@ std::byte * MemBank::GetPage() {
 
 void MemBank::AcceptPage(std::byte * page) {
     freePages.push(page);
+}
+
+void MemBank::PrintStatus() {
+    std::cout << "\nMemBank status:\n";
+    std::cout << "blocks    : " << blocks.size() << '\n'
+              << "allocated : " << blocks.size() * BLOCK_SIZE_MB << " Mb\n"
+              << "freePages : " << freePages.size() << '\n';
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,6 +126,8 @@ void PageCluster::UpdateActivePage() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+const unsigned int MemDomain::PAGE_LIMIT = 1024;
+
 MemDomain::MemDomain() {
     for (int i = 0; i < 6; i++) {
         clusters[i].parentDomain = this;
@@ -143,149 +153,55 @@ std::byte * MemDomain::GetChunk(unsigned int chunkSize) {
 }
 
 void MemDomain::PrintStatus() {
+    std::cout << "\nMemDomain status:\n";
     for (const auto & c : clusters) {
         std::cout << c.chunkSize << ' ' << c.pages.size() << ' ' << c.activePage->NumOfFreeChunks() << '\n';
     }
 }
-/*
-///////////////////////////////////////////////////////////////////////////////
-
-const Ref Ref::none{};
-
-Ref::Ref(ObjHnd * objHndPtr) : objHnd{objHndPtr} {}
-
-bool Ref::operator==(const Ref & another) const {
-    return objHnd == another.objHnd;
-}
-
-bool Ref::operator!=(const Ref & another) const {
-    return objHnd != another.objHnd;
-}
-
-bool Ref::operator<(const Ref & another) const {
-    return objHnd < another.objHnd;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const unsigned int MemDomain::size = (1 << 8); // 256
+std::vector<MemDomain*> Heap::domains;
 
-MemDomain::MemDomain() {
-    handlers.resize(size);
-    freeHandlersStack.resize(size);
-    for (int i = 0; i < size; i++) {
-        handlers[i].domain = this;
-        freeHandlersStack[i] = &handlers[i];
-    }
-    freeHandlersStackTop = size - 1;
-}
+MemDomain * Heap::constantDomain;
+MemDomain * Heap::babyDomain;
+MemDomain * Heap::activeDomain;
 
-Ref MemDomain::NewRef(Obj * obj) {
-    assert(freeHandlersStackTop >= 0);
-    ObjHnd * objHnd = freeHandlersStack[freeHandlersStackTop];
-    objHnd->obj = obj;
-    objHnd->numOfOwners = 0;
-    objHnd->generation = generation;
-    Ref ref(objHnd);
-    freeHandlersStack[freeHandlersStackTop] = nullptr;
-    freeHandlersStackTop--;
-    return ref;
-}
+const unsigned int Heap::TEMP_STACK_CAPACITY{1 << 10}; // 1024
+std::list<Obj*> Heap::tempStack;
+int Heap::tempStackTop;
 
-void MemDomain::FreeRef(Ref ref) {
-    assert(ref.GetDomain() == this);
-    ObjHnd * objHnd = ref.objHnd;
-    freeHandlersStackTop++;
-    freeHandlersStack[freeHandlersStackTop] = objHnd;
-
-    objHnd->obj = nullptr;
-    objHnd->numOfOwners = 0;
-    objHnd->generation = 0;
-}
-
-void MemDomain::Mark() {
-    for (int i = 0; i < size; i++) {
-        if (handlers[i].generation == generation)
-            continue;
-
-        if (handlers[i].numOfOwners > 0) {
-            handlers[i].generation++;
-            auto * markFun = handlers[i].obj->type->opTable->Mark;
-            if (markFun != nullptr)
-                markFun(Ref(&handlers[i]));
-        }
-    }
-}
-
-void MemDomain::Sweep() {
-    for (int i = 0; i < size; i++) {
-        if (handlers[i].generation < generation) {
-            assert(handlers[i].numOfOwners == 0);
-            freeHandlersStackTop++;
-            freeHandlersStack[freeHandlersStackTop] = &handlers[i];
-            auto * deleteFun = handlers[i].obj->type->opTable->Delete;
-            if (deleteFun != nullptr)
-                deleteFun(Ref(&handlers[i]));
-
-            // It's not necessary, but never the less it's better to clean handlers.
-            handlers[i].obj = nullptr;
-            handlers[i].numOfOwners = 0;
-            handlers[i].generation = 0;
-        }
-    }
-}
-
-void MemDomain::CollectGarbage() {
-    assert(!isConstant);
-    generation++;
-    Mark();
-    Sweep();
-}
-
-bool MemDomain::HasFreeHandlers() {
-    return freeHandlersStackTop >= 0;
-}
-
-void MemDomain::PrintStatus(const std::string & additionalMessage) {
-    std::stringstream s;
-
-    if (!additionalMessage.empty())
-        s << "\n-- " << additionalMessage << "--";
-
-    s << "\nMemDomain info:\n"
-      << "isConstant           : " << std::boolalpha << isConstant << '\n'
-      << "size                 : " << size << '\n'
-      << "generation           : " << generation << '\n'
-      << "hasFreeHandlers      : " << HasFreeHandlers() << '\n'
-      << "numOfObjects         : " << NumOfObjects() << '\n'
-      << "freeHandlersStackTop : " << freeHandlersStackTop << '\n';
-
-    std::cout << s.str();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-std::vector<MemDomain*> Heap::domains{};
-MemDomain * Heap::constantDomain{};
-MemDomain * Heap::babyDomain{};
-MemDomain * Heap::activeDomain{};
-const int Heap::RefStackCapacity{1 << 10}; // 1024
-std::vector<Ref> Heap::refStack{};
-int Heap::refStackTop{};
-
-void (*Heap::PreCollectCallback) () {};
-void (*Heap::PostCollectCallback) () {};
+void (*Heap::PreCollectCallback)();
+void (*Heap::PostCollectCallback)();
 
 void Heap::Init() {
+    tempStack.resize(TEMP_STACK_CAPACITY);
+    tempStackTop = -1;
+
     constantDomain = new MemDomain();
     constantDomain->isConstant = true;
 
     babyDomain = new MemDomain();
+    babyDomain->isBaby = true;
 
     domains.push_back(new MemDomain());
     activeDomain = domains[0];
 }
 
+void Heap::PushTemp(Obj * obj) {
+    if (tempStackTop == TEMP_STACK_CAPACITY) {
+        std::cerr << "Error. Stack overflow." << std::endl;
+        exit(1);
+    }
+    tempStackTop++;
+}
+
+void Heap::PopTemp() {
+    assert(tempStackTop >= 0);
+    tempStackTop--;
+}
+
+/*
 void Heap::CollectGarbageInDomain(MemDomain * targetDomain) {
     MarkTemp();
     PreCollectCallback();
@@ -345,21 +261,6 @@ Ref Heap::TransferRef(Ref ref, MemDomain * targetDomain) {
     Obj * objPtr = ref.GetObj();
     babyDomain->FreeRef(ref);
     return NewRefInDomain(objPtr, targetDomain);
-}
-
-void Heap::PushRef(Ref ref) {
-    if (refStackTop == RefStackCapacity) {
-        std::cerr << "Error. Stack overflow." << std::endl;
-        exit(1);
-    }
-    refStackTop++;
-    refStack[refStackTop] = ref;
-}
-
-void Heap::PopRef() {
-    assert(refStackTop >= 0);
-    refStack[refStackTop].objHnd = nullptr;
-    refStackTop--;
 }
 
 void Heap::MarkTemp() {
