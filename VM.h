@@ -2,11 +2,14 @@
 #define PROTON_VM_H
 
 #include "Mem.h"
-#include "ContextStack.h"
+//#include "ContextStack.h"
 
 struct VM {
+    /*
     static ContextStack contextStack;
+     */
     static void Init();
+    /*
     static void Mark();
     static void PrintStatus();
 
@@ -22,6 +25,7 @@ struct VM {
 
     [[nodiscard]]
     static Ref GetConstant_Str(const std::string & val);
+     */
 };
 
 #endif //PROTON_VM_H

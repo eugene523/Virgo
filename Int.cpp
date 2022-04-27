@@ -9,287 +9,212 @@
 #include "ErrorMessages.h"
 #include "Str.h"
 
-Ref Int_OpAdd(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t))
+Obj * Int_OpAdd(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
     {
-        v_int b_val {((Int*)b_obj)->val };
-        return NEW_REF(new Int(a_val + b_val));
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Int::New(selfVal + otherVal);
     }
-    else if (b_obj->Is(Real::t))
+    else if (other->Is(Real::t))
     {
-        v_real b_val {((Real*)b_obj)->val };
-        return NEW_REF(new Real(a_val + b_val));
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal + otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpSub(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t))
+Obj * Int_OpSub(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
     {
-        v_int b_val {((Int*)b_obj)->val };
-        return NEW_REF(new Int(a_val - b_val));
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Int::New(selfVal - otherVal);
     }
-    else if (b_obj->Is(Real::t))
+    else if (other->Is(Real::t))
     {
-        v_real b_val {((Real*)b_obj)->val };
-        return NEW_REF(new Real(a_val - b_val));
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal - otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpMul(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t))
+Obj * Int_OpMul(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
     {
-        v_int b_val {((Int*)b_obj)->val };
-        return NEW_REF(new Int(a_val * b_val));
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Int::New(selfVal * otherVal);
     }
-    else if (b_obj->Is(Real::t))
+    else if (other->Is(Real::t))
     {
-        v_real b_val {((Real*)b_obj)->val };
-        return NEW_REF(new Real(a_val * b_val));
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal * otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpDiv(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t))
+Obj * Int_OpDiv(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
     {
-        v_int b_val {((Int*)b_obj)->val };
-        if (b_val == 0)
-            return NEW_REF(new Err(ERR_DIVISION_BY_ZERO));
-
-        return NEW_REF(new Real(((v_real)a_val) / b_val));
+        v_int otherVal = ((Int*)other)->val;
+        if (otherVal == 0)
+            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
+        
+        return (Obj*)Real::New(((v_real)selfVal) / otherVal);
     }
-    else if (b_obj->Is(Real::t))
+    else if (other->Is(Real::t))
     {
-        v_real b_val {((Real*)b_obj)->val };
-        if (b_val == 0)
-            return NEW_REF(new Err(ERR_DIVISION_BY_ZERO));
+        v_real otherVal = ((Real*)other)->val;
+        if (otherVal == 0)
+            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
 
-        return NEW_REF(new Real(a_val / b_val));
+        return (Obj*)Real::New(selfVal / otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpPow(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)->val };
-        return NEW_REF(new Real(powl(a_val, b_val)));
+Obj * Int_OpPow(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Real::New(powl(selfVal, otherVal));
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return NEW_REF(new Real(powl(a_val, b_val)));
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(powl(selfVal, otherVal));
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpNeg(Ref a) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-    v_int a_val {((Int*)a_obj)-> val };
-    return NEW_REF(new Int(-a_val));
+Obj * Int_OpNeg(Obj * self) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)-> val;
+    return (Obj*)Int::New(-selfVal);
 }
 
-Ref Int_OpGr(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val > b_val);
+Obj * Int_OpGr(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal > otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val > b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal > otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpGrEq(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val >= b_val);
+Obj * Int_OpGrEq(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal >= otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val >= b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal >= otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpLs(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val < b_val);
+Obj * Int_OpLs(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal < otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val < b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal < otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpLsEq(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val <= b_val);
+Obj * Int_OpLsEq(Obj * self, Obj * other) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal <= otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val <= b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal <= otherVal);
     }
-    return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
 }
 
-Ref Int_OpEq(Ref a, Ref b) {
-    if (a == b)
-        return BOOL_REF(true);
-
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val == b_val);
+Obj * Int_OpEq(Obj * self, Obj * other) {
+    if (self == other)
+        return (Obj*)Bool::New(true);
+    
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal == otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val == b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal == otherVal);
     }
-    return BOOL_REF(false);
+    return (Obj*)Bool::New(false);
 }
 
-Ref Int_OpNotEq(Ref a, Ref b) {
-    if (a == b)
-        return BOOL_REF(false);
-
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-
-    Obj * b_obj = GET_OBJ(b);
-    if (b_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-
-    v_int a_val {((Int*)a_obj)->val };
-    if (b_obj->Is(Int::t)) {
-        v_int b_val {((Int*)b_obj)-> val };
-        return BOOL_REF(a_val != b_val);
+Obj * Int_OpNotEq(Obj * self, Obj * other) {
+    if (self == other)
+        return (Obj*)Bool::New(false);
+    
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t)) 
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal != otherVal);
     }
-    else if (b_obj->Is(Real::t)) {
-        v_real b_val {((Real*)b_obj)->val };
-        return BOOL_REF(a_val != b_val);
+    else if (other->Is(Real::t)) 
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal != otherVal);
     }
-    return BOOL_REF(true);
+    return (Obj*)Bool::New(true);
 }
 
-Ref Int_ToStr(Ref a) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Int::t));
-    auto val = ((Int*)a_obj)->val;
+/*
+Obj * Int_ToStr(Obj * self) {
+    
+    if (self == nullptr)
+        return (Obj*)Err::New(ERR_FIRST_ARG_IS_NULL));
+    assert(self->Is(Int::t));
+    auto val = ((Int*)self)->val;
     std::stringstream s;
     s << val;
     return NEW_REF(new Str(s.str()));
 }
+ */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -297,28 +222,25 @@ Type * Int::t;
 
 void Int::InitType() {
     Int::t = new Type("int");
-    auto ot = Int::t->opTable;
-    ot->OpAdd   = &Int_OpAdd;
-    ot->OpSub   = &Int_OpSub;
-    ot->OpMul   = &Int_OpMul;
-    ot->OpDiv   = &Int_OpDiv;
-    ot->OpPow   = &Int_OpPow;
-    ot->OpNeg   = &Int_OpNeg;
-    ot->OpGr    = &Int_OpGr;
-    ot->OpGrEq  = &Int_OpGrEq;
-    ot->OpLs    = &Int_OpLs;
-    ot->OpLsEq  = &Int_OpLsEq;
-    ot->OpEq    = &Int_OpEq;
-    ot->OpNotEq = &Int_OpNotEq;
-    ot->ToStr   = &Int_ToStr;
+    auto mtab = Int::t->methodTable;
+    mtab->OpAdd   = &Int_OpAdd;
+    mtab->OpSub   = &Int_OpSub;
+    mtab->OpMul   = &Int_OpMul;
+    mtab->OpDiv   = &Int_OpDiv;
+    mtab->OpPow   = &Int_OpPow;
+    mtab->OpNeg   = &Int_OpNeg;
+    mtab->OpGr    = &Int_OpGr;
+    mtab->OpGrEq  = &Int_OpGrEq;
+    mtab->OpLs    = &Int_OpLs;
+    mtab->OpLsEq  = &Int_OpLsEq;
+    mtab->OpEq    = &Int_OpEq;
+    mtab->OpNotEq = &Int_OpNotEq;
+    //mtab->ToStr   = &Int_ToStr;
 }
 
-Int::Int() : Obj{Int::t} {}
-
-Int::Int(v_int value) : Obj{Int::t}, val{value} {}
-
-std::string Int::ToStr() const {
-    std::stringstream s;
-    s << val;
-    return s.str();
+Int * Int::New(v_int value) {
+    Int * i = (Int*)Heap::GetChunk(sizeof(Int));
+    Obj::Init(i, Int::t);
+    i->val = value;
+    return i;
 }

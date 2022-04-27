@@ -1,12 +1,12 @@
 #include "None.h"
 #include "Type.h"
 
-Ref None_ToStr(Ref self) {}
-
 Type * None::t;
+
+None * None::constant;
 
 void None::InitType() {
     None::t = new Type("none");
+    constant = (None*)Heap::GetChunk_Const(sizeof(None));
+    Obj::Init(constant, None::t);
 }
-
-None::None() : Obj{None::t} {}

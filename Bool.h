@@ -4,17 +4,19 @@
 #include "Obj.h"
 #include "Mem.h"
 
-struct Bool : Obj {
+struct Bool {
+    Obj obj;
     bool val {false};
 
     static Type * t;
-    static void InitType();
-    static Ref True;
-    static Ref False;
-    Bool();
-    explicit Bool(bool val);
-};
+    static Bool * True;
+    static Bool * False;
 
-#define BOOL_REF(val) ((val) ? Bool::True : Bool::False)
+    static void InitType();
+
+    static inline Bool * New(bool value) {
+        return (value) ? Bool::True : Bool::False;
+    }
+};
 
 #endif //PROTON_BOOL_H

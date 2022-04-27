@@ -93,7 +93,7 @@ void Page::FreeChunk(std::byte * chunk) {
 }
 
 unsigned int Page::NumOfFreeChunks() {
-    int numOfFreeChunks = 0;
+    unsigned int numOfFreeChunks = 0;
     std::byte * nextPtr = next;
     while (nextPtr != nullptr) {
         numOfFreeChunks++;
@@ -138,6 +138,7 @@ MemDomain::MemDomain() {
 
 std::byte * MemDomain::GetChunk(unsigned int chunkSize) {
     assert(chunkSize >= 24);
+    assert(chunkSize <= 64);
     unsigned int clusterIndex = 0;
     if (chunkSize % ALIGNMENT == 0) {
         clusterIndex = chunkSize / ALIGNMENT - 3;
@@ -186,6 +187,14 @@ void Heap::Init() {
 
     domains.push_back(new MemDomain());
     activeDomain = domains[0];
+}
+
+std::byte * Heap::GetChunk(std::size_t chunkSize) {
+    return babyDomain->GetChunk(chunkSize);
+}
+
+std::byte * Heap::GetChunk_Const(std::size_t chunkSize) {
+    return constantDomain->GetChunk(chunkSize);
 }
 
 void Heap::PushTemp(Obj * obj) {

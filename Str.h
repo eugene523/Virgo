@@ -3,13 +3,13 @@
 
 #include "Obj.h"
 
-struct Str : Obj {
+struct Str {
+    Obj obj;
     std::string val;
 
     static Type * t;
     static void InitType();
-    explicit Str(std::string val);
-    explicit Str(char val);
+    static Str * New(std::string value);
 };
 
 #endif //PROTON_STR_H

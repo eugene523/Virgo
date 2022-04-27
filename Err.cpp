@@ -1,21 +1,27 @@
 #include <sstream>
+#include <utility>
 #include "Type.h"
 #include "Err.h"
 
 Type * Err::t;
 
 void Err::InitType() {
-    Err::t = new Type("err");
+    t = new Type("err");
 }
 
-Err::Err(std::string message, uint line /* = 0 */) :
-Obj{Err::t}, message{std::move(message)}, line{line} {}
+Err * Err::New(const std::string & message, uint srcLine /* = 0 */) {
+    Err * err = (Err*)Heap::GetChunk(sizeof(Err));
+    Obj::Init(err, Err::t);
+    err->srcLine = srcLine;
+    err->message = message;
+    return err;
+}
 
 /*
-std::string Err::ToStr() const {
+std::string Err::ToStr() {
     std::stringstream s;
-    if (line > 0)
-        s << "Line " << line << ". ";
+    if (srcLine > 0)
+        s << "Line " << srcLine << ". ";
     s << "Error: " + message;
     return s.str();
 }

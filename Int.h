@@ -3,18 +3,13 @@
 
 #include "Obj.h"
 
-struct Int : Obj {
+struct Int {
+    Obj obj;
     v_int val {};
 
     static Type * t;
     static void InitType();
-    Int();
-    explicit Int(v_int value);
-
-    [[nodiscard]]
-    std::string ToStr() const override;
-
-    void Mark() override {}
+    static Int * New(v_int value);
 };
 
 #endif //PROTON_INT_H

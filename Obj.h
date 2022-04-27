@@ -1,6 +1,7 @@
-#ifndef PROTON_OBJ_H
-#define PROTON_OBJ_H
+#ifndef VIRGO_OBJ_H
+#define VIRGO_OBJ_H
 
+#include <cassert>
 #include <string>
 #include <memory>
 #include <bitset>
@@ -12,11 +13,21 @@ using uint   = unsigned int;
 struct Type;
 
 struct Obj {
-    const Type * const type;
-    std::uint32_t numOfOwners;
+    Type * type{};
+    std::uint32_t numOfOwners{};
     std::bitset<32> flags;
-    explicit Obj(Type * type);
+
+    static inline void Init(void * inPlace, Type * type) {
+        assert(type != nullptr);
+        Obj * obj = (Obj*)inPlace;
+        obj->type = type;
+        obj->numOfOwners = 0;
+        obj->flags = 0;
+    }
+
     inline bool Is(Type * ofType) { return type == ofType; }
 };
 
-#endif //PROTON_OBJ_H
+#define IS_OF_TYPE(obj, ofType) (((Obj*)obj)->type == ofType)
+
+#endif //VIRGO_OBJ_H

@@ -3,13 +3,14 @@
 
 #include "Obj.h"
 
-struct Err : Obj {
-    uint        line {};
+struct Err {
+    Obj         obj;
+    uint        srcLine;
     std::string message;
 
     static Type * t;
     static void InitType();
-    explicit Err(std::string message, uint line = 0);
+    static Err * New(const std::string & message, uint line = 0);
 };
 
 #endif //PROTON_ERROR_H

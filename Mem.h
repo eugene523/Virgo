@@ -40,7 +40,9 @@ struct Page {
     inline bool HasFreeChunk() { return next != nullptr; }
 };
 
-#define GET_PAGE(ptr) (Page*)((std::uint64_t)ptr & PAGE_MASK)
+#define GET_PAGE(ptr) ((Page*)((std::uint64_t)ptr & PAGE_MASK))
+
+#define IS_BABY(ptr) (GET_PAGE(ptr)->domain->isBaby)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +99,8 @@ struct Heap {
     static void (*PostCollectCallback)();
 
     static void Init();
+    static std::byte * GetChunk(std::size_t chunkSize);
+    static std::byte * GetChunk_Const(std::size_t chunkSize);
     static void PushTemp(Obj * obj);
     static void PopTemp();
     /*
@@ -112,13 +116,5 @@ struct Heap {
     static void UnmarkTemp();
     */
 };
-
-#define NEW_REF(objPtr) Heap::NewRef(objPtr)
-
-#define NEW_CONSTANT(objPtr) Heap::NewConstantRef(objPtr)
-
-#define PUSH_TEMP(ref) Heap::PushRef(ref)
-
-#define POP_TEMP Heap::PopRef(ref)
 
 #endif //VIRGO_MEM_H

@@ -3,7 +3,9 @@
 #include <sstream>
 #include <cstdio>
 #include <chrono>
+//#include <utility>
 #include "Mem.h"
+#include "Err.h"
 /*
 void test() {
     VM::Init();
@@ -28,6 +30,21 @@ void Mem2Test() {
 }
 */
 
+#include "None.h"
+#include "Err.h"
+#include "Bool.h"
+#include "Int.h"
+#include "Real.h"
+
 int main() {
+    Heap::Init();
+    None::InitType();
+    Err::InitType();
+    Bool::InitType();
+    Int::InitType();
+    Real::InitType();
+
+    Err * err = Err::New("Hello World!", 0);
+    std::cout << IS_OF_TYPE(err, Err::t);
     return 0;
 }

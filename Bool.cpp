@@ -3,111 +3,80 @@
 #include "Type.h"
 #include "Bool.h"
 #include "Err.h"
-#include "ErrorMessages.h"
 #include "Str.h"
 
-const char * ERR_LOG_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
+const char * ERR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
 
-Ref Bool_OpAnd(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    assert(a_obj->Is(Bool::t));
+Obj * Bool_OpAnd(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
 
-    Obj * b_obj = GET_OBJ(b);
-    if (!(b_obj->Is(Bool::t)))
-        return NEW_REF(new Err(ERR_LOG_EXPR_WRONG_TYPE));
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Err::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
 
-    bool a_val = ((Bool*)a_obj)->val;
-    bool b_val = ((Bool*)b_obj)->val;
-    return BOOL_REF(a_val && b_val);
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal && otherVal);
 }
 
-Ref Bool_OpOr(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    assert(a_obj->Is(Bool::t));
+Obj * Bool_OpOr(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
 
-    Obj * b_obj = GET_OBJ(b);
-    if (!(b_obj->Is(Bool::t)))
-        return NEW_REF(new Err(ERR_LOG_EXPR_WRONG_TYPE));
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Err::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
 
-    bool a_val = ((Bool*)a_obj)->val;
-    bool b_val = ((Bool*)b_obj)->val;
-    return BOOL_REF(a_val || b_val);
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal || otherVal);
 }
 
-Ref Bool_OpNot(Ref a) {
-    Obj * a_obj = GET_OBJ(a);
-    assert(a_obj->Is(Bool::t));
-    bool a_val = ((Bool*)a_obj)->val;
-    return BOOL_REF(!a_val);
+Obj * Bool_OpNot(Obj * self) {
+    assert(self->Is(Bool::t));
+    bool selfVal = ((Bool*)self)->val;
+    return (Obj*)Bool::New(selfVal);
 }
 
-Ref Bool_OpEq(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    assert(a_obj->Is(Bool::t));
+Obj * Bool_OpEq(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
 
-    Obj * b_obj = GET_OBJ(b);
-    if (!(b_obj->Is(Bool::t)))
-        return BOOL_REF(false);
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Bool::New(false);
 
-    bool a_val = ((Bool*)a_obj)->val;
-    bool b_val = ((Bool*)b_obj)->val;
-    return BOOL_REF(a_val == b_val);
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal == otherVal);
 }
 
-Ref Bool_OpNotEq(Ref a, Ref b) {
-    Obj * a_obj = GET_OBJ(a);
-    assert(a_obj->Is(Bool::t));
+Obj * Bool_OpNotEq(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
 
-    Obj * b_obj = GET_OBJ(b);
-    if (!(b_obj->Is(Bool::t)))
-        return BOOL_REF(true);
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Bool::New(true);
 
-    bool a_val = ((Bool*)a_obj)->val;
-    bool b_val = ((Bool*)b_obj)->val;
-    return BOOL_REF(a_val != b_val);
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal != otherVal);
 }
-
-/*
-Ref Bool_ToStr(Ref a) {
-    Obj * a_obj = GET_OBJ(a);
-    if (a_obj == nullptr)
-        return NEW_REF(new Err(ERR_FIRST_ARG_IS_NULL));
-    assert(a_obj->Is(Bool::t));
-    auto val = ((Bool*)a_obj)->val;
-
-    std::stringstream s;
-    s << (val ? "true" : "false");
-    return NEW_REF(new Str(s.str()));
-}
- */
 
 ///////////////////////////////////////////////////////////////////////////////
 
 Type * Bool::t;
 
+Bool * Bool::True {};
+
+Bool * Bool::False {};
+
 void Bool::InitType() {
     Bool::t = new Type("bool");
-    auto ot = t->opTable;
-    ot->OpAnd   = &Bool_OpAnd;
-    ot->OpOr    = &Bool_OpOr;
-    ot->OpNot   = &Bool_OpNot;
-    ot->OpEq    = &Bool_OpEq;
-    ot->OpNotEq = &Bool_OpNotEq;
-    //ot->ToStr   = &Bool_ToStr;
+    auto mtab = t->methodTable;
+    mtab->OpAnd   = &Bool_OpAnd;
+    mtab->OpOr    = &Bool_OpOr;
+    mtab->OpNot   = &Bool_OpNot;
+    mtab->OpEq    = &Bool_OpEq;
+    mtab->OpNotEq = &Bool_OpNotEq;
+
+    Bool::True = (Bool*)Heap::GetChunk_Const(sizeof(Bool));
+    Bool::True->val = true;
+
+    Bool::False = (Bool*)Heap::GetChunk_Const(sizeof(Bool));
+    Bool::False->val = false;
 }
-
-Ref Bool::True {};
-
-Ref Bool::False {};
-
-Bool::Bool() : Obj{Bool::t} {}
-
-Bool::Bool(bool val) : Obj{Bool::t}, val{val} {}
-
-/*
-std::string Bool::ToStr() const {
-    std::stringstream s;
-    s << (val ? "true" : "false");
-    return s.str();
-}
-*/

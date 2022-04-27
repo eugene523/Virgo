@@ -3,15 +3,14 @@
 
 #include "Obj.h"
 
-struct Real : Obj {
+struct Real {
+    Obj obj;
     v_real val {};
 
     static Type * t;
     static void InitType();
-    Real();
-    explicit Real(v_real value);
-    [[nodiscard]] std::string ToStr() const override;
-    void Mark() override {}
+    static Real * New(v_real value);
+
 };
 
 #endif //PROTON_REAL_H
