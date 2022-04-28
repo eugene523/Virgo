@@ -1,14 +1,14 @@
 #include <cassert>
 #include <iostream>
-#include <sstream>
 #include "Mem.h"
 #include "Type.h"
 
-const unsigned int  PAGE_SIZE = 4096;
-const std::uint64_t PAGE_MASK = ~0xFFFull;
-const unsigned int  ALIGNMENT = 8;
-const unsigned int  BLOCK_SIZE = (1 << 24); // 16MB
-const unsigned int  BLOCK_SIZE_MB = 16;
+const uint          ALIGNMENT     = 8;
+const uint          PAGE_POWER    = 12;
+const uint          PAGE_SIZE     = (1u << PAGE_POWER); // 4096
+const std::uint64_t PAGE_MASK     = (~std::uint64_t(0) << PAGE_POWER); // 0xFFF
+const uint          BLOCK_SIZE    = (1u << 24u); // 16MB
+const uint          BLOCK_SIZE_MB = 16;
 
 std::vector<std::byte*> MemBank::blocks;
 
@@ -31,7 +31,7 @@ void MemBank::AllocateBlock() {
         numOfPages = BLOCK_SIZE/PAGE_SIZE - 1;
     }
 
-    // Slice block into pieces.
+    // Slicing block into pieces.
     for (int i = 0; i < numOfPages; i++) {
         freePages.push(nextPage);
         nextPage += PAGE_SIZE;
@@ -59,47 +59,78 @@ void MemBank::PrintStatus() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Page::Init(std::byte * pagePtr, MemDomain * domain, unsigned int chunkSize) {
+const uint NEXT_FIELD_DISPLACEMENT = 8;
+const uint PAGE_AVAILABLE_SPACE = PAGE_SIZE - sizeof(Page);
+
+#define PAGE_CAPACITY(chunkSize) (PAGE_AVAILABLE_SPACE / chunkSize)
+
+#define NEXT_FIELD(chunkPtr) ((std::byte**)(chunkPtr + NEXT_FIELD_DISPLACEMENT))
+
+#define IS_FREE_CHUNK(chunkPtr) (*((std::byte**)chunkPtr) == nullptr)
+
+void Page::Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize) {
     memset(pagePtr, 0, PAGE_SIZE);
 
     auto * page = (Page*)pagePtr;
     page->domain = domain;
     page->chunkSize = chunkSize;
 
-    int availableSpace = PAGE_SIZE - sizeof(Page);
-    int numOfChunks = availableSpace / chunkSize;
-    std::byte * next = pagePtr + sizeof(Page);
-    page->next = next;
-    for (int i = 0; i < (numOfChunks - 1); i++) {
-        *((std::byte**)next) = next + chunkSize;
-        next += chunkSize;
+    uint capacity = PAGE_CAPACITY(chunkSize);
+    std::byte * chunk = pagePtr + sizeof(Page);
+    page->nextFreeChunk = chunk;
+    for (uint i = 0; i < (capacity - 1); i++) {
+        std::byte * nextChunk = chunk + chunkSize;
+        *NEXT_FIELD(chunk) = nextChunk;
+        chunk = nextChunk;
     }
-    *((std::byte**)next) = nullptr;
+    *NEXT_FIELD(chunk) = nullptr;
 }
 
 std::byte * Page::GetChunk() {
-    if (next == nullptr)
+    if (nextFreeChunk == nullptr)
         return nullptr;
-    std::byte * chunk = next;
-    next = *((std::byte**)next);
+    std::byte * chunk = nextFreeChunk;
+    nextFreeChunk = *NEXT_FIELD(nextFreeChunk);
     return chunk;
 }
 
+// FreeChunk function doesn't care about the content of a chunk.
+// It just pushes chunk to the free list of vacant chunks.
+// So, be aware that if some object sits inside this chunk,
+// then it must be properly deconstructed before a FreeChunk call.
+// We also zeroing out chunk (first 8 bytes must be zero)
+// in order to show garbage collector that this is a free chunk and it must be skipped.
 void Page::FreeChunk(std::byte * chunk) {
     Page * page = GET_PAGE(chunk);
-    std::byte * next = page->next;
-    page->next = chunk;
-    *((std::byte**)chunk) = next;
+    memset(chunk, 0, page->chunkSize);
+    std::byte * next = page->nextFreeChunk;
+    page->nextFreeChunk = chunk;
+    *NEXT_FIELD(chunk) = next;
 }
 
-unsigned int Page::NumOfFreeChunks() {
-    unsigned int numOfFreeChunks = 0;
-    std::byte * nextPtr = next;
-    while (nextPtr != nullptr) {
+uint Page::NumOfFreeChunks() {
+    uint numOfFreeChunks = 0;
+    std::byte * chunk = nextFreeChunk;
+    while (chunk != nullptr) {
         numOfFreeChunks++;
-        nextPtr = *((std::byte**)nextPtr);
+        chunk = *NEXT_FIELD(chunk);
     }
     return numOfFreeChunks;
+}
+
+bool Page::IsEmpty() { return NumOfFreeChunks() == PAGE_CAPACITY(chunkSize); }
+
+void Page::Mark() {
+    uint availableSpace = PAGE_SIZE - sizeof(Page);
+    uint capacity = availableSpace / chunkSize;
+    std::byte * chunk = (std::byte*)this + sizeof(Page);
+    for (uint i = 0; i < capacity; i++) {
+        if (IS_FREE_CHUNK(chunk)) {
+            chunk = *NEXT_FIELD(chunk);
+            continue;
+        }
+
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,7 +157,7 @@ void PageCluster::UpdateActivePage() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const unsigned int MemDomain::PAGE_LIMIT = 1024;
+const uint MemDomain::PAGE_LIMIT = 1024;
 
 MemDomain::MemDomain() {
     for (int i = 0; i < 6; i++) {
@@ -136,10 +167,10 @@ MemDomain::MemDomain() {
     }
 }
 
-std::byte * MemDomain::GetChunk(unsigned int chunkSize) {
+std::byte * MemDomain::GetChunk(uint chunkSize) {
     assert(chunkSize >= 24);
     assert(chunkSize <= 64);
-    unsigned int clusterIndex = 0;
+    uint clusterIndex = 0;
     if (chunkSize % ALIGNMENT == 0) {
         clusterIndex = chunkSize / ALIGNMENT - 3;
     } else {
@@ -168,7 +199,7 @@ MemDomain * Heap::constantDomain;
 MemDomain * Heap::babyDomain;
 MemDomain * Heap::activeDomain;
 
-const unsigned int Heap::TEMP_STACK_CAPACITY{1 << 10}; // 1024
+const uint Heap::TEMP_STACK_CAPACITY{1 << 10}; // 1024
 std::list<Obj*> Heap::tempStack;
 int Heap::tempStackTop;
 
@@ -180,10 +211,10 @@ void Heap::Init() {
     tempStackTop = -1;
 
     constantDomain = new MemDomain();
-    constantDomain->isConstant = true;
+    constantDomain->Set_IsConstant(true);
 
     babyDomain = new MemDomain();
-    babyDomain->isBaby = true;
+    babyDomain->Set_IsBaby(true);
 
     domains.push_back(new MemDomain());
     activeDomain = domains[0];
@@ -209,82 +240,3 @@ void Heap::PopTemp() {
     assert(tempStackTop >= 0);
     tempStackTop--;
 }
-
-/*
-void Heap::CollectGarbageInDomain(MemDomain * targetDomain) {
-    MarkTemp();
-    PreCollectCallback();
-    targetDomain->CollectGarbage();
-    PostCollectCallback();
-    UnmarkTemp();
-}
-
-Ref Heap::NewRef(Obj * obj) {
-    if (activeDomain->HasFreeHandlers())
-        return activeDomain->NewRef(obj);
-
-    CollectGarbageInDomain(activeDomain);
-
-    if (activeDomain->HasFreeHandlers())
-        return activeDomain->NewRef(obj);
-
-    auto * memDom = new MemDomain();
-    domains.push_back(memDom);
-    activeDomain = memDom;
-    return memDom->NewRef(obj);
-}
-
-Ref Heap::NewRefInDomain(Obj * obj, MemDomain * targetDomain) {
-    if (targetDomain->HasFreeHandlers())
-        return targetDomain->NewRef(obj);
-
-    CollectGarbageInDomain(targetDomain);
-
-    if (targetDomain->HasFreeHandlers())
-        return targetDomain->NewRef(obj);
-
-    return NewRef(obj);
-}
-
-Ref Heap::NewRefNeighbour(Obj * obj, Ref neighbour) {
-    return NewRefInDomain(obj, neighbour.GetDomain());
-}
-
-Ref Heap::NewPreservedRef(Obj * obj) {
-    Ref ref = NewRef(obj);
-    ref.IncOwners();
-    return ref;
-}
-
-Ref Heap::NewConstantRef(Obj* obj) {
-    assert(constantDomain->HasFreeHandlers());
-    return constantDomain->NewRef(obj);
-}
-
-Ref Heap::TransferRef(Ref ref, MemDomain * targetDomain) {
-    if (ref.GetDomain()->isConstant) {
-        ref.IncOwners();
-        return ref;
-    }
-    assert(ref.GetDomain() == babyDomain);
-    Obj * objPtr = ref.GetObj();
-    babyDomain->FreeRef(ref);
-    return NewRefInDomain(objPtr, targetDomain);
-}
-
-void Heap::MarkTemp() {
-    for (int i = 0; i <= refStackTop; i++) {
-        if (refStack[i].GetDomain() != activeDomain)
-            continue;
-        refStack[i].IncOwners();
-    }
-}
-
-void Heap::UnmarkTemp() {
-    for (int i = 0; i <= refStackTop; i++) {
-        if (refStack[i].GetDomain() != activeDomain)
-            continue;
-        refStack[i].DecOwners();
-    }
-}
-*/

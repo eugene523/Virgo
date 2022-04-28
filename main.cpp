@@ -36,15 +36,19 @@ void Mem2Test() {
 #include "Int.h"
 #include "Real.h"
 
-int main() {
+void Init() {
     Heap::Init();
     None::InitType();
     Err::InitType();
     Bool::InitType();
     Int::InitType();
     Real::InitType();
+}
 
-    Err * err = Err::New("Hello World!", 0);
-    std::cout << IS_OF_TYPE(err, Err::t);
+int main() {
+    Init();
+    std::byte ** p = (std::byte**)malloc(10);
+    std::cout << std::hex << p << '\n';
+    std::cout << (p + 1);
     return 0;
 }

@@ -13,8 +13,12 @@ using uint   = unsigned int;
 struct Type;
 
 struct Obj {
-    Type * type{};
+    Type *        type{};
     std::uint32_t numOfOwners{};
+
+    enum {
+        Obj_MarkColorBit
+    };
     std::bitset<32> flags;
 
     static inline void Init(void * inPlace, Type * type) {
@@ -26,6 +30,9 @@ struct Obj {
     }
 
     inline bool Is(Type * ofType) { return type == ofType; }
+
+    #define MARK_BIT 0
+    inline void Mark() { flags[MARK_BIT] = !flags[MARK_BIT]; }
 };
 
 #define IS_OF_TYPE(obj, ofType) (((Obj*)obj)->type == ofType)

@@ -17,6 +17,8 @@ struct Bool {
     static inline Bool * New(bool value) {
         return (value) ? Bool::True : Bool::False;
     }
+
+    inline Bool * Invert() { return val ? Bool::False : Bool::True; }
 };
 
 #endif //PROTON_BOOL_H

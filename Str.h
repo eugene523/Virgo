@@ -5,11 +5,12 @@
 
 struct Str {
     Obj obj;
-    std::string val;
+    const char * val;
+    uint len;
 
     static Type * t;
     static void InitType();
-    static Str * New(std::string value);
+    static Str * New(const char * value);
 };
 
 #endif //PROTON_STR_H

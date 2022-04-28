@@ -10,9 +10,9 @@
 #include <bitset>
 #include "Obj.h"
 
-extern const unsigned int  PAGE_SIZE;
+extern const uint          PAGE_SIZE;
 extern const std::uint64_t PAGE_MASK;
-extern const unsigned int  ALIGNMENT;
+extern const uint          ALIGNMENT;
 
 struct MemBank {
     static std::vector<std::byte*> blocks;
@@ -29,26 +29,28 @@ struct MemBank {
 struct MemDomain;
 
 struct Page {
-    MemDomain *  domain;
-    unsigned int chunkSize;
-    std::byte *  next; // Next free chunk
+    MemDomain * domain;
+    uint        chunkSize;
+    std::byte * nextFreeChunk;
 
-    static void Init(std::byte * pagePtr, MemDomain * domain, unsigned int chunkSize);
+    static void Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize);
     std::byte * GetChunk();
     static void FreeChunk(std::byte * chunk);
-    unsigned int NumOfFreeChunks();
-    inline bool HasFreeChunk() { return next != nullptr; }
+    uint NumOfFreeChunks();
+    inline bool HasFreeChunk() { return nextFreeChunk != nullptr; }
+    bool IsEmpty();
+    void Mark();
 };
 
-#define GET_PAGE(ptr) ((Page*)((std::uint64_t)ptr & PAGE_MASK))
+#define GET_PAGE(chunkPtr) ((Page*)((std::uint64_t)chunkPtr & PAGE_MASK))
 
-#define IS_BABY(ptr) (GET_PAGE(ptr)->domain->isBaby)
+#define IS_BABY(ptr) (GET_PAGE(ptr)->domain->flagBits[MD_IS_BABY])
 
 ///////////////////////////////////////////////////////////////////////////////
 
 struct PageCluster {
     MemDomain *  parentDomain{};
-    unsigned int chunkSize{};
+    uint chunkSize{};
     std::list<Page*> pages{};
     Page * activePage{};
     void QueryPage();
@@ -56,12 +58,17 @@ struct PageCluster {
 };
 
 struct MemDomain {
-    static const unsigned int PAGE_LIMIT;
+    static const uint PAGE_LIMIT;
 
-    bool isConstant{};
-    bool isBaby{};
-    bool isFull{};
-    unsigned int generation{};
+    enum
+    {
+        MemDomain_MarkColor_Bit,
+        MemDomain_IsConstant_Bit,
+        MemDomain_IsBaby_Bit,
+    };
+    std::bitset<32> flagBits{};
+
+    uint gcGeneration{};
 
     // Each cluster contains pages of the same chunkSize:
     // chunkSize = (index + 3) * ALIGNMENT
@@ -70,8 +77,14 @@ struct MemDomain {
 
     explicit MemDomain();
 
+    inline bool Get_IsBaby() { return flagBits[MemDomain_IsBaby_Bit]; }
+    inline void Set_IsBaby(bool value) { flagBits[MemDomain_IsBaby_Bit] = value; }
+
+    inline bool Get_IsConstant() { return flagBits[MemDomain_IsConstant_Bit]; }
+    inline void Set_IsConstant(bool value) { flagBits[MemDomain_IsConstant_Bit] = value; }
+
     [[nodiscard]]
-    std::byte * GetChunk(unsigned int chunkSize);
+    std::byte * GetChunk(uint chunkSize);
 
     // TODO:
     // Mark, Sweep, GC
@@ -91,7 +104,7 @@ struct Heap {
     // We push to this stack intermediate results of a currently evaluating expression,
     // so we can be sure that intermediate values will not be deleted if GC will start
     // in the middle of expression.
-    static const unsigned int TEMP_STACK_CAPACITY;
+    static const uint TEMP_STACK_CAPACITY;
     static std::list<Obj*> tempStack;
     static int tempStackTop;
 
@@ -103,18 +116,6 @@ struct Heap {
     static std::byte * GetChunk_Const(std::size_t chunkSize);
     static void PushTemp(Obj * obj);
     static void PopTemp();
-    /*
-    static void CollectGarbageInDomain(MemDomain * targetDomain);
-    static Ref NewRef(Obj * obj);
-    static Ref NewRefInDomain(Obj * obj, MemDomain * targetDomain);
-    static Ref NewRefNeighbour(Obj * obj, Ref neighbour);
-    static Ref NewPreservedRef(Obj * obj);
-    static Ref NewConstantRef(Obj * obj);
-    static Ref TransferRef(Ref ref, MemDomain * targetDomain);
-
-    static void MarkTemp();
-    static void UnmarkTemp();
-    */
 };
 
 #endif //VIRGO_MEM_H
