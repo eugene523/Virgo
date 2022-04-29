@@ -1,5 +1,6 @@
 #include <cassert>
 #include <utility>
+#include <string>
 #include "Type.h"
 #include "Str.h"
 #include "Bool.h"
@@ -50,6 +51,8 @@ Obj * Str_OpNotEq(Obj * self, Obj * other) {
         return result;
     return (Obj*)(((Bool*)result)->Invert());
 }
+
+
 
 /*
 Obj * Str_Get(Obj * self, Obj * other) {

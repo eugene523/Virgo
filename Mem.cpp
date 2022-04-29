@@ -68,6 +68,15 @@ const uint PAGE_AVAILABLE_SPACE = PAGE_SIZE - sizeof(Page);
 
 #define IS_FREE_CHUNK(chunkPtr) (*((std::byte**)chunkPtr) == nullptr)
 
+/*
+struct Obj {
+    Type *        type{};
+    std::uint32_t numOfOwners{};
+    std::bitset<32> flags;
+}
+ */
+#define OBJ_NUM_OF_OWNERS(chunkPtr) (*)
+
 void Page::Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize) {
     memset(pagePtr, 0, PAGE_SIZE);
 
@@ -129,7 +138,8 @@ void Page::Mark() {
             chunk = *NEXT_FIELD(chunk);
             continue;
         }
-
+        // First field of Obj is Type *
+        (Type*)chunk
     }
 }
 
@@ -200,7 +210,7 @@ MemDomain * Heap::babyDomain;
 MemDomain * Heap::activeDomain;
 
 const uint Heap::TEMP_STACK_CAPACITY{1 << 10}; // 1024
-std::list<Obj*> Heap::tempStack;
+std::list<void*> Heap::tempStack;
 int Heap::tempStackTop;
 
 void (*Heap::PreCollectCallback)();
@@ -228,7 +238,7 @@ std::byte * Heap::GetChunk_Const(std::size_t chunkSize) {
     return constantDomain->GetChunk(chunkSize);
 }
 
-void Heap::PushTemp(Obj * obj) {
+void Heap::PushTemp(void * obj) {
     if (tempStackTop == TEMP_STACK_CAPACITY) {
         std::cerr << "Error. Stack overflow." << std::endl;
         exit(1);

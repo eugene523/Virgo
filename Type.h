@@ -3,7 +3,8 @@
 
 #include <vector>
 #include <map>
-#include "Mem.h"
+
+struct Obj;
 
 struct MethodTable {
     void  (*Mark)        (Obj * self) {};

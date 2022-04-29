@@ -5,18 +5,16 @@
 #include <string>
 #include <memory>
 #include <bitset>
-
-using v_int  = long long int;
-using v_real = long double;
-using uint   = unsigned int;
-
-struct Type;
+#include "Common.h"
+#include "Type.h"
+#include "Mem.h"
 
 struct Obj {
     Type *        type{};
     std::uint32_t numOfOwners{};
 
-    enum {
+    enum
+    {
         Obj_MarkColorBit
     };
     std::bitset<32> flags;
@@ -27,12 +25,14 @@ struct Obj {
         obj->type = type;
         obj->numOfOwners = 0;
         obj->flags = 0;
+        obj->flags[Obj_MarkColorBit] = GET_PAGE(inPlace)->domain->Get_MarkColor();
     }
 
     inline bool Is(Type * ofType) { return type == ofType; }
 
-    #define MARK_BIT 0
-    inline void Mark() { flags[MARK_BIT] = !flags[MARK_BIT]; }
+    inline bool Get_MarkColor() { return flags[Obj_MarkColorBit]; }
+
+    inline void Mark() { flags[Obj_MarkColorBit] = !flags[Obj_MarkColorBit]; }
 };
 
 #define IS_OF_TYPE(obj, ofType) (((Obj*)obj)->type == ofType)

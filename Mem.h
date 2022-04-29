@@ -8,7 +8,7 @@
 #include <list>
 #include <stack>
 #include <bitset>
-#include "Obj.h"
+#include "Common.h"
 
 extern const uint          PAGE_SIZE;
 extern const std::uint64_t PAGE_MASK;
@@ -77,6 +77,8 @@ struct MemDomain {
 
     explicit MemDomain();
 
+    inline bool Get_MarkColor() { return flagBits[MemDomain_MarkColor_Bit]; }
+
     inline bool Get_IsBaby() { return flagBits[MemDomain_IsBaby_Bit]; }
     inline void Set_IsBaby(bool value) { flagBits[MemDomain_IsBaby_Bit] = value; }
 
@@ -105,7 +107,7 @@ struct Heap {
     // so we can be sure that intermediate values will not be deleted if GC will start
     // in the middle of expression.
     static const uint TEMP_STACK_CAPACITY;
-    static std::list<Obj*> tempStack;
+    static std::list<void*> tempStack;
     static int tempStackTop;
 
     static void (*PreCollectCallback)();
@@ -114,7 +116,7 @@ struct Heap {
     static void Init();
     static std::byte * GetChunk(std::size_t chunkSize);
     static std::byte * GetChunk_Const(std::size_t chunkSize);
-    static void PushTemp(Obj * obj);
+    static void PushTemp(void * obj);
     static void PopTemp();
 };
 

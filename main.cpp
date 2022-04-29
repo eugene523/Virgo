@@ -47,8 +47,6 @@ void Init() {
 
 int main() {
     Init();
-    std::byte ** p = (std::byte**)malloc(10);
-    std::cout << std::hex << p << '\n';
-    std::cout << (p + 1);
+    std::cout << sizeof(Obj);
     return 0;
 }
