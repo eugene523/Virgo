@@ -34,39 +34,51 @@ struct Page {
     std::byte * nextFreeChunk;
 
     static void Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize);
+
+    static inline Page * GetPage(void * chunkPtr) {
+        return (Page*)((std::uint64_t)chunkPtr & PAGE_MASK);
+    }
+
     std::byte * GetChunk();
     static void FreeChunk(std::byte * chunk);
     uint NumOfFreeChunks();
-    inline bool HasFreeChunk() { return nextFreeChunk != nullptr; }
+
+    inline bool HasFreeChunk() {
+        return nextFreeChunk != nullptr;
+    }
+
     bool IsEmpty();
     void Mark();
+    void Sweep();
 };
-
-#define GET_PAGE(chunkPtr) ((Page*)((std::uint64_t)chunkPtr & PAGE_MASK))
 
 #define IS_BABY(ptr) (GET_PAGE(ptr)->domain->flagBits[MD_IS_BABY])
 
 ///////////////////////////////////////////////////////////////////////////////
 
 struct PageCluster {
-    MemDomain *  parentDomain{};
+    MemDomain *  domain{};
     uint chunkSize{};
     std::list<Page*> pages{};
     Page * activePage{};
+
     void QueryPage();
     void UpdateActivePage();
+    void Mark();
+    void Sweep();
+    void ReleaseEmptyPages();
 };
 
 struct MemDomain {
-    static const uint PAGE_LIMIT;
+    uint pageLimit = 1024;
 
     enum
     {
-        MemDomain_MarkColor_Bit,
-        MemDomain_IsConstant_Bit,
-        MemDomain_IsBaby_Bit,
+        Bit_MarkColor,
+        Bit_IsConstant,
+        Bit_IsBaby,
     };
-    std::bitset<32> flagBits{};
+    std::bitset<32> flags{};
 
     uint gcGeneration{};
 
@@ -77,19 +89,41 @@ struct MemDomain {
 
     explicit MemDomain();
 
-    inline bool Get_MarkColor() { return flagBits[MemDomain_MarkColor_Bit]; }
+    inline bool Get_MarkColor() {
+        return flags[Bit_MarkColor];
+    }
 
-    inline bool Get_IsBaby() { return flagBits[MemDomain_IsBaby_Bit]; }
-    inline void Set_IsBaby(bool value) { flagBits[MemDomain_IsBaby_Bit] = value; }
+    /////////////////////////////////////////////
 
-    inline bool Get_IsConstant() { return flagBits[MemDomain_IsConstant_Bit]; }
-    inline void Set_IsConstant(bool value) { flagBits[MemDomain_IsConstant_Bit] = value; }
+    inline bool Get_IsBaby() {
+        return flags[Bit_IsBaby];
+    }
+
+    inline void Set_IsBaby(bool value) {
+        flags[Bit_IsBaby] = value;
+    }
+
+    /////////////////////////////////////////////
+
+    inline bool Get_IsConstant() {
+        return flags[Bit_IsConstant];
+    }
+
+    inline void Set_IsConstant(bool value) {
+        flags[Bit_IsConstant] = value;
+    }
+
+    /////////////////////////////////////////////
+
+    void Mark();
+    void Sweep();
+    void CollectGarbage();
+    void ReleaseEmptyPages();
+
+    /////////////////////////////////////////////
 
     [[nodiscard]]
     std::byte * GetChunk(uint chunkSize);
-
-    // TODO:
-    // Mark, Sweep, GC
 
     void PrintStatus();
 };

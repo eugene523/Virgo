@@ -10,12 +10,12 @@
 #include "Mem.h"
 
 struct Obj {
-    Type *        type{};
+    Type * type{};
     std::uint32_t numOfOwners{};
 
     enum
     {
-        Obj_MarkColorBit
+        Bit_MarkColor
     };
     std::bitset<32> flags;
 
@@ -25,16 +25,36 @@ struct Obj {
         obj->type = type;
         obj->numOfOwners = 0;
         obj->flags = 0;
-        obj->flags[Obj_MarkColorBit] = GET_PAGE(inPlace)->domain->Get_MarkColor();
+        obj->flags[Bit_MarkColor] = Page::GetPage(inPlace)->domain->Get_MarkColor();
     }
 
-    inline bool Is(Type * ofType) { return type == ofType; }
+    inline bool Is(Type * ofType) {
+        return type == ofType;
+    }
 
-    inline bool Get_MarkColor() { return flags[Obj_MarkColorBit]; }
+    inline void IncOwners() { numOfOwners++; }
 
-    inline void Mark() { flags[Obj_MarkColorBit] = !flags[Obj_MarkColorBit]; }
+    inline void DecOwners() { numOfOwners--; }
+
+    inline bool Get_MarkColor() {
+        return flags[Bit_MarkColor];
+    }
+
+    inline void Mark() {
+        flags[Bit_MarkColor].flip();
+        assert(Page::GetPage(this)->domain->Get_MarkColor() == flags[Bit_MarkColor]);
+        auto markMethod = type->methodTable->Mark;
+        if (markMethod == nullptr)
+            return;
+        markMethod(this);
+    }
+
+    inline void Delete() {
+        auto deleteMethod = type->methodTable->Delete;
+        if (deleteMethod == nullptr)
+            return;
+        deleteMethod(this);
+    }
 };
-
-#define IS_OF_TYPE(obj, ofType) (((Obj*)obj)->type == ofType)
 
 #endif //VIRGO_OBJ_H

@@ -59,23 +59,18 @@ void MemBank::PrintStatus() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const uint NEXT_FIELD_DISPLACEMENT = 8;
+struct ChunkHeader {
+    std::uint64_t zeroField; // Always zero for a free chunk
+    std::byte * nextChunk;
+};
+
+inline bool IsFreeChunk(void * chunkPtr) {
+    return ((ChunkHeader*)chunkPtr)->zeroField == 0;
+}
+
 const uint PAGE_AVAILABLE_SPACE = PAGE_SIZE - sizeof(Page);
 
 #define PAGE_CAPACITY(chunkSize) (PAGE_AVAILABLE_SPACE / chunkSize)
-
-#define NEXT_FIELD(chunkPtr) ((std::byte**)(chunkPtr + NEXT_FIELD_DISPLACEMENT))
-
-#define IS_FREE_CHUNK(chunkPtr) (*((std::byte**)chunkPtr) == nullptr)
-
-/*
-struct Obj {
-    Type *        type{};
-    std::uint32_t numOfOwners{};
-    std::bitset<32> flags;
-}
- */
-#define OBJ_NUM_OF_OWNERS(chunkPtr) (*)
 
 void Page::Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize) {
     memset(pagePtr, 0, PAGE_SIZE);
@@ -89,17 +84,17 @@ void Page::Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize) {
     page->nextFreeChunk = chunk;
     for (uint i = 0; i < (capacity - 1); i++) {
         std::byte * nextChunk = chunk + chunkSize;
-        *NEXT_FIELD(chunk) = nextChunk;
+        ((ChunkHeader*)chunk)->nextChunk = nextChunk;
         chunk = nextChunk;
     }
-    *NEXT_FIELD(chunk) = nullptr;
+    ((ChunkHeader*)chunk)->nextChunk = nullptr;
 }
 
 std::byte * Page::GetChunk() {
     if (nextFreeChunk == nullptr)
         return nullptr;
     std::byte * chunk = nextFreeChunk;
-    nextFreeChunk = *NEXT_FIELD(nextFreeChunk);
+    nextFreeChunk = ((ChunkHeader*)nextFreeChunk)->nextChunk;
     return chunk;
 }
 
@@ -110,11 +105,11 @@ std::byte * Page::GetChunk() {
 // We also zeroing out chunk (first 8 bytes must be zero)
 // in order to show garbage collector that this is a free chunk and it must be skipped.
 void Page::FreeChunk(std::byte * chunk) {
-    Page * page = GET_PAGE(chunk);
+    Page * page = Page::GetPage(chunk);
     memset(chunk, 0, page->chunkSize);
     std::byte * next = page->nextFreeChunk;
     page->nextFreeChunk = chunk;
-    *NEXT_FIELD(chunk) = next;
+    ((ChunkHeader*)chunk)->nextChunk = next;
 }
 
 uint Page::NumOfFreeChunks() {
@@ -122,24 +117,58 @@ uint Page::NumOfFreeChunks() {
     std::byte * chunk = nextFreeChunk;
     while (chunk != nullptr) {
         numOfFreeChunks++;
-        chunk = *NEXT_FIELD(chunk);
+        chunk = ((ChunkHeader*)chunk)->nextChunk;
     }
     return numOfFreeChunks;
 }
 
-bool Page::IsEmpty() { return NumOfFreeChunks() == PAGE_CAPACITY(chunkSize); }
+bool Page::IsEmpty() {
+    return NumOfFreeChunks() == PAGE_CAPACITY(chunkSize);
+}
+
+#include "Obj.h"
 
 void Page::Mark() {
-    uint availableSpace = PAGE_SIZE - sizeof(Page);
-    uint capacity = availableSpace / chunkSize;
+    uint capacity = PAGE_CAPACITY(chunkSize);
     std::byte * chunk = (std::byte*)this + sizeof(Page);
+    bool currentColor = domain->Get_MarkColor();
     for (uint i = 0; i < capacity; i++) {
-        if (IS_FREE_CHUNK(chunk)) {
-            chunk = *NEXT_FIELD(chunk);
+        if (IsFreeChunk(chunk)) {
+            chunk += chunkSize;
             continue;
         }
-        // First field of Obj is Type *
-        (Type*)chunk
+
+        Obj * obj = (Obj*)chunk;
+
+        // Check if it is already marked.
+        if (obj->Get_MarkColor() == currentColor)
+            continue;
+
+        if (obj->numOfOwners == 0)
+            continue;
+
+        obj->Mark();
+    }
+}
+
+void Page::Sweep() {
+    uint capacity = PAGE_CAPACITY(chunkSize);
+    std::byte * chunk = (std::byte*)this + sizeof(Page);
+    bool currentColor = domain->Get_MarkColor();
+    for (uint i = 0; i < capacity; i++) {
+        if (IsFreeChunk(chunk)) {
+            chunk += chunkSize;
+            continue;
+        }
+
+        Obj * obj = (Obj*)chunk;
+
+        // If it's marked with proper color then we skip it.
+        if (obj->Get_MarkColor() == currentColor)
+            continue;
+
+        obj->Delete();
+        Page::FreeChunk((std::byte*)obj);
     }
 }
 
@@ -147,14 +176,14 @@ void Page::Mark() {
 
 void PageCluster::QueryPage() {
     std::byte * page = MemBank::GetPage();
-    Page::Init(page, parentDomain, chunkSize);
+    Page::Init(page, domain, chunkSize);
     pages.push_back((Page*)page);
     activePage = (Page*)page;
 }
 
 void PageCluster::UpdateActivePage() {
     activePage = nullptr;
-    for (auto p : pages) {
+    for (auto * p : pages) {
         if (p->HasFreeChunk()) {
             activePage = p;
             break;
@@ -165,13 +194,25 @@ void PageCluster::UpdateActivePage() {
         QueryPage();
 }
 
+void PageCluster::Mark() {
+    for (auto * p : pages) {
+        p->Mark();
+    }
+}
+
+void PageCluster::Sweep() {
+    for (auto * p : pages) {
+        p->Sweep();
+    }
+}
+
+void PageCluster::ReleaseEmptyPages() {}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-const uint MemDomain::PAGE_LIMIT = 1024;
-
 MemDomain::MemDomain() {
-    for (int i = 0; i < 6; i++) {
-        clusters[i].parentDomain = this;
+    for (std::size_t i = 0; i < clusters.size(); i++) {
+        clusters[i].domain = this;
         clusters[i].chunkSize = (i + 3) * ALIGNMENT;
         clusters[i].QueryPage();
     }
@@ -192,6 +233,25 @@ std::byte * MemDomain::GetChunk(uint chunkSize) {
     if (!cluster.activePage->HasFreeChunk())
         cluster.UpdateActivePage();
     return cluster.activePage->GetChunk();
+}
+
+void MemDomain::Mark() {
+    flags[Bit_MarkColor].flip();
+    for (auto & cluster : clusters) {
+        cluster.Mark();
+    }
+}
+
+void MemDomain::Sweep() {
+    for (auto & cluster : clusters) {
+        cluster.Sweep();
+    }
+}
+
+void MemDomain::CollectGarbage() {
+    gcGeneration++;
+    Mark();
+    Sweep();
 }
 
 void MemDomain::PrintStatus() {
