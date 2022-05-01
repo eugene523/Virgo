@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Virgo
         Common.h
+        Utils.h Utils.cpp
         ErrorMessages.h ErrorMessages.cpp
         Type.h Type.cpp
         Obj.h Obj.cpp

@@ -42,6 +42,7 @@ struct Page {
     std::byte * GetChunk();
     static void FreeChunk(std::byte * chunk);
     uint NumOfFreeChunks();
+    uint NumOfObj();
 
     inline bool HasFreeChunk() {
         return nextFreeChunk != nullptr;
@@ -59,15 +60,21 @@ struct Page {
 struct PageCluster {
     MemDomain *  domain{};
     uint chunkSize{};
-    std::list<Page*> pages{};
+    std::vector<Page*> pages{};
+    uint activePageIndex{};
     Page * activePage{};
 
     void QueryPage();
     void UpdateActivePage();
     void Mark();
     void Sweep();
-    void ReleaseEmptyPages();
+    //void ReleaseEmptyPages();
+    uint NumOfPages();
+    uint Capacity();
+    uint NumOfObj();
 };
+
+///////////////////////////////////////////////////////////////////////////////
 
 struct MemDomain {
     uint pageLimit = 1024;
@@ -80,9 +87,7 @@ struct MemDomain {
     };
     std::bitset<32> flags{};
 
-    uint gcGeneration{};
-
-    // Each cluster contains pages of the same chunkSize:
+    // Each cluster contains pages that contain chunks of the same size:
     // chunkSize = (index + 3) * ALIGNMENT
     // i.e. 24, 32, ..., 64
     std::array<PageCluster, 6> clusters{};
@@ -115,17 +120,21 @@ struct MemDomain {
 
     /////////////////////////////////////////////
 
+    uint NumOfPages();
+    uint Capacity();
+    uint NumOfObj();
+
     void Mark();
     void Sweep();
-    void CollectGarbage();
     void ReleaseEmptyPages();
+    void CollectGarbage();
 
     /////////////////////////////////////////////
 
     [[nodiscard]]
     std::byte * GetChunk(uint chunkSize);
 
-    void PrintStatus();
+    void PrintStatus(const std::string & additionalMessage = "");
 };
 
 ///////////////////////////////////////////////////////////////////////////////

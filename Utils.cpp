@@ -1,9 +1,10 @@
 #include <cstdlib>
 #include <cmath>
+#include "Common.h"
 
 int RandomInt(int min, int max)
 {
-    int a   = max - min + 1;
+    uint a   = max - min + 1;
     int rnd = rand() % a + min;
     return rnd;
 }

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 #include "Mem.h"
 #include "Type.h"
 
@@ -105,11 +106,11 @@ std::byte * Page::GetChunk() {
 // We also zeroing out chunk (first 8 bytes must be zero)
 // in order to show garbage collector that this is a free chunk and it must be skipped.
 void Page::FreeChunk(std::byte * chunk) {
+    assert(((ChunkHeader*)chunk)->zeroField != 0);
     Page * page = Page::GetPage(chunk);
     memset(chunk, 0, page->chunkSize);
-    std::byte * next = page->nextFreeChunk;
+    ((ChunkHeader*)chunk)->nextChunk = page->nextFreeChunk;
     page->nextFreeChunk = chunk;
-    ((ChunkHeader*)chunk)->nextChunk = next;
 }
 
 uint Page::NumOfFreeChunks() {
@@ -122,6 +123,10 @@ uint Page::NumOfFreeChunks() {
     return numOfFreeChunks;
 }
 
+uint Page::NumOfObj() {
+    return (PAGE_CAPACITY(chunkSize) - NumOfFreeChunks());
+}
+
 bool Page::IsEmpty() {
     return NumOfFreeChunks() == PAGE_CAPACITY(chunkSize);
 }
@@ -132,9 +137,8 @@ void Page::Mark() {
     uint capacity = PAGE_CAPACITY(chunkSize);
     std::byte * chunk = (std::byte*)this + sizeof(Page);
     bool currentColor = domain->Get_MarkColor();
-    for (uint i = 0; i < capacity; i++) {
+    for (uint i = 0; i < capacity; i++, chunk += chunkSize) {
         if (IsFreeChunk(chunk)) {
-            chunk += chunkSize;
             continue;
         }
 
@@ -155,11 +159,9 @@ void Page::Sweep() {
     uint capacity = PAGE_CAPACITY(chunkSize);
     std::byte * chunk = (std::byte*)this + sizeof(Page);
     bool currentColor = domain->Get_MarkColor();
-    for (uint i = 0; i < capacity; i++) {
-        if (IsFreeChunk(chunk)) {
-            chunk += chunkSize;
+    for (uint i = 0; i < capacity; i++, chunk += chunkSize) {
+        if (IsFreeChunk(chunk))
             continue;
-        }
 
         Obj * obj = (Obj*)chunk;
 
@@ -206,7 +208,22 @@ void PageCluster::Sweep() {
     }
 }
 
-void PageCluster::ReleaseEmptyPages() {}
+uint PageCluster::NumOfPages() {
+    return pages.size();
+}
+
+uint PageCluster::Capacity() {
+    return (NumOfPages() * PAGE_CAPACITY(chunkSize));
+}
+
+uint PageCluster::NumOfObj() {
+    uint numOfObj = 0;
+    for (auto * p : pages)
+        numOfObj += p->NumOfObj();
+    return numOfObj;
+}
+
+//void PageCluster::ReleaseEmptyPages() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -235,6 +252,27 @@ std::byte * MemDomain::GetChunk(uint chunkSize) {
     return cluster.activePage->GetChunk();
 }
 
+uint MemDomain::NumOfPages() {
+    uint numOfPages = 0;
+    for (auto & c : clusters)
+        numOfPages += c.NumOfPages();
+    return numOfPages;
+}
+
+uint MemDomain::Capacity() {
+    uint capacity = 0;
+    for (auto & c : clusters)
+        capacity += c.Capacity();
+    return capacity;
+}
+
+uint MemDomain::NumOfObj() {
+    uint numOfObj = 0;
+    for (auto & c : clusters)
+        numOfObj += c.NumOfObj();
+    return numOfObj;
+}
+
 void MemDomain::Mark() {
     flags[Bit_MarkColor].flip();
     for (auto & cluster : clusters) {
@@ -249,15 +287,50 @@ void MemDomain::Sweep() {
 }
 
 void MemDomain::CollectGarbage() {
-    gcGeneration++;
     Mark();
     Sweep();
 }
 
-void MemDomain::PrintStatus() {
-    std::cout << "\nMemDomain status:\n";
-    for (const auto & c : clusters) {
-        std::cout << c.chunkSize << ' ' << c.pages.size() << ' ' << c.activePage->NumOfFreeChunks() << '\n';
+void MemDomain::PrintStatus(const std::string & additionalMessage /* = "" */) {
+    std::cout << '\n' << std::string(60, '-') << '\n';
+    std::cout << "MemDomain status";
+
+    if (!additionalMessage.empty())
+        std::cout << " [" << additionalMessage << "]:" << "\n";
+    else
+        std::cout << "\n";
+
+    uint width = 10;
+    std::cout << "pages    : " << NumOfPages() << '\n'
+              << "capacity : " << Capacity()   << '\n'
+              << "objects  : " << NumOfObj()   << '\n'
+              << "memory   : " <<
+
+    std::cout << "\nclusters:\n";
+    std::cout << std::left
+              << std::setw(width) << "chunk_sz"
+              << std::setw(width) << "page_cap"
+              << std::setw(width) << "pages"
+              << std::setw(width) << "full_cap"
+              << std::setw(width) << "objects"
+              << std::setw(width) << "occupancy"
+              << '\n';
+
+    for (auto & c : clusters) {
+        uint chunkSize    = c.chunkSize;
+        uint pageCapacity = PAGE_CAPACITY(chunkSize);
+        uint numOfPages   = c.NumOfPages();
+        uint fullCapacity = pageCapacity * numOfPages;
+        uint numOfObjects = c.NumOfObj();
+        uint occupancy    = (((double)numOfObjects)/fullCapacity) * 100;
+
+        std::cout << std::setw(width) << chunkSize
+                  << std::setw(width) << pageCapacity
+                  << std::setw(width) << numOfPages
+                  << std::setw(width) << fullCapacity
+                  << std::setw(width) << numOfObjects
+                  << std::setw(width) << (std::to_string(occupancy) + " %")
+                  << '\n';
     }
 }
 

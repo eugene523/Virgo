@@ -45,8 +45,41 @@ void Init() {
     Real::InitType();
 }
 
+std::byte * fakeChunk(MemDomain & m, uint size) {
+    std::byte * chunk = m.GetChunk(size);
+    Obj::Init(chunk, None::t);
+    return chunk;
+}
+
+uint randomChunkSize() {
+    return (24 + rand() % (64 - 24 + 1));
+}
+
+void MemDomain_Test1() {
+    const uint numOfObjects = 1000;
+    MemDomain m = MemDomain();
+    std::list<std::byte*> chunks;
+    for (uint i = 0; i < numOfObjects; i++) {
+        uint size = randomChunkSize();
+        chunks.push_back(fakeChunk(m, size));
+    }
+    assert(m.NumOfObj() == numOfObjects);
+    for (auto c : chunks)
+        Page::FreeChunk(c);
+    assert(m.NumOfObj() == 0);
+}
+
 int main() {
     Init();
-    std::cout << sizeof(Obj);
+    MemDomain m = MemDomain();
+    m.PrintStatus("Before allocation");
+    std::list<std::byte*> chunks;
+    for (int i = 0; i < 1690000; i++) {
+        chunks.push_back(fakeChunk(m, randomChunkSize()));
+    }
+    m.PrintStatus("After allocation");
+    m.CollectGarbage();
+    m.PrintStatus("After gc.");
+
     return 0;
 }
