@@ -1,22 +1,28 @@
 #include <cstdlib>
 #include <cmath>
+#include <string>
+#include <sstream>
+#include <cassert>
 #include "Common.h"
 
-int RandomInt(int min, int max)
+namespace Utils
 {
-    uint a   = max - min + 1;
+
+int RandomInt(int min, int max) {
+    assert(max > min);
+    uint a = max - min + 1;
     int rnd = rand() % a + min;
     return rnd;
 }
 
-std::string numSep(uint64_t num) {
+std::string NumSep(uint64_t num) {
     if (num < 1000)
         return std::to_string(num);
 
-    char symbols[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+    char symbols[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     char buffer[32] {};
-    int  numOfProceedDigits = 0;
-    int  pos = 0;
+    int numOfProceedDigits = 0;
+    int pos = 0;
     while (num > 0) {
         buffer[pos] = symbols[num % 10];
         numOfProceedDigits++;
@@ -35,8 +41,10 @@ std::string numSep(uint64_t num) {
     }
 
     std::stringstream s;
-    for ( ; pos >= 0 ; pos--) {
+    for (; pos >= 0; pos--) {
         s << buffer[pos];
     }
     return s.str();
+}
+
 }

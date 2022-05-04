@@ -3,10 +3,13 @@
 
 #include <string>
 
-bool NearlyEqual(long double a, long double b, long double delta);
+namespace Utils
+{
 
 int RandomInt(int min, int max);
 
-std::string numSep(uint64_t num);
+std::string NumSep(uint64_t num);
+
+}
 
 #endif //VIRGO_UTILS_H

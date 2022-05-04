@@ -3,6 +3,7 @@
 #include <iomanip>
 #include "Mem.h"
 #include "Type.h"
+#include "Utils.h"
 
 const uint          ALIGNMENT     = 8;
 const uint          PAGE_POWER    = 12;
@@ -176,18 +177,36 @@ void Page::Sweep() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+uint PageCluster::NumOfPages() {
+    return pages.size();
+}
+
+uint PageCluster::Capacity() {
+    return (NumOfPages() * PAGE_CAPACITY(chunkSize));
+}
+
+uint PageCluster::NumOfObj() {
+    uint numOfObj = 0;
+    for (auto * p : pages)
+        numOfObj += p->NumOfObj();
+    return numOfObj;
+}
+
 void PageCluster::QueryPage() {
     std::byte * page = MemBank::GetPage();
     Page::Init(page, domain, chunkSize);
     pages.push_back((Page*)page);
     activePage = (Page*)page;
+    activePageIndex = pages.size() - 1;
 }
 
-void PageCluster::UpdateActivePage() {
+void PageCluster::UpdateActivePage_AfterGC() {
+    activePageIndex = 0;
     activePage = nullptr;
-    for (auto * p : pages) {
-        if (p->HasFreeChunk()) {
-            activePage = p;
+    for (std::size_t i = 0; i < pages.size(); i++) {
+        if (pages[i]->HasFreeChunk()) {
+            activePageIndex = i;
+            activePage = pages[i];
             break;
         }
     }
@@ -208,22 +227,17 @@ void PageCluster::Sweep() {
     }
 }
 
-uint PageCluster::NumOfPages() {
-    return pages.size();
+void PageCluster::ReleaseEmptyPages() {
+    for (std::size_t i = 0; i < pages.size(); ) {
+        if (pages[i]->IsEmpty()) {
+            Page * page = pages[i];
+            MemBank::AcceptPage((std::byte*)page);
+            pages.erase(pages.begin() + i);
+        } else {
+            i++;
+        }
+    }
 }
-
-uint PageCluster::Capacity() {
-    return (NumOfPages() * PAGE_CAPACITY(chunkSize));
-}
-
-uint PageCluster::NumOfObj() {
-    uint numOfObj = 0;
-    for (auto * p : pages)
-        numOfObj += p->NumOfObj();
-    return numOfObj;
-}
-
-//void PageCluster::ReleaseEmptyPages() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -273,22 +287,23 @@ uint MemDomain::NumOfObj() {
     return numOfObj;
 }
 
-void MemDomain::Mark() {
+void MemDomain::CollectGarbage() {
     flags[Bit_MarkColor].flip();
     for (auto & cluster : clusters) {
         cluster.Mark();
     }
-}
 
-void MemDomain::Sweep() {
     for (auto & cluster : clusters) {
         cluster.Sweep();
     }
-}
 
-void MemDomain::CollectGarbage() {
-    Mark();
-    Sweep();
+    for (auto & cluster : clusters) {
+        cluster.ReleaseEmptyPages();
+    }
+
+    for (auto & cluster : clusters) {
+        cluster.UpdateActivePage();
+    }
 }
 
 void MemDomain::PrintStatus(const std::string & additionalMessage /* = "" */) {
@@ -301,12 +316,13 @@ void MemDomain::PrintStatus(const std::string & additionalMessage /* = "" */) {
         std::cout << "\n";
 
     uint width = 10;
-    std::cout << "pages    : " << NumOfPages() << '\n'
+    uint totalNumOfPages = NumOfPages();
+    std::cout << "pages    : " << totalNumOfPages << '\n'
               << "capacity : " << Capacity()   << '\n'
               << "objects  : " << NumOfObj()   << '\n'
-              << "memory   : " <<
+              << "memory   : " << Utils::NumSep(totalNumOfPages * 4) << " kb\n";
 
-    std::cout << "\nclusters:\n";
+    std::cout << "\npage clusters:\n";
     std::cout << std::left
               << std::setw(width) << "chunk_sz"
               << std::setw(width) << "page_cap"

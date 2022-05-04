@@ -74,7 +74,7 @@ int main() {
     MemDomain m = MemDomain();
     m.PrintStatus("Before allocation");
     std::list<std::byte*> chunks;
-    for (int i = 0; i < 1690000; i++) {
+    for (int i = 0; i < 16900; i++) {
         chunks.push_back(fakeChunk(m, randomChunkSize()));
     }
     m.PrintStatus("After allocation");

@@ -64,14 +64,15 @@ struct PageCluster {
     uint activePageIndex{};
     Page * activePage{};
 
-    void QueryPage();
-    void UpdateActivePage();
-    void Mark();
-    void Sweep();
-    //void ReleaseEmptyPages();
     uint NumOfPages();
     uint Capacity();
     uint NumOfObj();
+    void QueryPage();
+    void UpdateActivePage();
+    void UpdateActivePage_AfterGC();
+    void Mark();
+    void Sweep();
+    void ReleaseEmptyPages();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,10 +124,6 @@ struct MemDomain {
     uint NumOfPages();
     uint Capacity();
     uint NumOfObj();
-
-    void Mark();
-    void Sweep();
-    void ReleaseEmptyPages();
     void CollectGarbage();
 
     /////////////////////////////////////////////
