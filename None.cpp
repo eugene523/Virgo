@@ -7,6 +7,6 @@ None * None::constant;
 
 void None::InitType() {
     None::t = new Type("none");
-    constant = (None*)Heap::GetChunk_Const(sizeof(None));
+    constant = (None*) Heap::GetChunk_Constant(sizeof(None));
     Obj::Init(constant, None::t);
 }

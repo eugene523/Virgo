@@ -82,7 +82,9 @@ struct MemDomain {
 
     enum
     {
+        Bit_IsAvailable,
         Bit_MarkColor,
+        Bit_NoGc,
         Bit_IsConstant,
         Bit_IsBaby,
     };
@@ -95,29 +97,18 @@ struct MemDomain {
 
     explicit MemDomain();
 
-    inline bool Get_MarkColor() {
-        return flags[Bit_MarkColor];
-    }
-
     /////////////////////////////////////////////
 
-    inline bool Get_IsBaby() {
-        return flags[Bit_IsBaby];
-    }
+    inline bool Get_IsAvailable() { return flags[Bit_IsAvailable]; }
+    inline void Set_IsAvailable(bool value) { flags[Bit_IsAvailable] = value; }
 
-    inline void Set_IsBaby(bool value) {
-        flags[Bit_IsBaby] = value;
-    }
+    inline bool Get_MarkColor() { return flags[Bit_MarkColor]; }
 
-    /////////////////////////////////////////////
+    inline bool Get_IsBaby() { return flags[Bit_IsBaby]; }
+    inline void Set_IsBaby(bool value) { flags[Bit_IsBaby] = value; }
 
-    inline bool Get_IsConstant() {
-        return flags[Bit_IsConstant];
-    }
-
-    inline void Set_IsConstant(bool value) {
-        flags[Bit_IsConstant] = value;
-    }
+    inline bool Get_IsConstant() { return flags[Bit_IsConstant]; }
+    inline void Set_IsConstant(bool value) { flags[Bit_IsConstant] = value; }
 
     /////////////////////////////////////////////
 
@@ -155,7 +146,7 @@ struct Heap {
 
     static void Init();
     static std::byte * GetChunk(std::size_t chunkSize);
-    static std::byte * GetChunk_Const(std::size_t chunkSize);
+    static std::byte * GetChunk_Constant(std::size_t chunkSize);
     static void PushTemp(void * obj);
     static void PopTemp();
 };

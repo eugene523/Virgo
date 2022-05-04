@@ -36,9 +36,7 @@ struct Obj {
 
     inline void DecOwners() { numOfOwners--; }
 
-    inline bool Get_MarkColor() {
-        return flags[Bit_MarkColor];
-    }
+    inline bool Get_MarkColor() { return flags[Bit_MarkColor]; }
 
     inline void Mark() {
         flags[Bit_MarkColor].flip();

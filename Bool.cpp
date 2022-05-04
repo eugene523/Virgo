@@ -74,9 +74,9 @@ void Bool::InitType() {
     mtab->OpEq    = &Bool_OpEq;
     mtab->OpNotEq = &Bool_OpNotEq;
 
-    Bool::True = (Bool*)Heap::GetChunk_Const(sizeof(Bool));
+    Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
     Bool::True->val = true;
 
-    Bool::False = (Bool*)Heap::GetChunk_Const(sizeof(Bool));
+    Bool::False = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
     Bool::False->val = false;
 }

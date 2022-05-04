@@ -8,7 +8,7 @@
 const uint          ALIGNMENT     = 8;
 const uint          PAGE_POWER    = 12;
 const uint          PAGE_SIZE     = (1u << PAGE_POWER); // 4096
-const std::uint64_t PAGE_MASK     = (~std::uint64_t(0) << PAGE_POWER); // 0xFFF
+const std::uint64_t PAGE_MASK     = (~std::uint64_t(0) << PAGE_POWER); // 0xFF'FF'FF'FF'FF'FF'F0'00
 const uint          BLOCK_SIZE    = (1u << 24u); // 16MB
 const uint          BLOCK_SIZE_MB = 16;
 
@@ -21,16 +21,15 @@ void MemBank::AllocateBlock() {
     blocks.push_back(block);
 
     // Find a position in the block which is aligned according to the page size.
-    const std::uint64_t mask = 0xFFF;
     std::byte * nextPage = nullptr;
     int numOfPages = 0;
-    std::uint64_t lastBits = (std::uint64_t)block & mask;
+    std::uint64_t lastBits = ((std::uint64_t)block) & (~PAGE_MASK);
     if (lastBits == 0) {
         nextPage = block;
-        numOfPages = BLOCK_SIZE/PAGE_SIZE;
+        numOfPages = BLOCK_SIZE / PAGE_SIZE;
     } else {
         nextPage = (std::byte*)((std::uint64_t)(block + PAGE_SIZE) & PAGE_MASK);
-        numOfPages = BLOCK_SIZE/PAGE_SIZE - 1;
+        numOfPages = (BLOCK_SIZE / PAGE_SIZE) - 1;
     }
 
     // Slicing block into pieces.
@@ -247,6 +246,7 @@ MemDomain::MemDomain() {
         clusters[i].chunkSize = (i + 3) * ALIGNMENT;
         clusters[i].QueryPage();
     }
+    Set_IsAvailable(true);
 }
 
 std::byte * MemDomain::GetChunk(uint chunkSize) {
@@ -383,7 +383,7 @@ std::byte * Heap::GetChunk(std::size_t chunkSize) {
     return babyDomain->GetChunk(chunkSize);
 }
 
-std::byte * Heap::GetChunk_Const(std::size_t chunkSize) {
+std::byte * Heap::GetChunk_Constant(std::size_t chunkSize) {
     return constantDomain->GetChunk(chunkSize);
 }
 
