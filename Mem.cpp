@@ -5,6 +5,48 @@
 #include "Type.h"
 #include "Utils.h"
 
+/* Virgo automatic memory managment system.
+ *
+ * Terms:
+ *
+ * MEMORY BANK - an object that allocate memory blocks and keep stack of
+ * free pages.
+ *
+ *
+ * BLOCK - it's just a block of memory of 16 Mb size, for example. But actually the
+ * size is arbitrary. Blocks are sliced into pages.
+ *
+ *
+ * PAGE - a block of memory, which traditionally has size of 4096 = 2^12 bytes,
+ * but in current implementation it can be any 2^n size. Pages of 2^n size start at specific
+ * memory address which is divisible by 2^n. This fact is very important,
+ * because if we have some pointer that points to some byte in this page, then we
+ * can easily compute start of the page by applying page mask:
+ * page_address = byte_address & page_mask.
+ * Each page contains a header placed on the start of the page,
+ * that contains some system info. Page is contains a 'free list' of chunks
+ * of the same size. See wikipedia on what is 'free list'.
+ *
+ *
+ * CHUNK - a little memory block (24..64 bytes) that lies inside a page.
+ * As we mentioned before, each page contains a header and an array of chunks of the same size, that
+ * starts right after a header and continues to the end. Of course at the end of the
+ * page there will be some unused little area, because the available space of the page
+ * after a header is not supposed to be divisible by chunk size. Each chunk
+ * is a place where an object live.
+ *
+ *
+ * PAGE CLUSTER - an array of pages. All pages in the cluster maintains chunks of the same size.
+ * Page cluster takes and returns free pages to the memory bank.
+ *
+ *
+ * MEMORY DOMAIN - a set of page clusters. Memory domain performs garbage collection,
+ * that is scoped to memory which belongs to this particular memory domain.
+ *
+ *
+ * HEAP - a set of memory domains.
+ */
+
 const uint          ALIGNMENT     = 8;
 const uint          PAGE_POWER    = 12;
 const uint          PAGE_SIZE     = (1u << PAGE_POWER); // 4096
