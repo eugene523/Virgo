@@ -222,7 +222,7 @@ void Real::InitType() {
 }
 
 Real * Real::New(v_real value) {
-    Real * r = (Real*)Heap::GetChunk(sizeof(Real));
+    Real * r = (Real*) Heap::GetChunk_Baby(sizeof(Real));
     Obj::Init(r, Real::t);
     r->val = value;
     return r;

@@ -78,7 +78,7 @@ int main() {
         chunks.push_back(fakeChunk(m, randomChunkSize()));
     }
     m.PrintStatus("After allocation");
-    m.CollectGarbage();
+    m.Gc();
     m.PrintStatus("After gc.");
 
     return 0;

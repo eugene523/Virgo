@@ -90,7 +90,7 @@ void Str::InitType() {
 }
 
 Str * Str::New(const char * value) {
-    Str * s = (Str*)Heap::GetChunk(sizeof(Str));
+    Str * s = (Str*) Heap::GetChunk_Baby(sizeof(Str));
     Obj::Init(s, Str::t);
     uint len = strlen(value);
     char * s_val = (char*)calloc(len + 1, sizeof(char));

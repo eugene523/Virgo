@@ -15,7 +15,7 @@ struct Obj {
 
     enum
     {
-        Bit_MarkColor
+        Flag_IsMarked
     };
     std::bitset<32> flags;
 
@@ -25,28 +25,23 @@ struct Obj {
         obj->type = type;
         obj->numOfOwners = 0;
         obj->flags = 0;
-        obj->flags[Bit_MarkColor] = Page::GetPage(inPlace)->domain->Get_MarkColor();
     }
 
-    inline bool Is(Type * ofType) {
-        return type == ofType;
-    }
+    inline bool Is(Type * ofType) { return type == ofType; }
 
     inline void IncOwners() { numOfOwners++; }
-
     inline void DecOwners() { numOfOwners--; }
 
-    inline bool Get_MarkColor() { return flags[Bit_MarkColor]; }
+    inline bool GetFlag_IsMarked() { return flags[Flag_IsMarked]; }
+    inline void ResetFlag_IsMarked() { flags[Flag_IsMarked] = false; }
 
     inline void Mark() {
-        flags[Bit_MarkColor].flip();
-        assert(Page::GetPage(this)->domain->Get_MarkColor() == flags[Bit_MarkColor]);
+        flags[Flag_IsMarked] = true;
         auto markMethod = type->methodTable->Mark;
         if (markMethod == nullptr)
             return;
         markMethod(this);
     }
-
     inline void Delete() {
         auto deleteMethod = type->methodTable->Delete;
         if (deleteMethod == nullptr)

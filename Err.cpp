@@ -10,7 +10,7 @@ void Err::InitType() {
 }
 
 Err * Err::New(const std::string & message, uint srcLine /* = 0 */) {
-    Err * err = (Err*)Heap::GetChunk(sizeof(Err));
+    Err * err = (Err*) Heap::GetChunk_Baby(sizeof(Err));
     Obj::Init(err, Err::t);
     err->srcLine = srcLine;
     err->message = message;

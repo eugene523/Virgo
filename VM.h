@@ -26,6 +26,18 @@ struct VM {
     [[nodiscard]]
     static Ref GetConstant_Str(const std::string & val);
      */
+
+    // Temporary references stack is used during evaluating expressions.
+    // We push to this stack intermediate results of a currently evaluating expression,
+    // so we can be sure that intermediate values will not be deleted if GC will start
+    // in the middle of expression.
+    /*
+    static const uint TEMP_STACK_CAPACITY;
+    static std::list<void*> tempStack;
+    static int tempStackTop;
+    static void PushTemp(void * obj);
+    static void PopTemp();
+     */
 };
 
 #endif //PROTON_VM_H

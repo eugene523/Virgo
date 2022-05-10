@@ -239,7 +239,7 @@ void Int::InitType() {
 }
 
 Int * Int::New(v_int value) {
-    Int * i = (Int*)Heap::GetChunk(sizeof(Int));
+    Int * i = (Int*) Heap::GetChunk_Baby(sizeof(Int));
     Obj::Init(i, Int::t);
     i->val = value;
     return i;

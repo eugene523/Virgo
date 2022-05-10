@@ -33,7 +33,9 @@ struct Page {
     uint        chunkSize;
     std::byte * nextFreeChunk;
 
-    static void Init(std::byte * pagePtr, MemDomain * domain, uint chunkSize);
+    static void Init(std::byte * pagePtr,
+                     MemDomain * domain,
+                     uint        chunkSize);
 
     static inline Page * GetPage(void * chunkPtr) {
         return (Page*)((std::uint64_t)chunkPtr & PAGE_MASK);
@@ -58,18 +60,19 @@ struct Page {
 ///////////////////////////////////////////////////////////////////////////////
 
 struct PageCluster {
-    MemDomain *  domain{};
-    uint chunkSize{};
+    MemDomain *        domain{};
+    uint               chunkSize{};
     std::vector<Page*> pages{};
-    uint activePageIndex{};
-    Page * activePage{};
+    uint               activePageIndex{};
+    Page *             activePage{};
 
+    std::byte * GetChunk();
     uint NumOfPages();
     uint Capacity();
     uint NumOfObj();
     void QueryPage();
     void UpdateActivePage();
-    void UpdateActivePage_AfterGC();
+    void UpdateActivePage_AfterGc();
     void Mark();
     void Sweep();
     void ReleaseEmptyPages();
@@ -79,14 +82,17 @@ struct PageCluster {
 
 struct MemDomain {
     uint pageLimit = 1024;
+    uint totalNumOfPages{};
+
+    uint   lastMarked{};
+    uint   lastDeleted{};
+    double shrinkFactor{};
 
     enum
     {
-        Bit_IsAvailable,
-        Bit_MarkColor,
-        Bit_NoGc,
-        Bit_IsConstant,
-        Bit_IsBaby,
+        Flag_IsAvailable,
+        Flag_IsConstantDomain,
+        Flag_IsBabyDomain,
     };
     std::bitset<32> flags{};
 
@@ -99,23 +105,21 @@ struct MemDomain {
 
     /////////////////////////////////////////////
 
-    inline bool Get_IsAvailable() { return flags[Bit_IsAvailable]; }
-    inline void Set_IsAvailable(bool value) { flags[Bit_IsAvailable] = value; }
+    inline bool GetFlag_IsAvailable() { return flags[Flag_IsAvailable]; }
+    inline void SetFlag_IsAvailable(bool value) { flags[Flag_IsAvailable] = value; }
 
-    inline bool Get_MarkColor() { return flags[Bit_MarkColor]; }
+    inline bool GetFlag_IsConstant() { return flags[Flag_IsConstantDomain]; }
+    inline void SetFlag_IsConstant(bool value) { flags[Flag_IsConstantDomain] = value; }
 
-    inline bool Get_IsBaby() { return flags[Bit_IsBaby]; }
-    inline void Set_IsBaby(bool value) { flags[Bit_IsBaby] = value; }
-
-    inline bool Get_IsConstant() { return flags[Bit_IsConstant]; }
-    inline void Set_IsConstant(bool value) { flags[Bit_IsConstant] = value; }
+    inline bool GetFlag_IsBabyDomain() { return flags[Flag_IsBabyDomain]; }
+    inline void SetFlag_IsBabyDomain(bool value) { flags[Flag_IsBabyDomain] = value; }
 
     /////////////////////////////////////////////
 
     uint NumOfPages();
     uint Capacity();
     uint NumOfObj();
-    void CollectGarbage();
+    void Gc();
 
     /////////////////////////////////////////////
 
@@ -128,27 +132,24 @@ struct MemDomain {
 ///////////////////////////////////////////////////////////////////////////////
 
 struct Heap {
-    static std::vector<MemDomain*> domains;
     static MemDomain * constantDomain;
     static MemDomain * babyDomain;
+    static uint        domainLimit;
+    static uint        activeDomainIndex;
     static MemDomain * activeDomain;
+    static std::vector<MemDomain*> domains;
 
-    // Temporary references stack is used during evaluating expressions.
-    // We push to this stack intermediate results of a currently evaluating expression,
-    // so we can be sure that intermediate values will not be deleted if GC will start
-    // in the middle of expression.
-    static const uint TEMP_STACK_CAPACITY;
-    static std::list<void*> tempStack;
-    static int tempStackTop;
-
-    static void (*PreCollectCallback)();
-    static void (*PostCollectCallback)();
+    static void (*PreGc)(MemDomain * gcDomain);
 
     static void Init();
-    static std::byte * GetChunk(std::size_t chunkSize);
     static std::byte * GetChunk_Constant(std::size_t chunkSize);
-    static void PushTemp(void * obj);
-    static void PopTemp();
+    static std::byte * GetChunk_Baby(std::size_t chunkSize);
+    static std::byte * GetChunk_Preferable(MemDomain * preferableDomain, std::size_t chunkSize);
+    static std::byte * GetChunk_Active(std::size_t chunkSize);
+    static void UpdateActiveDomain();
+
+    static void GlobalGc();
+    static void UpdateActiveDomain_AfterGlobalGc();
 };
 
 #endif //VIRGO_MEM_H
