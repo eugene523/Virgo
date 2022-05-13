@@ -14,19 +14,23 @@
  * free pages.
  *
  *
- * BLOCK - it's just a block of memory of 16 Mb size, for example. But actually the
- * size is arbitrary. Blocks are sliced into pages.
+ * BLOCK - it's just a block of memory of quite significant size (ex. 16 Mb).
+ * But actually the size is arbitrary. After memory bank allocates a block,
+ * it slices it into pages, and put them on the stack of free pages.
  *
  *
- * PAGE - a block of memory, which traditionally has size of 4096 = 2^12 bytes,
- * but in current implementation it can be any 2^n size. Pages of 2^n size start at specific
+ * PAGE - a block of memory, which usually has the size of 4096 = 2^12 bytes,
+ * but in current implementation it can be of any 2^n size. Pages of 2^n size start at specific
  * memory address which is divisible by 2^n. This fact is very important,
  * because if we have some pointer that points to some byte in this page, then we
  * can easily compute start of the page by applying page mask:
- * page_address = byte_address & page_mask.
+ *
+ *     page_address = byte_address & page_mask.
+ *
  * Each page contains a header placed on the start of the page,
- * that contains some system info. Page is contains a 'free list' of chunks
+ * that contains some system info. Page maintains a 'free list' of chunks
  * of the same size. See wikipedia on what is 'free list'.
+ * In our codebase we also use the term 'page' to denote a page header.
  *
  *
  * CHUNK - a little memory block (24..64 bytes) that lies inside a page.
@@ -37,7 +41,7 @@
  * is a place where an object live.
  *
  *
- * PAGE CLUSTER - an array of pages. All pages in the cluster maintains chunks of the same size.
+ * PAGE CLUSTER - a set of pages. All pages in the cluster maintains chunks of the same size.
  * Page cluster takes and returns free pages to the memory bank.
  *
  *
@@ -48,6 +52,8 @@
  * HEAP - a set of memory domains.
  */
 
+///////////////////////////////////////////////////////////////////////////////
+
 const uint          ALIGNMENT     = 8;
 const uint          PAGE_POWER    = 12;
 const uint          PAGE_SIZE     = (1u << PAGE_POWER); // 4096
@@ -55,12 +61,14 @@ const std::uint64_t PAGE_MASK     = (~std::uint64_t(0) << PAGE_POWER); // 0xFF'F
 const uint          BLOCK_SIZE    = (1u << 24u); // 16MB
 const uint          BLOCK_SIZE_MB = 16;
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::vector<std::byte*> MemBank::blocks;
 
 std::stack<std::byte*> MemBank::freePages;
 
 void MemBank::AllocateBlock() {
-    std::byte * block = (std::byte*)calloc(BLOCK_SIZE, 1);
+    auto * block = (std::byte*)calloc(BLOCK_SIZE, 1);
     if (block == nullptr) {
         std::cerr << "Fatal error. Can't allocate block.";
         abort();
@@ -108,8 +116,8 @@ void MemBank::PrintStatus() {
 ///////////////////////////////////////////////////////////////////////////////
 
 struct ChunkHeader {
-    std::uint64_t zeroField; // Always zero for a free chunk
     std::byte *   nextChunk;
+    std::uint64_t zeroField; // Always zero for a free chunk
 };
 
 inline bool IsFreeChunk(void * chunkPtr) {
@@ -122,7 +130,8 @@ const uint PAGE_AVAILABLE_SPACE = PAGE_SIZE - sizeof(Page);
 
 void Page::Init(std::byte * pagePtr,
                 MemDomain * domain,
-                uint        chunkSize) {
+                uint        chunkSize)
+{
     memset(pagePtr, 0, PAGE_SIZE);
 
     auto * page = (Page*)pagePtr;
@@ -225,6 +234,11 @@ void Page::Sweep() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void PageCluster::Init() {
+    QueryPage();
+    UpdateActivePage();
+}
+
 std::byte * PageCluster::GetChunk() {
     std::byte * chunk = activePage->GetChunk();
     if (chunk != nullptr)
@@ -234,7 +248,10 @@ std::byte * PageCluster::GetChunk() {
 }
 
 uint PageCluster::NumOfPages() {
-    return pages.size();
+    uint size = availablePages.size() + unavailablePages.size();
+    if (activePage != nullptr)
+        size++;
+    return size;
 }
 
 uint PageCluster::Capacity() {
@@ -243,65 +260,58 @@ uint PageCluster::Capacity() {
 
 uint PageCluster::NumOfObj() {
     uint numOfObj = 0;
-    for (auto * p : pages)
+
+    for (auto * p : availablePages)
         numOfObj += p->NumOfObj();
+
+    for (auto * p : unavailablePages)
+        numOfObj += p->NumOfObj();
+
+    numOfObj += activePage->NumOfObj();
     return numOfObj;
 }
 
 void PageCluster::QueryPage() {
     std::byte * page = MemBank::GetPage();
     Page::Init(page, domain, chunkSize);
-    pages.push_back((Page*)page);
-    activePage = (Page*)page;
-    activePageIndex = pages.size() - 1;
+    availablePages.push_back((Page*)page);
     domain->totalNumOfPages++;
 }
 
 void PageCluster::UpdateActivePage() {
-    for (std::size_t i = activePageIndex; i < pages.size(); i++) {
-        if (pages[i]->HasFreeChunk()) {
-            activePageIndex = i;
-            activePage = pages[i];
+    // In this function we expect that
+    // activePage has no free chunks (unavailable).
+    if (availablePages.empty()) {
+        if (domain->totalNumOfPages == domain->limitNumOfPages)
             return;
-        }
-    }
-
-    if (domain->totalNumOfPages < domain->pageLimit)
         QueryPage();
-}
-
-void PageCluster::UpdateActivePage_AfterGc() {
-    for (std::size_t i = 0; i < pages.size(); i++) {
-        if (pages[i]->HasFreeChunk()) {
-            activePageIndex = i;
-            activePage = pages[i];
-            return;
-        }
     }
-
-    if (domain->totalNumOfPages < domain->pageLimit) {
-        QueryPage();
-        return;
-    }
-
-    // Afterall, if we can't update active page,
-    // we set it to first page.
-    // It can happen if all objects in all pages of the cluster are needed.
-    activePageIndex = 0;
-    activePage = pages[0];
+    unavailablePages.push_back(activePage);
+    activePage = availablePages.back();
+    availablePages.pop_back();
 }
 
 void PageCluster::Mark() {
-    for (auto * p : pages)
+    for (auto * p : availablePages)
         p->Mark();
+
+    for (auto * p : unavailablePages)
+        p->Mark();
+
+    activePage->Mark();
 }
 
 void PageCluster::Sweep() {
-    for (auto * p : pages)
+    for (auto * p : availablePages)
         p->Sweep();
+
+    for (auto * p : unavailablePages)
+        p->Sweep();
+
+    activePage->Sweep();
 }
 
-void PageCluster::ReleaseEmptyPages() {
+void PageCluster::ReleaseEmptyPages_InVector(std::vector<Page*> & pages) {
     for (std::size_t i = 0; i < pages.size(); ) {
         if (pages[i]->IsEmpty()) {
             Page * page = pages[i];
@@ -314,13 +324,32 @@ void PageCluster::ReleaseEmptyPages() {
     }
 }
 
+void PageCluster::ReleaseEmptyPages() {
+    ReleaseEmptyPages_InVector(availablePages);
+    ReleaseEmptyPages_InVector(unavailablePages);
+}
+
+void PageCluster::AfterGc() {
+    // Moving available pages from unavailable pages list
+    // to available pages list.
+    for (std::size_t i = 0; i < unavailablePages.size();) {
+        if (unavailablePages[i]->HasFreeChunk()) {
+            Page * page = unavailablePages[i];
+            unavailablePages.erase(unavailablePages.begin() + i);
+            availablePages.push_back(page);
+        } else {
+            i++;
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 MemDomain::MemDomain() {
     for (std::size_t i = 0; i < clusters.size(); i++) {
         clusters[i].domain = this;
         clusters[i].chunkSize = (i + 3) * ALIGNMENT;
-        clusters[i].QueryPage();
+        clusters[i].Init();
     }
     SetFlag_IsAvailable(true);
 }
@@ -370,11 +399,11 @@ void MemDomain::Gc() {
 
     if (!GetFlag_IsBabyDomain()) {
         for (auto & cluster : clusters)
-        cluster.ReleaseEmptyPages();
+            cluster.ReleaseEmptyPages();
     }
 
     for (auto & cluster : clusters)
-        cluster.UpdateActivePage_AfterGc();
+        cluster.AfterGc();
 
     // Computing shrink factor
     uint totalNumOfObj = lastMarked + lastDeleted;
@@ -432,7 +461,6 @@ void MemDomain::PrintStatus(const std::string & additionalMessage /* = "" */) {
 
 MemDomain * Heap::constantDomain;
 MemDomain * Heap::babyDomain;
-uint        Heap::domainLimit = 1;
 uint        Heap::activeDomainIndex = 0;
 MemDomain * Heap::activeDomain;
 std::vector<MemDomain*> Heap::domains;
@@ -442,7 +470,7 @@ void (*Heap::PreGc)(MemDomain * gcDomain);
 void Heap::Init() {
     constantDomain = new MemDomain();
     constantDomain->SetFlag_IsConstant(true);
-    constantDomain->pageLimit = UINT32_MAX;
+    constantDomain->limitNumOfPages = UINT32_MAX;
 
     babyDomain = new MemDomain();
     babyDomain->SetFlag_IsBabyDomain(true);
@@ -451,20 +479,51 @@ void Heap::Init() {
     activeDomain = domains[0];
 }
 
-std::byte * Heap::GetChunk_Constant(std::size_t chunkSize) {
+std::byte * Heap::GetChunk_Constant(uint chunkSize) {
     return constantDomain->GetChunk(chunkSize);
 }
 
-std::byte * Heap::GetChunk_Baby(std::size_t chunkSize) {
+std::byte * Heap::GetChunk_Baby(uint chunkSize) {
     std::byte * chunk = babyDomain->GetChunk(chunkSize);
-    if (chunk == nullptr) {
-        PreGc(babyDomain);
-        babyDomain->Gc();
-        chunk = babyDomain->GetChunk(chunkSize);
-        if (chunk == nullptr) {
-            std::cerr << "Fatal error. Can't collect garbage in baby domain.";
-            abort();
-        }
+    if (chunk != nullptr)
+        return chunk;
+
+    PreGc(babyDomain);
+    babyDomain->Gc();
+    chunk = babyDomain->GetChunk(chunkSize);
+    if (chunk != nullptr)
+        return chunk;
+
+    std::cerr << "Fatal error. Can't allocate chunk in baby domain.";
+    abort();
+}
+
+std::byte * Heap::GetChunk_Active(uint chunkSize) {
+    try_get_chunk:
+    std::byte * chunk = activeDomain->GetChunk(chunkSize);
+    if (chunk != nullptr)
+        return chunk;
+
+    const double SHRINK_FACTOR_THRESHOLD = 0.2;
+    if (activeDomain->shrinkFactor > SHRINK_FACTOR_THRESHOLD) {
+        DomainGc(activeDomain);
+        chunk = activeDomain->GetChunk(chunkSize);
+        if (chunk != nullptr)
+            return chunk;
+        activeDomain->SetFlag_IsAvailable(false);
+        bool updateResult = UpdateActiveDomain();
+        if (updateResult)
+            goto try_get_chunk;
+        GlobalGc();
+        // ?
     }
-    return chunk;
+}
+
+void Heap::GlobalGc() {
+    PreGlobalGc();
+}
+
+void Heap::DomainGc(MemDomain * domain) {
+    PreDomainGc(domain);
+
 }

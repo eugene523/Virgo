@@ -45,48 +45,44 @@ struct Page {
     static void FreeChunk(std::byte * chunk);
     uint NumOfFreeChunks();
     uint NumOfObj();
-
-    inline bool HasFreeChunk() {
-        return nextFreeChunk != nullptr;
-    }
-
+    inline bool HasFreeChunk() { return nextFreeChunk != nullptr; }
     bool IsEmpty();
     void Mark();
     void Sweep();
 };
-
-#define IS_BABY(ptr) (GET_PAGE(ptr)->domain->flagBits[MD_IS_BABY])
 
 ///////////////////////////////////////////////////////////////////////////////
 
 struct PageCluster {
     MemDomain *        domain{};
     uint               chunkSize{};
-    std::vector<Page*> pages{};
-    uint               activePageIndex{};
     Page *             activePage{};
+    std::vector<Page*> availablePages{};   // This pages have free chunks.
+    std::vector<Page*> unavailablePages{}; // This pages don't have free chunks.
 
+    void Init();
     std::byte * GetChunk();
     uint NumOfPages();
     uint Capacity();
     uint NumOfObj();
     void QueryPage();
     void UpdateActivePage();
-    void UpdateActivePage_AfterGc();
     void Mark();
     void Sweep();
+    void ReleaseEmptyPages_InVector(std::vector<Page*> & pages);
     void ReleaseEmptyPages();
+    void AfterGc();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 struct MemDomain {
-    uint pageLimit = 1024;
-    uint totalNumOfPages{};
+    uint   limitNumOfPages = 1024;
+    uint   totalNumOfPages{};
 
     uint   lastMarked{};
     uint   lastDeleted{};
-    double shrinkFactor{};
+    double shrinkFactor{}; // [0..1]
 
     enum
     {
@@ -134,20 +130,20 @@ struct MemDomain {
 struct Heap {
     static MemDomain * constantDomain;
     static MemDomain * babyDomain;
-    static uint        domainLimit;
     static uint        activeDomainIndex;
     static MemDomain * activeDomain;
     static std::vector<MemDomain*> domains;
 
-    static void (*PreGc)(MemDomain * gcDomain);
-
     static void Init();
-    static std::byte * GetChunk_Constant(std::size_t chunkSize);
-    static std::byte * GetChunk_Baby(std::size_t chunkSize);
-    static std::byte * GetChunk_Preferable(MemDomain * preferableDomain, std::size_t chunkSize);
-    static std::byte * GetChunk_Active(std::size_t chunkSize);
-    static void UpdateActiveDomain();
+    static std::byte * GetChunk_Constant(uint chunkSize);
+    static std::byte * GetChunk_Baby(uint chunkSize);
+    static std::byte * GetChunk_Preferable(MemDomain * preferableDomain, uint chunkSize);
+    static std::byte * GetChunk_Active(uint chunkSize);
+    static bool UpdateActiveDomain();
 
+    static void (*PreDomainGc)(MemDomain * domain);
+    static void DomainGc(MemDomain * domain);
+    static void (*PreGlobalGc)();
     static void GlobalGc();
     static void UpdateActiveDomain_AfterGlobalGc();
 };

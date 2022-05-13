@@ -9,8 +9,8 @@
 #include "Type.h"
 #include "Mem.h"
 
+// This is actually a header for any object.
 struct Obj {
-    Type * type{};
     std::uint32_t numOfOwners{};
 
     enum
@@ -18,6 +18,8 @@ struct Obj {
         Flag_IsMarked
     };
     std::bitset<32> flags;
+
+    Type * type{};
 
     static inline void Init(void * inPlace, Type * type) {
         assert(type != nullptr);
@@ -42,6 +44,7 @@ struct Obj {
             return;
         markMethod(this);
     }
+
     inline void Delete() {
         auto deleteMethod = type->methodTable->Delete;
         if (deleteMethod == nullptr)
