@@ -10,6 +10,7 @@ struct Str {
 
     static Type * t;
     static void InitType();
+    static void New(void * inPlace, const char * value);
     static Str * New(const char * value);
 };
 

@@ -5,7 +5,7 @@
 #include "Int.h"
 #include "Str.h"
 #include "Invoker.h"
-#include "Err.h"
+#include "Error.h"
 #include "ErrorMessages.h"
 #include "VM.h"
 

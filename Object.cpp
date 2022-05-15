@@ -1,7 +1,7 @@
 #include <cassert>
 #include "Object.h"
 #include "Type.h"
-#include "Err.h"
+#include "Error.h"
 
 Ref Object_GetField(Ref selfRef, Ref fieldName) {
     auto * selfObj = GET_OBJ(selfRef);

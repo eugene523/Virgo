@@ -4,7 +4,7 @@
 #include "VM.h"
 #include "Type.h"
 #include "Args.h"
-#include "Err.h"
+#include "Error.h"
 #include "Bool.h"
 #include "Int.h"
 #include "Real.h"

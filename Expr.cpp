@@ -2,7 +2,7 @@
 #include <sstream>
 #include "Expr.h"
 #include "Type.h"
-#include "Err.h"
+#include "Error.h"
 #include "Bool.h"
 #include "Str.h"
 #include "List.h"

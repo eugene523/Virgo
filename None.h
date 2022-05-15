@@ -8,9 +8,9 @@ struct None {
     std::uint64_t fakeField = 0; // We use it just to make None of 24-byte size;
 
     static Type * t;
-    static None * constant;
+    static None * none;
     static void InitType();
-    static inline None * New() { return constant; }
+    static inline None * New() { return none; }
 };
 
 #endif //VIRGO_NONE_H

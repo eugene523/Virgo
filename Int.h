@@ -9,6 +9,7 @@ struct Int {
 
     static Type * t;
     static void InitType();
+    static void New(void * inPlace, v_int value);
     static Int * New(v_int value);
 };
 

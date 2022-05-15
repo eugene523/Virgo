@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "Fun.h"
 #include "Type.h"
-#include "Err.h"
+#include "Error.h"
 #include "Str.h"
 #include "ArgPair.h"
 #include "Args.h"

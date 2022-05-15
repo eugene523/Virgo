@@ -9,8 +9,8 @@ struct Real {
 
     static Type * t;
     static void InitType();
+    static void New(void * inPlace, v_real value);
     static Real * New(v_real value);
-
 };
 
 #endif //PROTON_REAL_H

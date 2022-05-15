@@ -6,7 +6,7 @@
 #include "Class.h"
 #include "VM.h"
 #include "Str.h"
-#include "Err.h"
+#include "Error.h"
 
 Type * Script::t;
 

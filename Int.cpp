@@ -5,7 +5,7 @@
 #include "Int.h"
 #include "Real.h"
 #include "Bool.h"
-#include "Err.h"
+#include "Error.h"
 #include "ErrorMessages.h"
 #include "Str.h"
 
@@ -22,7 +22,7 @@ Obj * Int_OpAdd(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Real::New(selfVal + otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpSub(Obj * self, Obj * other) {
@@ -38,7 +38,7 @@ Obj * Int_OpSub(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Real::New(selfVal - otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpMul(Obj * self, Obj * other) {
@@ -54,7 +54,7 @@ Obj * Int_OpMul(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Real::New(selfVal * otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpDiv(Obj * self, Obj * other) {
@@ -64,7 +64,7 @@ Obj * Int_OpDiv(Obj * self, Obj * other) {
     {
         v_int otherVal = ((Int*)other)->val;
         if (otherVal == 0)
-            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
+            return (Obj*)Error::New(ERR_DIVISION_BY_ZERO);
         
         return (Obj*)Real::New(((v_real)selfVal) / otherVal);
     }
@@ -72,11 +72,11 @@ Obj * Int_OpDiv(Obj * self, Obj * other) {
     {
         v_real otherVal = ((Real*)other)->val;
         if (otherVal == 0)
-            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
+            return (Obj*)Error::New(ERR_DIVISION_BY_ZERO);
 
         return (Obj*)Real::New(selfVal / otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpPow(Obj * self, Obj * other) {
@@ -92,7 +92,7 @@ Obj * Int_OpPow(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Real::New(powl(selfVal, otherVal));
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpNeg(Obj * self) {
@@ -114,7 +114,7 @@ Obj * Int_OpGr(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Bool::New(selfVal > otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpGrEq(Obj * self, Obj * other) {
@@ -130,7 +130,7 @@ Obj * Int_OpGrEq(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Bool::New(selfVal >= otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpLs(Obj * self, Obj * other) {
@@ -146,7 +146,7 @@ Obj * Int_OpLs(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Bool::New(selfVal < otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpLsEq(Obj * self, Obj * other) {
@@ -162,7 +162,7 @@ Obj * Int_OpLsEq(Obj * self, Obj * other) {
         v_real otherVal = ((Real*)other)->val;
         return (Obj*)Bool::New(selfVal <= otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Int_OpEq(Obj * self, Obj * other) {
@@ -207,7 +207,7 @@ Obj * Int_OpNotEq(Obj * self, Obj * other) {
 Obj * Int_ToStr(Obj * self) {
     
     if (self == nullptr)
-        return (Obj*)Err::New(ERR_FIRST_ARG_IS_NULL));
+        return (Obj*)Error::New(ERR_FIRST_ARG_IS_NULL));
     assert(self->Is(Int::t));
     auto val = ((Int*)self)->val;
     std::stringstream s;
@@ -238,8 +238,14 @@ void Int::InitType() {
     //mtab->ToStr   = &Int_ToStr;
 }
 
+void Int::New(void * inPlace, v_int value) {
+    Int * i = (Int*)inPlace;
+    Obj::Init(i, Int::t);
+    i->val = value;
+}
+
 Int * Int::New(v_int value) {
-    Int * i = (Int*) Heap::GetChunk_Baby(sizeof(Int));
+    Int * i = (Int*)Heap::GetChunk_Baby(sizeof(Int));
     Obj::Init(i, Int::t);
     i->val = value;
     return i;

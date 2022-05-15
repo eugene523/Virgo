@@ -1,7 +1,7 @@
 #include "VM.h"
 #include "Type.h"
 #include "None.h"
-#include "Err.h"
+#include "Error.h"
 #include "Bool.h"
 #include "Int.h"
 #include "Real.h"
@@ -20,14 +20,17 @@
 #include "Script.h"
 #include "Builtins.h"
 
+/*
 ContextStack VM::contextStack;
+*/
 
 void VM::Init() {
+    /*
     Mem::Init();
     Mem::MarkCallback = &Mark;
 
     None::InitType();
-    Err::InitType();
+    Error::InitType();
     Bool::InitType();
     Int::InitType();
     Real::InitType();
@@ -51,40 +54,50 @@ void VM::Init() {
     Bool::False = NEW_PRESERVED_REF(new Bool(false));
 
     Builtins::ZeroNamespace::Init();
+     */
 }
 
-void VM::Mark() {
-    contextStack.Mark();
+uint                        VM::nextId;
+std::map<uint, Obj*>        VM::constants;
+std::map<v_int, uint>       VM::constantsId_Int{};
+std::map<v_real, uint>      VM::constantsId_Real{};
+std::map<std::string, uint> VM::constantsId_Str{};
+
+uint VM::GetConstantId_Int(v_int val) {
+    if (constantsId_Int.count(val) > 0)
+        return constantsId_Int[val];
+
+    void * inPlace = Heap::GetChunk_Constant(sizeof(Int));
+    Int::New(inPlace, val);
+    uint id = nextId;
+    nextId++;
+    constants[id] = (Obj*)inPlace;
+    constantsId_Int[val] = id;
+    return id;
 }
 
-void VM::PrintStatus() {
-    Mem::PrintStatus();
+uint VM::GetConstantId_Real(v_real val) {
+    if (constantsId_Real.count(val) > 0)
+        return constantsId_Real[val];
+
+    void * inPlace = Heap::GetChunk_Constant(sizeof(Real));
+    Real::New(inPlace, val);
+    uint id = nextId;
+    nextId++;
+    constants[id] = (Obj*)inPlace;
+    constantsId_Real[val] = id;
+    return id;
 }
 
-std::map<v_int, Ref>       VM::constants_Int{};
-std::map<v_real, Ref>      VM::constants_Real{};
-std::map<std::string, Ref> VM::constants_Str{};
+uint VM::GetConstantId_Str(const std::string & val) {
+    if (constantsId_Str.count(val) > 0)
+        return constantsId_Str[val];
 
-Ref VM::GetConstant_Int(v_int val) {
-    if (constants_Int.count(val) > 0)
-        return constants_Int[val];
-    Ref ref = NEW_PRESERVED_REF(new Int(val));
-    constants_Int[val] = ref;
-    return ref;
-}
-
-Ref VM::GetConstant_Real(v_real val) {
-    if (constants_Real.count(val) > 0)
-        return constants_Real[val];
-    Ref ref = NEW_PRESERVED_REF(new Real(val));
-    constants_Real[val] = ref;
-    return ref;
-}
-
-Ref VM::GetConstant_Str(const std::string & val) {
-    if (constants_Str.count(val) > 0)
-        return constants_Str[val];
-    Ref ref = NEW_PRESERVED_REF(new Str(val));
-    constants_Str[val] = ref;
-    return ref;
+    void * inPlace = Heap::GetChunk_Constant(sizeof(Real));
+    Str::New(inPlace, val.c_str());
+    uint id = nextId;
+    nextId++;
+    constants[id] = (Obj*)inPlace;
+    constantsId_Str[val] = id;
+    return id;
 }

@@ -2,7 +2,7 @@
 #include "Parser.h"
 #include "Obj.h"
 #include "Type.h"
-#include "Err.h"
+#include "Error.h"
 #include "Str.h"
 #include "Bool.h"
 #include "Fun.h"

@@ -5,7 +5,7 @@
 #include "Bool.h"
 #include "Int.h"
 #include "Real.h"
-#include "Err.h"
+#include "Error.h"
 #include "ErrorMessages.h"
 
 Obj * Real_OpAdd(Obj * self, Obj * other) {
@@ -21,7 +21,7 @@ Obj * Real_OpAdd(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Real::New(selfVal + otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpSub(Obj * self, Obj * other) {
@@ -37,7 +37,7 @@ Obj * Real_OpSub(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Real::New(selfVal - otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpMult(Obj * self, Obj * other) {
@@ -53,7 +53,7 @@ Obj * Real_OpMult(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Real::New(selfVal * otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpDiv(Obj * self, Obj * other) {
@@ -63,17 +63,17 @@ Obj * Real_OpDiv(Obj * self, Obj * other) {
     {
         v_real otherVal = ((Real*)other)->val;
         if (otherVal == 0)
-            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
+            return (Obj*)Error::New(ERR_DIVISION_BY_ZERO);
         return (Obj*)Real::New(selfVal / otherVal);
     }
     else if (other->Is(Int::t))
     {
         v_int otherVal = ((Int*)other)->val;
         if (otherVal == 0)
-            return (Obj*)Err::New(ERR_DIVISION_BY_ZERO);
+            return (Obj*)Error::New(ERR_DIVISION_BY_ZERO);
         return (Obj*)Real::New(selfVal / otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpPow(Obj * self, Obj * other) {
@@ -89,7 +89,7 @@ Obj * Real_OpPow(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Real::New(powl(selfVal, otherVal));
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpNeg(Obj * self) {
@@ -111,7 +111,7 @@ Obj * Real_OpGr(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal > otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpGrEq(Obj * self, Obj * other) {
@@ -127,7 +127,7 @@ Obj * Real_OpGrEq(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal >= otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpLs(Obj * self, Obj * other) {
@@ -143,7 +143,7 @@ Obj * Real_OpLs(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal < otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpLsEq(Obj * self, Obj * other) {
@@ -159,7 +159,7 @@ Obj * Real_OpLsEq(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal <= otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpEq(Obj * self, Obj * other) {
@@ -178,7 +178,7 @@ Obj * Real_OpEq(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal == otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 Obj * Real_OpNotEq(Obj * self, Obj * other) {
@@ -197,7 +197,7 @@ Obj * Real_OpNotEq(Obj * self, Obj * other) {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal != otherVal);
     }
-    return (Obj*)Err::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,17 +221,15 @@ void Real::InitType() {
     mt->OpNotEq = &Real_OpNotEq;
 }
 
+void Real::New(void * inPlace, v_real value) {
+    Real * r = (Real*)inPlace;
+    Obj::Init(r, Real::t);
+    r->val = value;
+}
+
 Real * Real::New(v_real value) {
     Real * r = (Real*) Heap::GetChunk_Baby(sizeof(Real));
     Obj::Init(r, Real::t);
     r->val = value;
     return r;
 }
-
-/*
-std::string Real::ToStr() const {
-    std::stringstream s;
-    s << val;
-    return s.str();
-}
- */

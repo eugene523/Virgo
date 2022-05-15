@@ -6,7 +6,7 @@
 #include "Str.h"
 #include "Fun.h"
 #include "Script.h"
-#include "Err.h"
+#include "Error.h"
 #include "Builtins.h"
 
 Context::Context() = default;

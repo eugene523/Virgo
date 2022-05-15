@@ -2,7 +2,7 @@
 #include "Type.h"
 #include "List.h"
 #include "Seg.h"
-#include "Err.h"
+#include "Error.h"
 
 Type * Iter::t;
 

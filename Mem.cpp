@@ -70,7 +70,7 @@ std::stack<std::byte*> MemBank::freePages;
 void MemBank::AllocateBlock() {
     auto * block = (std::byte*)calloc(BLOCK_SIZE, 1);
     if (block == nullptr) {
-        std::cerr << "Fatal error. Can't allocate block.";
+        std::cerr << "Error. Can't allocate block.";
         abort();
     }
     blocks.push_back(block);
@@ -465,7 +465,7 @@ uint        Heap::activeDomainIndex = 0;
 MemDomain * Heap::activeDomain;
 std::vector<MemDomain*> Heap::domains;
 
-void (*Heap::PreGc)(MemDomain * gcDomain);
+void (*Heap::PreDomainGc)(MemDomain * gcDomain);
 
 void Heap::Init() {
     constantDomain = new MemDomain();
@@ -488,14 +488,32 @@ std::byte * Heap::GetChunk_Baby(uint chunkSize) {
     if (chunk != nullptr)
         return chunk;
 
-    PreGc(babyDomain);
-    babyDomain->Gc();
+    DomainGc(babyDomain);
     chunk = babyDomain->GetChunk(chunkSize);
     if (chunk != nullptr)
         return chunk;
 
-    std::cerr << "Fatal error. Can't allocate chunk in baby domain.";
+    std::cerr << "Error. Can't allocate chunk in baby domain.";
     abort();
+}
+
+const double SHRINK_FACTOR_THRESHOLD = 0.2;
+
+std::byte * Heap::GetChunk_Preferable(MemDomain * preferableDomain, uint chunkSize) {
+    if (preferableDomain->GetFlag_IsAvailable()) {
+        std::byte * chunk = preferableDomain->GetChunk(chunkSize);
+        if (chunk != nullptr)
+            return chunk;
+
+        if (preferableDomain->shrinkFactor > SHRINK_FACTOR_THRESHOLD) {
+            DomainGc(preferableDomain);
+            chunk = preferableDomain->GetChunk(chunkSize);
+            if (chunk != nullptr)
+                return chunk;
+        }
+        preferableDomain->SetFlag_IsAvailable(false);
+    }
+    return GetChunk_Active(chunkSize);
 }
 
 std::byte * Heap::GetChunk_Active(uint chunkSize) {
@@ -504,26 +522,31 @@ std::byte * Heap::GetChunk_Active(uint chunkSize) {
     if (chunk != nullptr)
         return chunk;
 
-    const double SHRINK_FACTOR_THRESHOLD = 0.2;
     if (activeDomain->shrinkFactor > SHRINK_FACTOR_THRESHOLD) {
         DomainGc(activeDomain);
         chunk = activeDomain->GetChunk(chunkSize);
         if (chunk != nullptr)
             return chunk;
-        activeDomain->SetFlag_IsAvailable(false);
-        bool updateResult = UpdateActiveDomain();
-        if (updateResult)
-            goto try_get_chunk;
-        GlobalGc();
-        // ?
     }
-}
+    activeDomain->SetFlag_IsAvailable(false);
 
-void Heap::GlobalGc() {
-    PreGlobalGc();
+    bool updateResult = UpdateActiveDomain();
+    if (updateResult)
+        goto try_get_chunk;
+
+    GlobalGc();
+    UpdateActiveDomain();
+    chunk = activeDomain->GetChunk(chunkSize);
+    if (chunk != nullptr)
+        return chunk;
+    std::cerr << "Error. Can't allocate chunk.";
 }
 
 void Heap::DomainGc(MemDomain * domain) {
     PreDomainGc(domain);
+    domain->Gc();
+}
 
+void Heap::GlobalGc() {
+    PreGlobalGc();
 }

@@ -5,7 +5,7 @@
 #include <chrono>
 //#include <utility>
 #include "Mem.h"
-#include "Err.h"
+#include "Error.h"
 /*
 void test() {
     VM::Init();
@@ -31,7 +31,7 @@ void Mem2Test() {
 */
 
 #include "None.h"
-#include "Err.h"
+#include "Error.h"
 #include "Bool.h"
 #include "Int.h"
 #include "Real.h"
@@ -39,7 +39,7 @@ void Mem2Test() {
 void Init() {
     Heap::Init();
     None::InitType();
-    Err::InitType();
+    Error::InitType();
     Bool::InitType();
     Int::InitType();
     Real::InitType();

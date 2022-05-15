@@ -3,10 +3,10 @@
 
 Type * None::t;
 
-None * None::constant;
+None * None::none;
 
 void None::InitType() {
     None::t = new Type("none");
-    constant = (None*) Heap::GetChunk_Constant(sizeof(None));
-    Obj::Init(constant, None::t);
+    none = (None*) Heap::GetChunk_Constant(sizeof(None));
+    Obj::Init(none, None::t);
 }

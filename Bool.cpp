@@ -2,7 +2,7 @@
 #include <sstream>
 #include "Type.h"
 #include "Bool.h"
-#include "Err.h"
+#include "Error.h"
 #include "Str.h"
 
 const char * ERR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
@@ -11,7 +11,7 @@ Obj * Bool_OpAnd(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
-        return (Obj*)Err::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
+        return (Obj*)Error::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
 
     bool selfVal = ((Bool*)self)->val;
     bool otherVal = ((Bool*)other)->val;
@@ -22,7 +22,7 @@ Obj * Bool_OpOr(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
-        return (Obj*)Err::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
+        return (Obj*)Error::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
 
     bool selfVal = ((Bool*)self)->val;
     bool otherVal = ((Bool*)other)->val;
