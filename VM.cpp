@@ -20,10 +20,6 @@
 #include "Script.h"
 #include "Builtins.h"
 
-/*
-ContextStack VM::contextStack;
-*/
-
 void VM::Init() {
     /*
     Mem::Init();
@@ -48,10 +44,6 @@ void VM::Init() {
     Object::InitType();
     Invoker::InitType();
     Script::InitType();
-
-    Ref none    = NEW_PRESERVED_REF(new None());
-    Bool::True  = NEW_PRESERVED_REF(new Bool(true));
-    Bool::False = NEW_PRESERVED_REF(new Bool(false));
 
     Builtins::ZeroNamespace::Init();
      */
@@ -100,4 +92,9 @@ uint VM::GetConstantId_Str(const std::string & val) {
     constants[id] = (Obj*)inPlace;
     constantsId_Str[val] = id;
     return id;
+}
+
+Obj * VM::GetConstant(uint id) {
+    assert(constants.count(id) > 0);
+    return constants[id];
 }

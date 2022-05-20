@@ -2,6 +2,8 @@
 #define PROTON_VM_H
 
 #include <map>
+#include <cstdlib>
+#include <iostream>
 #include "Mem.h"
 #include "Obj.h"
 
@@ -17,11 +19,12 @@ struct VM {
 
     static void Init();
 
-    static uint GetConstantId_Int(v_int val);
-    static uint GetConstantId_Real(v_real val);
-    static uint GetConstantId_Str(const std::string & val);
-    static Obj* GetConstant(uint id);
+    static uint  GetConstantId_Int(v_int val);
+    static uint  GetConstantId_Real(v_real val);
+    static uint  GetConstantId_Str(const std::string & val);
+    static Obj * GetConstant(uint id);
 
+    static void Execute(const char * byteCode);
 };
 
 #endif //PROTON_VM_H
