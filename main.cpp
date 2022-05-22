@@ -6,16 +6,13 @@
 //#include <utility>
 #include "Mem.h"
 #include "Error.h"
-/*
-void test() {
-    VM::Init();
-}
 
+/*
 void runScript() {
     VM::Init();
     std::fstream f;
-    //f.open(R"(C:\code\projects\Virgo\tests\for.v)");
-    f.open(R"(C:\code\projects\Virgo\tests\first.v)");
+    //f.open(R"(C:\code\projects\Virgo\Tests\for.v)");
+    f.open(R"(C:\code\projects\Virgo\Tests\first.v)");
     std::stringstream s;
     s << f.rdbuf();
     std::string sourceCode = s.str();
@@ -24,25 +21,18 @@ void runScript() {
     VM::contextStack.Print();
     VM::PrintStatus();
 }
-
-void Mem2Test() {
-    std::cout << sizeof(ObjHnd);
-}
 */
 
+#include "VM.h"
 #include "None.h"
 #include "Error.h"
 #include "Bool.h"
 #include "Int.h"
 #include "Real.h"
+#include "ByteCode.h"
 
 void Init() {
-    Heap::Init();
-    None::InitType();
-    Error::InitType();
-    Bool::InitType();
-    Int::InitType();
-    Real::InitType();
+    VM::Init();
 }
 
 std::byte * fakeChunk(MemDomain & m, uint size) {
@@ -55,31 +45,13 @@ uint randomChunkSize() {
     return (24 + rand() % (64 - 24 + 1));
 }
 
-void MemDomain_Test1() {
-    const uint numOfObjects = 1000;
-    MemDomain m = MemDomain();
-    std::list<std::byte*> chunks;
-    for (uint i = 0; i < numOfObjects; i++) {
-        uint size = randomChunkSize();
-        chunks.push_back(fakeChunk(m, size));
-    }
-    assert(m.NumOfObj() == numOfObjects);
-    for (auto c : chunks)
-        Page::FreeChunk(c);
-    assert(m.NumOfObj() == 0);
-}
-
 int main() {
     Init();
-    MemDomain m = MemDomain();
-    m.PrintStatus("Before allocation");
-    std::list<std::byte*> chunks;
-    for (int i = 0; i < 16900; i++) {
-        chunks.push_back(fakeChunk(m, randomChunkSize()));
-    }
-    m.PrintStatus("After allocation");
-    m.Gc();
-    m.PrintStatus("After gc.");
+
+    ByteCode bc;
+    bc.Write_OpCode(OpCode::NewFrame);
+    bc.Write_OpCode(OpCode::CloseFrame);
+    VM::Execute(bc);
 
     return 0;
 }

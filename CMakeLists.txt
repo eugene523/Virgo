@@ -16,6 +16,7 @@ add_executable(Virgo
         Int.h Int.cpp
         Real.h Real.cpp
         Str.h Str.cpp
+        Context.h Context.cpp
         ByteCode.h ByteCode.cpp
         VM.h VM.cpp
         #[[

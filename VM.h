@@ -6,16 +6,18 @@
 #include <iostream>
 #include "Mem.h"
 #include "Obj.h"
+#include "ByteCode.h"
 
 struct VM {
     static uint                        nextId;
-    static std::map<uint, Obj*>        constants;
+    static std::vector<Obj*>           constants;
     static std::map<v_int, uint>       constantsId_Int;
     static std::map<v_real, uint>      constantsId_Real;
     static std::map<std::string, uint> constantsId_Str;
 
-    static std::array<Obj*, 1024> stack;
-    static int stackTop;
+    static std::array<void*, 1024> ptrStack;
+    static int ptrStackTop;
+    static std::stack<uint> frameStack;
 
     static void Init();
 
@@ -24,7 +26,7 @@ struct VM {
     static uint  GetConstantId_Str(const std::string & val);
     static Obj * GetConstant(uint id);
 
-    static void Execute(const char * byteCode);
+    static void Execute(const ByteCode & bc);
 };
 
 #endif //PROTON_VM_H

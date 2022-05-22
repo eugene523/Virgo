@@ -6,12 +6,17 @@
 #include "Common.h"
 
 enum OpCode : std::uint64_t {
-    PushConstant, // constant_id
-    AccessValue,
+    NewFrame,
+    CloseFrame,
+    PushConstant,   // constant_id
+    GetValueByName, // expects Str* on stack
+    SetValueByName, // expects Str*, Obj* on stack
     Add,
     Sub,
     Mult,
-    Div
+    Div,
+    Pow,
+
 };
 
 struct ByteCode {

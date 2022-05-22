@@ -1,19 +1,14 @@
-#ifndef PROTON_CONTEXT_H
-#define PROTON_CONTEXT_H
+#ifndef VIRGO_CTX_H
+#define VIRGO_CTX_H
 
 #include <map>
-#include "Mem.h"
-#include "IDefObj.h"
+#include "Obj.h"
 
 struct Context {
-    Ref executionOwner;
-    std::map<Ref, Ref> variables;
+    std::map<Obj*, Obj*> variables;
 
-    Context();
-    Ref  GetVariable(Ref name);
-    void SetVariable(Ref name, Ref val);
-    void Mark();
-    void Print();
+    Obj * GetVariable(Obj * name);
+    void  SetVariable(Obj * name, Obj * value);
 };
 
-#endif //PROTON_CONTEXT_H
+#endif //VIRGO_CTX_H

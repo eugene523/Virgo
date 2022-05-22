@@ -133,17 +133,18 @@ struct Heap {
     static uint        activeDomainIndex;
     static MemDomain * activeDomain;
     static std::vector<MemDomain*> domains;
+    static void (*PreDomainGc)(MemDomain * domain);
+    static void (*PreGlobalGc)();
 
     static void Init();
+
     static std::byte * GetChunk_Constant(uint chunkSize);
     static std::byte * GetChunk_Baby(uint chunkSize);
     static std::byte * GetChunk_Preferable(MemDomain * preferableDomain, uint chunkSize);
     static std::byte * GetChunk_Active(uint chunkSize);
-    static bool UpdateActiveDomain();
 
-    static void (*PreDomainGc)(MemDomain * domain);
+    static bool UpdateActiveDomain();
     static void DomainGc(MemDomain * domain);
-    static void (*PreGlobalGc)();
     static void GlobalGc();
     static void UpdateActiveDomain_AfterGlobalGc();
 };
