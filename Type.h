@@ -30,6 +30,9 @@ struct MethodTable {
     Obj * (*OpNot)       (Obj * self) {};
     Obj * (*OpEq)        (Obj * self, Obj * other) {};
     Obj * (*OpNotEq)     (Obj * self, Obj * other) {};
+
+    // Used for debugging.
+    std::string (*Dstr) (Obj * self) {};
 };
 
 struct Type {

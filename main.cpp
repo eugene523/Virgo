@@ -48,10 +48,47 @@ uint randomChunkSize() {
 int main() {
     Init();
 
+    uint c_a = VM::GetConstantId_Str("a");
+    uint c_b = VM::GetConstantId_Str("b");
+    uint c_c = VM::GetConstantId_Str("c");
+
+    uint c_1 = VM::GetConstantId_Int(1);
+    uint c_2 = VM::GetConstantId_Real(3.14);
+
     ByteCode bc;
     bc.Write_OpCode(OpCode::NewFrame);
-    bc.Write_OpCode(OpCode::CloseFrame);
+
+    // a = 1
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_a);
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_1);
+    bc.Write_OpCode(OpCode::SetValueByName);
+
+    // b = 1
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_b);
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_2);
+    bc.Write_OpCode(OpCode::SetValueByName);
+
+    // c = a + b
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_c);
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_a);
+    bc.Write_OpCode(OpCode::GetValueByName);
+    bc.Write_OpCode(OpCode::PushConstant);
+    bc.Write_uint64(c_b);
+    bc.Write_OpCode(OpCode::GetValueByName);
+    bc.Write_OpCode(OpCode::Add);
+    bc.Write_OpCode(OpCode::SetValueByName);
+
     VM::Execute(bc);
+    VM::PrintFrames();
+
+    bc.Write_OpCode(OpCode::CloseFrame);
+
 
     return 0;
 }

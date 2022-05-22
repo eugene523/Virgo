@@ -8,7 +8,8 @@ struct Context {
     std::map<Obj*, Obj*> variables;
 
     Obj * GetVariable(Obj * name);
-    void  SetVariable(Obj * name, Obj * value);
+    Obj * SetVariable(Obj * name, Obj * value);
+    void  Print();
 };
 
 #endif //VIRGO_CTX_H

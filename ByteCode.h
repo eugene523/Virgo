@@ -5,18 +5,19 @@
 #include <cstddef>
 #include "Common.h"
 
-enum OpCode : std::uint64_t {
+enum OpCode : std::uint64_t
+{
+/*  Operation          Arguments     Expects on stack   */
     NewFrame,
     CloseFrame,
-    PushConstant,   // constant_id
-    GetValueByName, // expects Str* on stack
-    SetValueByName, // expects Str*, Obj* on stack
-    Add,
+    PushConstant,   // id
+    GetValueByName, //               Str*
+    SetValueByName, //               Str*, Obj*
+    Add,            //               Obj*, Obj*
     Sub,
     Mult,
     Div,
     Pow,
-
 };
 
 struct ByteCode {

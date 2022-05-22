@@ -27,6 +27,7 @@ struct VM {
     static Obj * GetConstant(uint id);
 
     static void Execute(const ByteCode & bc);
+    static void PrintFrames();
 };
 
 #endif //PROTON_VM_H

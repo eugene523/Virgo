@@ -52,7 +52,10 @@ Obj * Str_OpNotEq(Obj * self, Obj * other) {
     return (Obj*)(((Bool*)result)->Invert());
 }
 
-
+std::string Str_Dstr(Obj * self) {
+    assert(self->Is(Str::t));
+    return std::string(((Str*)self)->val);
+}
 
 /*
 Obj * Str_Get(Obj * self, Obj * other) {
@@ -82,11 +85,12 @@ Type * Str::t;
 
 void Str::InitType() {
     Str::t = new Type("str");
-    auto mtab = Str::t->methodTable;
-    mtab->OpAdd   = &Str_OpAdd;
-    mtab->OpEq    = &Str_OpEq;
-    mtab->OpNotEq = &Str_OpNotEq;
-    //mtab->Get     = &Str_Get;
+    auto mt = Str::t->methodTable;
+    mt->OpAdd   = &Str_OpAdd;
+    mt->OpEq    = &Str_OpEq;
+    mt->OpNotEq = &Str_OpNotEq;
+    mt->Dstr    = &Str_Dstr;
+    //mt->Get     = &Str_Get;
 }
 
 void Str::New(void * inPlace, const char * value) {

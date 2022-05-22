@@ -59,7 +59,7 @@ std::map<v_int, uint>       VM::constantsId_Int{};
 std::map<v_real, uint>      VM::constantsId_Real{};
 std::map<std::string, uint> VM::constantsId_Str{};
 std::array<void*, 1024>     VM::ptrStack;
-int                         VM::ptrStackTop;
+int                         VM::ptrStackTop = -1;
 std::stack<uint>            VM::frameStack;
 
 uint VM::GetConstantId_Int(v_int val) {
@@ -109,44 +109,84 @@ void VM::Execute(const ByteCode & bc) {
     uint pos = 0;
     for (;;)
     {
-        OpCode op = *((OpCode*)(bc.stream + pos));
+        OpCode opCode = *((OpCode*)(bc.stream + pos));
         pos += sizeof(OpCode);
-        switch (op)
+        switch (opCode)
         {
             case OpCode::NewFrame :
             {
+                ptrStackTop++;
                 ptrStack[ptrStackTop] = new Context();
                 frameStack.push(ptrStackTop);
-                ptrStackTop++;
                 break;
             }
             case OpCode::CloseFrame :
             {
-                uint lastFramePos = frameStack.top();
+                int lastFramePos = frameStack.top();
                 frameStack.pop();
                 delete ((Context*)ptrStack[lastFramePos]);
-                ptrStackTop = lastFramePos;
+                ptrStackTop = lastFramePos - 1;
+                break;
             }
             case OpCode::PushConstant :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
                 pos += sizeof(uint64_t);
-                ptrStack[ptrStackTop] = GetConstant(id);
                 ptrStackTop++;
+                ptrStack[ptrStackTop] = GetConstant(id);
+                break;
             }
             case OpCode::GetValueByName :
             {
-                auto * name = (Obj*)ptrStack[ptrStackTop - 1];
+                auto * name = (Obj*)ptrStack[ptrStackTop];
                 auto * context = (Context*)ptrStack[frameStack.top()];
                 Obj  * value = context->GetVariable(name);
                 if (value->Is(Error::t)) {
                     std::cerr << ((Error*)value)->message;
                     abort();
                 }
-                ptrStack[ptrStackTop - 1] = value;
+                ptrStack[ptrStackTop] = value;
+                break;
+            }
+            case OpCode::SetValueByName :
+            {
+                auto * obj     = (Obj*)ptrStack[ptrStackTop];
+                auto * name    = (Obj*)ptrStack[ptrStackTop - 1];
+                auto * context = (Context*)ptrStack[frameStack.top()];
+                auto * result  = context->SetVariable(name, obj);
+                if (result != nullptr) {
+                    assert(result->Is(Error::t));
+                    std::cerr << ((Error*)result)->message;
+                    abort();
+                }
+                ptrStackTop -= 2;
+                break;
+            }
+            case OpCode::Add :
+            {
+                auto * obj_2  = (Obj*)ptrStack[ptrStackTop];
+                auto * obj_1  = (Obj*)ptrStack[ptrStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpAdd;
+                if (method == nullptr) {
+                    std::cerr << "Object does not provide operation +.";
+                    abort();
+                }
+                auto * result = method(obj_1, obj_2);
+                if (result->Is(Error::t)) {
+                    std::cerr << ((Error*)result)->message;
+                    abort();
+                }
+                ptrStackTop--;
+                ptrStack[ptrStackTop] = result;
+                break;
             }
         }
         if (pos >= bc.pos)
             break;
     }
+}
+
+void VM::PrintFrames() {
+    auto * context = (Context*)ptrStack[frameStack.top()];
+    context->Print();
 }

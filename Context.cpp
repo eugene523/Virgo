@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 #include "Context.h"
 #include "Str.h"
 #include "Error.h"
@@ -15,8 +16,23 @@ Obj * Context::GetVariable(Obj * name) {
     return (Obj*)Error::New(s.str());
 }
 
-void Context::SetVariable(Obj * name, Obj * value) {
+Obj * Context::SetVariable(Obj * name, Obj * value) {
     assert(name->Is(Str::t));
     assert(value != nullptr);
     variables[name] = value;
+    return nullptr;
+}
+
+void Context::Print() {
+    for (auto const & [key, val] : variables) {
+        std::string keyStr, valStr;
+        keyStr = key->type->methodTable->Dstr(key);
+        auto * method = val->type->methodTable->Dstr;
+        if (method == nullptr) {
+            valStr = val->type->name;
+        } else {
+            valStr = method(val);
+        }
+        std::cout << '\n' << keyStr << " = " << valStr;
+    }
 }

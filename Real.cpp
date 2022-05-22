@@ -200,6 +200,11 @@ Obj * Real_OpNotEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
 }
 
+std::string Real_Dstr(Obj * self) {
+    assert(self->Is(Real::t));
+    return std::to_string(((Real*)self)->val);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 Type * Real::t;
@@ -219,6 +224,7 @@ void Real::InitType() {
     mt->OpLsEq  = &Real_OpLsEq;
     mt->OpEq    = &Real_OpEq;
     mt->OpNotEq = &Real_OpNotEq;
+    mt->Dstr    = &Real_Dstr;
 }
 
 void Real::New(void * inPlace, v_real value) {

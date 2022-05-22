@@ -216,26 +216,32 @@ Obj * Int_ToStr(Obj * self) {
 }
  */
 
+std::string Int_Dstr(Obj * self) {
+    assert(self->Is(Int::t));
+    return std::to_string(((Int*)self)->val);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 Type * Int::t;
 
 void Int::InitType() {
     Int::t = new Type("int");
-    auto mtab = Int::t->methodTable;
-    mtab->OpAdd   = &Int_OpAdd;
-    mtab->OpSub   = &Int_OpSub;
-    mtab->OpMul   = &Int_OpMul;
-    mtab->OpDiv   = &Int_OpDiv;
-    mtab->OpPow   = &Int_OpPow;
-    mtab->OpNeg   = &Int_OpNeg;
-    mtab->OpGr    = &Int_OpGr;
-    mtab->OpGrEq  = &Int_OpGrEq;
-    mtab->OpLs    = &Int_OpLs;
-    mtab->OpLsEq  = &Int_OpLsEq;
-    mtab->OpEq    = &Int_OpEq;
-    mtab->OpNotEq = &Int_OpNotEq;
-    //mtab->ToStr   = &Int_ToStr;
+    auto mt = Int::t->methodTable;
+    mt->OpAdd   = &Int_OpAdd;
+    mt->OpSub   = &Int_OpSub;
+    mt->OpMul   = &Int_OpMul;
+    mt->OpDiv   = &Int_OpDiv;
+    mt->OpPow   = &Int_OpPow;
+    mt->OpNeg   = &Int_OpNeg;
+    mt->OpGr    = &Int_OpGr;
+    mt->OpGrEq  = &Int_OpGrEq;
+    mt->OpLs    = &Int_OpLs;
+    mt->OpLsEq  = &Int_OpLsEq;
+    mt->OpEq    = &Int_OpEq;
+    mt->OpNotEq = &Int_OpNotEq;
+    mt->Dstr    = &Int_Dstr;
+    //mt->ToStr   = &Int_ToStr;
 }
 
 void Int::New(void * inPlace, v_int value) {
