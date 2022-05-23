@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Mem.h"
 #include "Obj.h"
+#include "Error.h"
 #include "ByteCode.h"
 
 struct VM {
@@ -27,6 +28,7 @@ struct VM {
     static Obj * GetConstant(uint id);
 
     static void Execute(const ByteCode & bc);
+    static void HandlePossibleError(Obj * obj);
     static void PrintFrames();
 };
 

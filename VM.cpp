@@ -141,10 +141,7 @@ void VM::Execute(const ByteCode & bc) {
                 auto * name = (Obj*)ptrStack[ptrStackTop];
                 auto * context = (Context*)ptrStack[frameStack.top()];
                 Obj  * value = context->GetVariable(name);
-                if (value->Is(Error::t)) {
-                    std::cerr << ((Error*)value)->message;
-                    abort();
-                }
+                HandlePossibleError(value);
                 ptrStack[ptrStackTop] = value;
                 break;
             }
@@ -154,11 +151,7 @@ void VM::Execute(const ByteCode & bc) {
                 auto * name    = (Obj*)ptrStack[ptrStackTop - 1];
                 auto * context = (Context*)ptrStack[frameStack.top()];
                 auto * result  = context->SetVariable(name, obj);
-                if (result != nullptr) {
-                    assert(result->Is(Error::t));
-                    std::cerr << ((Error*)result)->message;
-                    abort();
-                }
+                HandlePossibleError(result);
                 ptrStackTop -= 2;
                 break;
             }
@@ -172,10 +165,7 @@ void VM::Execute(const ByteCode & bc) {
                     abort();
                 }
                 auto * result = method(obj_1, obj_2);
-                if (result->Is(Error::t)) {
-                    std::cerr << ((Error*)result)->message;
-                    abort();
-                }
+                HandlePossibleError(result);
                 ptrStackTop--;
                 ptrStack[ptrStackTop] = result;
                 break;
@@ -184,6 +174,17 @@ void VM::Execute(const ByteCode & bc) {
         if (pos >= bc.pos)
             break;
     }
+}
+
+void VM::HandlePossibleError(Obj * obj) {
+    if (obj == nullptr)
+        return;
+
+    if (!obj->Is(Error::t))
+        return;
+
+    std::cerr << '\n' << ((Error*)obj)->message;
+    abort();
 }
 
 void VM::PrintFrames() {
