@@ -16,8 +16,8 @@ struct VM {
     static std::map<v_real, uint>      constantsId_Real;
     static std::map<std::string, uint> constantsId_Str;
 
-    static std::array<void*, 1024> ptrStack;
-    static int ptrStackTop;
+    static std::array<void*, 1024> stack;
+    static int stackTop;
     static std::stack<uint> frameStack;
 
     static void Init();
@@ -29,6 +29,11 @@ struct VM {
 
     static void Execute(const ByteCode & bc);
     static void HandlePossibleError(Obj * obj);
+    static void ThrowError(const std::string & message);
+
+    static void ThrowError_NoSuchOperation(const Type & t,
+                                           const std::string & opSymbol);
+
     static void PrintFrames();
 };
 

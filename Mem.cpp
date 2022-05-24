@@ -10,13 +10,13 @@
  *
  * Terms:
  *
- * MEMORY BANK - an object that allocate memory blocks and keep ptrStack of
+ * MEMORY BANK - an object that allocate memory blocks and keep stack of
  * free pages.
  *
  *
  * BLOCK - it's just a block of memory of quite significant size (ex. 16 Mb).
  * But actually the size is arbitrary. After memory bank allocates a block,
- * it slices it into pages, and put them on the ptrStack of free pages.
+ * it slices it into pages, and put them on the stack of free pages.
  *
  *
  * PAGE - a block of memory, which usually has the size of 4096 = 2^12 bytes,

@@ -14,10 +14,10 @@ enum OpCode : std::uint64_t
     GetValueByName, //               Str*
     SetValueByName, //               Str*, Obj*
     Add,            //               Obj*, Obj*
-    Sub,
-    Mult,
-    Div,
-    Pow,
+    Sub,            //               Obj*, Obj*
+    Mult,           //               Obj*, Obj*
+    Div,            //               Obj*, Obj*
+    Pow,            //               Obj*, Obj*
 };
 
 struct ByteCode {

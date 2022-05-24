@@ -1,3 +1,4 @@
+#include <sstream>
 #include "VM.h"
 #include "Type.h"
 #include "None.h"
@@ -58,8 +59,8 @@ std::vector<Obj*>           VM::constants;
 std::map<v_int, uint>       VM::constantsId_Int{};
 std::map<v_real, uint>      VM::constantsId_Real{};
 std::map<std::string, uint> VM::constantsId_Str{};
-std::array<void*, 1024>     VM::ptrStack;
-int                         VM::ptrStackTop = -1;
+std::array<void*, 1024>     VM::stack;
+int                         VM::stackTop = -1;
 std::stack<uint>            VM::frameStack;
 
 uint VM::GetConstantId_Int(v_int val) {
@@ -115,59 +116,60 @@ void VM::Execute(const ByteCode & bc) {
         {
             case OpCode::NewFrame :
             {
-                ptrStackTop++;
-                ptrStack[ptrStackTop] = new Context();
-                frameStack.push(ptrStackTop);
+                stackTop++;
+                stack[stackTop] = new Context();
+                frameStack.push(stackTop);
                 break;
             }
             case OpCode::CloseFrame :
             {
                 int lastFramePos = frameStack.top();
                 frameStack.pop();
-                delete ((Context*)ptrStack[lastFramePos]);
-                ptrStackTop = lastFramePos - 1;
+                delete ((Context*)stack[lastFramePos]);
+                stackTop = lastFramePos - 1;
                 break;
             }
             case OpCode::PushConstant :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
                 pos += sizeof(uint64_t);
-                ptrStackTop++;
-                ptrStack[ptrStackTop] = GetConstant(id);
+                stackTop++;
+                stack[stackTop] = GetConstant(id);
                 break;
             }
             case OpCode::GetValueByName :
             {
-                auto * name = (Obj*)ptrStack[ptrStackTop];
-                auto * context = (Context*)ptrStack[frameStack.top()];
+                auto * name = (Obj*)stack[stackTop];
+                auto * context = (Context*)stack[frameStack.top()];
                 Obj  * value = context->GetVariable(name);
                 HandlePossibleError(value);
-                ptrStack[ptrStackTop] = value;
+                stack[stackTop] = value;
                 break;
             }
             case OpCode::SetValueByName :
             {
-                auto * obj     = (Obj*)ptrStack[ptrStackTop];
-                auto * name    = (Obj*)ptrStack[ptrStackTop - 1];
-                auto * context = (Context*)ptrStack[frameStack.top()];
+                auto * obj     = (Obj*)stack[stackTop];
+                auto * name    = (Obj*)stack[stackTop - 1];
+                auto * context = (Context*)stack[frameStack.top()];
                 auto * result  = context->SetVariable(name, obj);
                 HandlePossibleError(result);
-                ptrStackTop -= 2;
+                stackTop -= 2;
                 break;
             }
             case OpCode::Add :
             {
-                auto * obj_2  = (Obj*)ptrStack[ptrStackTop];
-                auto * obj_1  = (Obj*)ptrStack[ptrStackTop - 1];
+                auto * obj_2  = (Obj*)stack[stackTop];
+                auto * obj_1  = (Obj*)stack[stackTop - 1];
                 auto * method = obj_1->type->methodTable->OpAdd;
                 if (method == nullptr) {
+                    //ThrowError_NoSuchOperation(obj_1->type, )
                     std::cerr << "Object does not provide operation +.";
                     abort();
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                ptrStackTop--;
-                ptrStack[ptrStackTop] = result;
+                stackTop--;
+                stack[stackTop] = result;
                 break;
             }
         }
@@ -187,7 +189,19 @@ void VM::HandlePossibleError(Obj * obj) {
     abort();
 }
 
+void VM::ThrowError(const std::string & message) {
+    std::cerr << '\n' << message;
+    abort();
+}
+
+void VM::ThrowError_NoSuchOperation(const Type & t,
+                                    const std::string & opSymbol) {
+    std::stringstream s;
+    s << "\nObject of type " << t.name << " does not provide operation " << opSymbol << '.';
+    ThrowError(s.str());
+}
+
 void VM::PrintFrames() {
-    auto * context = (Context*)ptrStack[frameStack.top()];
+    auto * context = (Context*)stack[frameStack.top()];
     context->Print();
 }
