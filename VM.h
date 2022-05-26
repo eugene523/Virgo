@@ -30,9 +30,7 @@ struct VM {
     static void Execute(const ByteCode & bc);
     static void HandlePossibleError(Obj * obj);
     static void ThrowError(const std::string & message);
-
-    static void ThrowError_NoSuchOperation(const Type & t,
-                                           const std::string & opSymbol);
+    static void ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol);
 
     static void PrintFrames();
 };

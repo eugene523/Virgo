@@ -7,17 +7,23 @@
 
 enum OpCode : std::uint64_t
 {
-/*  Operation          Arguments     Expects on stack   */
-    NewFrame,
-    CloseFrame,
+/*  Operation       Arguments        Expects on stack   */
+    NewFrame,       //
+    CloseFrame,     //
     PushConstant,   // id
     GetValueByName, //               Str*
     SetValueByName, //               Str*, Obj*
     Add,            //               Obj*, Obj*
     Sub,            //               Obj*, Obj*
-    Mult,           //               Obj*, Obj*
+    Mul,            //               Obj*, Obj*
     Div,            //               Obj*, Obj*
     Pow,            //               Obj*, Obj*
+    Jump,           // pos
+
+    If
+    // A0 : pos_true
+    // A1 : pos_false
+    // E  : Bool*
 };
 
 struct ByteCode {

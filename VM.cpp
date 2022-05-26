@@ -162,14 +162,74 @@ void VM::Execute(const ByteCode & bc) {
                 auto * obj_1  = (Obj*)stack[stackTop - 1];
                 auto * method = obj_1->type->methodTable->OpAdd;
                 if (method == nullptr) {
-                    //ThrowError_NoSuchOperation(obj_1->type, )
-                    std::cerr << "Object does not provide operation +.";
-                    abort();
+                    ThrowError_NoSuchOperation(obj_1->type, "+");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
                 stackTop--;
                 stack[stackTop] = result;
+                break;
+            }
+            case OpCode::Sub :
+            {
+                auto * obj_2  = (Obj*)stack[stackTop];
+                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * method = obj_1->type->methodTable->OpSub;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "-");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                stackTop--;
+                stack[stackTop] = result;
+                break;
+            }
+            case OpCode::Mul :
+            {
+                auto * obj_2  = (Obj*)stack[stackTop];
+                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * method = obj_1->type->methodTable->OpMul;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "*");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                stackTop--;
+                stack[stackTop] = result;
+                break;
+            }
+            case OpCode::Div :
+            {
+                auto * obj_2  = (Obj*)stack[stackTop];
+                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * method = obj_1->type->methodTable->OpMul;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "/");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                stackTop--;
+                stack[stackTop] = result;
+                break;
+            }
+            case OpCode::Pow :
+            {
+                auto * obj_2  = (Obj*)stack[stackTop];
+                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * method = obj_1->type->methodTable->OpMul;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "^");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                stackTop--;
+                stack[stackTop] = result;
+                break;
+            }
+            case OpCode::Jump :
+            {
+                uint64_t bcPos = *((uint64_t*)(bc.stream + pos));
+                pos = bcPos;
                 break;
             }
         }
@@ -194,10 +254,13 @@ void VM::ThrowError(const std::string & message) {
     abort();
 }
 
-void VM::ThrowError_NoSuchOperation(const Type & t,
-                                    const std::string & opSymbol) {
+void VM::ThrowError_NoSuchOperation(const Type & t, const std::string & opSymbol) {
     std::stringstream s;
-    s << "\nObject of type " << t.name << " does not provide operation " << opSymbol << '.';
+    s << "\nObject of type "
+      << t.name
+      << " does not provide operation "
+      << opSymbol
+      << '.';
     ThrowError(s.str());
 }
 
