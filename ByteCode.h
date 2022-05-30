@@ -51,6 +51,8 @@ struct ByteCode {
     void Write_OpCode(OpCode opCode);
     void Write_uint64(std::uint64_t i);
     void Write_LoadConstant(std::uint64_t id);
+    void Write_GetLocalVariable(std::uint64_t id);
+    void Write_SetLocalVariable(std::uint64_t id);
     void Write_Jump(std::uint64_t jumpPos);
     void Write_If(std::uint64_t falsePos);
 };

@@ -70,18 +70,20 @@ struct ExprBinary : Expr {
 };
 
 struct ExprLoadConstant : Expr {
-    uint constantId {};
-    ExprLoadConstant(uint constantId, uint line);
+    uint id {};
+    ExprLoadConstant(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprGetLocalVariable : Expr {
-    explicit ExprGetLocalVariable(uint line);
+    uint id {};
+    explicit ExprGetLocalVariable(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprSetLocalVariable : Expr {
-    explicit ExprSetLocalVariable(uint line);
+    uint id {};
+    explicit ExprSetLocalVariable(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 

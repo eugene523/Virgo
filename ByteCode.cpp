@@ -35,6 +35,16 @@ void ByteCode::Write_LoadConstant(std::uint64_t id) {
     Write_uint64(id);
 }
 
+void ByteCode::Write_GetLocalVariable(std::uint64_t id) {
+    Write_OpCode(OpCode::GetLocalVariable);
+    Write_uint64(id);
+}
+
+void ByteCode::Write_SetLocalVariable(std::uint64_t id) {
+    Write_OpCode(OpCode::SetLocalVariable);
+    Write_uint64(id);
+}
+
 void ByteCode::Write_Jump(std::uint64_t jumpPos) {
     Write_OpCode(OpCode::Jump);
     Write_uint64(jumpPos);

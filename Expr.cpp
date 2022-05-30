@@ -26,20 +26,29 @@ ExprBinary::~ExprBinary() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLoadConstant::ExprLoadConstant(uint constantId, uint line) :
-Expr(ExprType::LoadConstant, line), constantId{constantId} {}
+ExprLoadConstant::ExprLoadConstant(uint id, uint line) :
+Expr(ExprType::LoadConstant, line), id{id} {}
 
 void ExprLoadConstant::Compile(ByteCode & bc) {
-    bc.Write_LoadConstant(constantId);
+    bc.Write_LoadConstant(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGetLocalVariable::ExprGetLocalVariable(uint line) :
-Expr(ExprType::GetLocalVariable, line) {}
+ExprGetLocalVariable::ExprGetLocalVariable(uint id, uint line) :
+Expr(ExprType::GetLocalVariable, line), id{id} {}
 
 void ExprGetLocalVariable::Compile(ByteCode & bc) {
-    bc.Write_OpCode(OpCode::GetLocalVariable);
+    bc.Write_GetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprSetLocalVariable::ExprSetLocalVariable(uint id, uint line) :
+Expr(ExprType::GetLocalVariable, line), id{id} {}
+
+void ExprSetLocalVariable::Compile(ByteCode & bc) {
+    bc.Write_SetLocalVariable(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
