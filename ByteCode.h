@@ -7,12 +7,27 @@
 
 enum OpCode : std::uint64_t
 {
-/*  Operation       Arguments      Expects on stack   */
-    NewFrame,       //
-    CloseFrame,     //
-    PushConstant,   // id
-    GetValueByName, //             Str*
-    SetValueByName, //             Str*, Obj*
+    NewFrame,
+    CloseFrame,
+
+    LoadConstant,
+    // Loads constant taken from the global pool of constants on the stack.
+    // Arguments : id (global identifier of a constant)
+    // Stack     : ---
+    // Result    : Obj* (constant object on the stack)
+
+    GetLocalVariable,
+    // Loads local variable on the stack.
+    // Arguments : id (global identifier of a string constant used as a name)
+    // Stack     : ---
+    // Result    : Obj* (local variable)
+
+    SetLocalVariable,
+    // Sets value to the local variable.
+    // Arguments : id (global identifier of a string constant used as a name)
+    // Stack     : Obj* (new value)
+    // Result    : ---
+
     Add,            //             Obj*, Obj*
     Sub,            //             Obj*, Obj*
     Mul,            //             Obj*, Obj*
@@ -35,7 +50,7 @@ struct ByteCode {
     void Enlarge();
     void Write_OpCode(OpCode opCode);
     void Write_uint64(std::uint64_t i);
-    void Write_PushConstant(std::uint64_t id);
+    void Write_LoadConstant(std::uint64_t id);
     void Write_Jump(std::uint64_t jumpPos);
     void Write_If(std::uint64_t falsePos);
 };

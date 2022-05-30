@@ -129,7 +129,7 @@ void VM::Execute(const ByteCode & bc) {
                 stackTop = lastFramePos - 1;
                 break;
             }
-            case OpCode::PushConstant :
+            case OpCode::LoadConstant :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
                 pos += sizeof(uint64_t);
@@ -137,7 +137,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = GetConstant(id);
                 break;
             }
-            case OpCode::GetValueByName :
+            case OpCode::GetLocalVariable :
             {
                 auto * name = (Obj*)stack[stackTop];
                 auto * context = (Context*)stack[frameStack.top()];
@@ -146,7 +146,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = value;
                 break;
             }
-            case OpCode::SetValueByName :
+            case OpCode::SetLocalVariable :
             {
                 auto * obj     = (Obj*)stack[stackTop];
                 auto * name    = (Obj*)stack[stackTop - 1];

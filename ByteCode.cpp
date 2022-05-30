@@ -30,8 +30,8 @@ void ByteCode::Write_uint64(std::uint64_t i) {
     pos += sizeof(std::uint64_t);
 }
 
-void ByteCode::Write_PushConstant(std::uint64_t id) {
-    Write_OpCode(OpCode::PushConstant);
+void ByteCode::Write_LoadConstant(std::uint64_t id) {
+    Write_OpCode(OpCode::LoadConstant);
     Write_uint64(id);
 }
 

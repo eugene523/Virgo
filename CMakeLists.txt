@@ -20,7 +20,7 @@ add_executable(Virgo
         ByteCode.h ByteCode.cpp
         VM.h VM.cpp
         Tokenizer.h Tokenizer.cpp
-
+        Expr.h Expr.cpp
         #[[
         List.h List.cpp
         Iter.h Iter.cpp

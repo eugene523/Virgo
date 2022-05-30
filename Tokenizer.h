@@ -98,7 +98,7 @@ std::string SubStr(const std::string & str, int start, int endExcluded);
 ///////////////////////////////////////////////////////////////////////////////
 
 struct Token {
-    const TokenType type {};
+    const TokenType type;
 
     // 'lexeme' is a piece of text, that represents some entity.
     // An entity can be:
@@ -108,18 +108,21 @@ struct Token {
     const std::string lexeme;
 
     // If 'lexeme' represents some constant value like integer, real, string,
-    // then 'literal' contains an actual object (Int, Real, Str, etc.),
+    // then 'constant' contains an actual object (Int, Real, Str, etc.),
     // otherwise it is 'none'.
-    const uint  literalId;
-    const Obj * literal;
+    const uint  constantId;
+    const Obj * constant;
 
     // Line of code that contains this token.
     const uint line {};
 
     explicit Token(TokenType   tokenType,
                    std::string lexeme,
-                   uint        literalId,
+                   uint        constantId,
                    uint        line);
+
+    explicit Token(TokenType tokenType,
+                   uint      line);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
