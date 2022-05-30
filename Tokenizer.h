@@ -109,16 +109,17 @@ struct Token {
 
     // If 'lexeme' represents some constant value like integer, real, string,
     // then 'literal' contains an actual object (Int, Real, Str, etc.),
-    // otherwise it's Ref::none.
-    const Ref literal;
+    // otherwise it is 'none'.
+    const uint  literalId;
+    const Obj * literal;
 
     // Line of code that contains this token.
     const uint line {};
 
     explicit Token(TokenType   tokenType,
-                   std::string lexeme = "",
-                   Ref         literal = Ref::none,
-                   uint        line = 0);
+                   std::string lexeme,
+                   uint        literalId,
+                   uint        line);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,7 +173,7 @@ class Tokenizer {
     void Process_EndOfFile();
     void ScanToken();
     void AddToken(TokenType type);
-    void AddToken(TokenType tokenType, Ref literal);
+    void AddToken(TokenType tokenType, uint literalId);
     void AddToken(Token * token);
     void ReportError(const std::string & message);
 

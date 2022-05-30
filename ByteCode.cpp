@@ -29,3 +29,18 @@ void ByteCode::Write_uint64(std::uint64_t i) {
     *((std::uint64_t*)(stream + pos)) = i;
     pos += sizeof(std::uint64_t);
 }
+
+void ByteCode::Write_PushConstant(std::uint64_t id) {
+    Write_OpCode(OpCode::PushConstant);
+    Write_uint64(id);
+}
+
+void ByteCode::Write_Jump(std::uint64_t jumpPos) {
+    Write_OpCode(OpCode::Jump);
+    Write_uint64(jumpPos);
+}
+
+void ByteCode::Write_If(std::uint64_t falsePos) {
+    Write_OpCode(OpCode::If);
+    Write_uint64(falsePos);
+}

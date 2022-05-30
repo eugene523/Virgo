@@ -1,5 +1,5 @@
-#ifndef PROTON_BOOL_H
-#define PROTON_BOOL_H
+#ifndef VIRGO_BOOL_H
+#define VIRGO_BOOL_H
 
 #include "Obj.h"
 #include "Mem.h"
@@ -21,4 +21,4 @@ struct Bool {
     inline Bool * Invert() { return val ? Bool::False : Bool::True; }
 };
 
-#endif //PROTON_BOOL_H
+#endif //VIRGO_BOOL_H

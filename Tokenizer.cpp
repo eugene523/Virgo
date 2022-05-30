@@ -1,4 +1,5 @@
 #include "Tokenizer.h"
+#include "None.h"
 #include "Str.h"
 #include <utility>
 
@@ -84,10 +85,15 @@ void Printw(const std::string & str, int width) {
 ///////////////////////////////////////////////////////////////////////////////
 
 Token::Token(TokenType   tokenType,
-             std::string lexeme  /* = "" */,
-             Ref         literal /* = Ref::none */,
-             uint        line    /* = 0 */) :
-        type{tokenType}, lexeme{std::move(lexeme)}, literal{literal}, line{line} {}
+             std::string lexeme    /* = "" */,
+             uint        literalId /* = 0, which corresponds to 'none' */,
+             uint        line      /* = 0 */)
+             :
+             type{tokenType},
+             lexeme{std::move(lexeme)},
+             literalId{literalId},
+             literal{VM::GetConstant(literalId)},
+             line{line} {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -140,7 +146,7 @@ void Tokenizer::PrintTokens() {
         }
         Printw(TokenTypeToString(i->type), width);
         Printw(i->lexeme, width);
-        Printw(i->literal != Ref::none ? GET_OBJ(i->literal)->ToStr() : "-", width);
+        Printw(None::IsNone(i->literal) ? "-" : ((Str*)i->literal)->val, width);
         Printw(std::to_string(i->line), width);
         std::cout << std::endl;
     }
@@ -214,11 +220,11 @@ void Tokenizer::Process_NewLine() {
             return;
         }
         if (nestingLevel > currentNestingLevel) {
-            AddToken(new Token(TokenType::EnterScope));
+            AddToken(new Token(TokenType::EnterScope, "", 0, currentLine));
             currentNestingLevel = nestingLevel;
         } else if (nestingLevel < currentNestingLevel) {
             for (int i = 0; i < (currentNestingLevel - nestingLevel); i++)
-                AddToken(new Token(TokenType::ExitScope));
+                AddToken(new Token(TokenType::ExitScope, "", 0, currentLine));
             currentNestingLevel = nestingLevel;
         }
     }
@@ -278,9 +284,9 @@ void Tokenizer::Process_String() {
     }
 
     Advance();
-    std::string strLexeme = SubStr(src, startPosition + 1, currentPosition - 1);
-    Ref strLiteral = VM::GetConstant_Str(strLexeme);
-    AddToken(new Token(TokenType::String, strLexeme, strLiteral, currentLine));
+    std::string lexeme = SubStr(src, startPosition + 1, currentPosition - 1);
+    uint literalId = VM::GetConstantId_Str(lexeme);
+    AddToken(new Token(TokenType::String, lexeme, literalId, currentLine));
 }
 
 void Tokenizer::Process_Number() {
@@ -311,13 +317,13 @@ void Tokenizer::Process_Number() {
         }
     }
 
-    std::string numLexeme = SubStr(src, startPosition, currentPosition);
+    std::string lexeme = SubStr(src, startPosition, currentPosition);
     if (isInt) {
-        Ref intLiteral = VM::GetConstant_Int(std::stoll(numLexeme));
-        AddToken(new Token(TokenType::Int, numLexeme, intLiteral, currentLine));
+        uint literalId = VM::GetConstantId_Int(std::stoll(lexeme));
+        AddToken(new Token(TokenType::Int, lexeme, literalId, currentLine));
     } else {
-        Ref realLiteral = VM::GetConstant_Real(std::stold(numLexeme));
-        AddToken(new Token(TokenType::Real, numLexeme, realLiteral, currentLine));
+        uint literalId = VM::GetConstantId_Real(std::stold(lexeme));
+        AddToken(new Token(TokenType::Real, lexeme, literalId, currentLine));
     }
 }
 
@@ -328,11 +334,11 @@ void Tokenizer::Process_Word() {
         Advance();
     std::string word = SubStr(src, startPosition, currentPosition);
     if (IsKeyword(word)) {
-        AddToken(new Token(keywords[word], word, Ref::none, currentLine));
+        AddToken(new Token(keywords[word], word, 0, currentLine));
         return;
     }
-    Ref wordLiteral = VM::GetConstant_Str(word);
-    AddToken(new Token(TokenType::Identifier, word, wordLiteral, currentLine));
+    uint literalId = VM::GetConstantId_Str(word);
+    AddToken(new Token(TokenType::Identifier, word, literalId, currentLine));
 }
 
 void Tokenizer::Process_EndOfFile() {
@@ -342,18 +348,18 @@ void Tokenizer::Process_EndOfFile() {
     // additional Token_ExitScope tokens
     // according to the current nesting level.
     for (int i = 0; i < currentNestingLevel; i++)
-        tokens.push_back(new Token(TokenType::ExitScope));
-    tokens.push_back(new Token(TokenType::EndOfFile, "", Ref::none, currentLine));
+        tokens.push_back(new Token(TokenType::ExitScope, "", 0, currentLine));
+    tokens.push_back(new Token(TokenType::EndOfFile, "", 0, currentLine));
 }
 
 void Tokenizer::ScanToken() {
     char c = Advance();
     switch (c) {
-        case '(' : n_opened++; AddToken(TokenType::L_Parenthesis);  break;
+        case '(' : n_opened++; AddToken(TokenType::L_Parenthesis); break;
         case ')' : n_opened--; AddToken(TokenType::R_Parenthesis); break;
-        case '[' : n_opened++; AddToken(TokenType::L_Bracket);      break;
+        case '[' : n_opened++; AddToken(TokenType::L_Bracket);     break;
         case ']' : n_opened--; AddToken(TokenType::R_Bracket);     break;
-        case '{' : n_opened++; AddToken(TokenType::L_Brace);        break;
+        case '{' : n_opened++; AddToken(TokenType::L_Brace);       break;
         case '}' : n_opened--; AddToken(TokenType::R_Brace);       break;
         case ',' : AddToken(TokenType::Comma);     break;
         case '.' : AddToken(TokenType::Dot);       break;
@@ -381,11 +387,11 @@ void Tokenizer::ScanToken() {
     }
 }
 
-void Tokenizer::AddToken(TokenType type) { AddToken(type, Ref::none); }
+void Tokenizer::AddToken(TokenType type) { AddToken(type, 0); }
 
-void Tokenizer::AddToken(TokenType tokenType, Ref literal) {
+void Tokenizer::AddToken(TokenType tokenType, uint literalId) {
     std::string lexeme = SubStr(src, startPosition, currentPosition);
-    tokens.push_back(new Token(tokenType, lexeme, literal, currentLine));
+    tokens.push_back(new Token(tokenType, lexeme, literalId, currentLine));
 }
 
 void Tokenizer::AddToken(Token * token) { tokens.push_back(token); }

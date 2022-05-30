@@ -11,6 +11,7 @@ struct None {
     static None * none;
     static void InitType();
     static inline None * New() { return none; }
+    static inline bool IsNone(const Obj * obj) { return obj == (Obj*)none; }
 };
 
 #endif //VIRGO_NONE_H

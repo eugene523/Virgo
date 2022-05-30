@@ -19,6 +19,8 @@ add_executable(Virgo
         Context.h Context.cpp
         ByteCode.h ByteCode.cpp
         VM.h VM.cpp
+        Tokenizer.h Tokenizer.cpp
+
         #[[
         List.h List.cpp
         Iter.h Iter.cpp
@@ -39,7 +41,6 @@ add_executable(Virgo
         Script.h Script.cpp
         Context.h Context.cpp
         ContextStack.h ContextStack.cpp
-        VM.h VM.cpp
-        Tokenizer.h Tokenizer.cpp
-        Parser.h Parser.cpp]]
+        Parser.h Parser.cpp
+        ]]
         main.cpp)

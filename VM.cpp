@@ -232,6 +232,21 @@ void VM::Execute(const ByteCode & bc) {
                 pos = bcPos;
                 break;
             }
+            case OpCode::If :
+            {
+                auto * obj = (Obj*)stack[stackTop];
+                if (obj->type != Bool::t) {
+                    ThrowError("Condition result must be of boolean type.");
+                }
+                stackTop--;
+                if ((Bool*)obj == Bool::True) {
+                    pos += sizeof(uint64_t);
+                    break;
+                }
+                uint64_t posFalse = *((uint64_t*)(bc.stream + pos));
+                pos = posFalse;
+                break;
+            }
         }
         if (pos >= bc.pos)
             break;
@@ -254,10 +269,10 @@ void VM::ThrowError(const std::string & message) {
     abort();
 }
 
-void VM::ThrowError_NoSuchOperation(const Type & t, const std::string & opSymbol) {
+void VM::ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol) {
     std::stringstream s;
     s << "\nObject of type "
-      << t.name
+      << t->name
       << " does not provide operation "
       << opSymbol
       << '.';
