@@ -5,7 +5,7 @@
 #include "Type.h"
 #include "Str.h"
 #include "Fun.h"
-#include "Script.h"
+#include "Script_.h"
 #include "Error.h"
 #include "Builtins.h"
 

@@ -12,28 +12,37 @@
 #include "Int.h"
 #include "Real.h"
 #include "ByteCode.h"
+#include "Tokenizer.h"
+#include "Parser.h"
 
 void Init() {
     VM::Init();
 }
 
-/*
-void runScript() {
+void RunScript() {
     Init();
+
     std::fstream f;
-    //f.open(R"(C:\code\projects\Virgo\Tests\for.v)");
-    f.open(R"(C:\code\projects\Virgo\Tests\first.v)");
+    f.open(R"(C:\code\Virgo\Tests\1_arithmetics_add.v)");
     std::stringstream s;
     s << f.rdbuf();
-    std::string sourceCode = s.str();
+    std::string src = s.str();
+
+    Tokenizer tokenizer;
+    tokenizer.Tokenize(src);
+    if (tokenizer.HasError()) {
+        std::cout << tokenizer.GetErrorMessage();
+        return;
+    }
+    VM::PrintConstants();
+
     Parser p;
-    p.Interpret(sourceCode);
-    VM::contextStack.Print();
-    VM::PrintStatus();
+    Script * script = p.Parse(tokenizer.GetTokens());
+    script->Execute();
+    VM::PrintFrames();
 }
- */
 
 int main() {
-    Init();
+    RunScript();
     return 0;
 }

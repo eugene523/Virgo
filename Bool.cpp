@@ -57,6 +57,11 @@ Obj * Bool_OpNotEq(Obj * self, Obj * other) {
     return (Obj*)Bool::New(selfVal != otherVal);
 }
 
+std::string Bool_Dstr(Obj * self) {
+    assert(self->type == Bool::t);
+    return (self == (Obj*)Bool::True) ? "true" : "false";
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 Type * Bool::t;
@@ -73,10 +78,13 @@ void Bool::InitType() {
     mtab->OpNot   = &Bool_OpNot;
     mtab->OpEq    = &Bool_OpEq;
     mtab->OpNotEq = &Bool_OpNotEq;
+    mtab->Dstr    = &Bool_Dstr;
 
     Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
+    Obj::Init(Bool::True, Bool::t);
     Bool::True->val = true;
 
     Bool::False = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
+    Obj::Init(Bool::False, Bool::t);
     Bool::False->val = false;
 }

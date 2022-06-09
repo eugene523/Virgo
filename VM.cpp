@@ -30,8 +30,14 @@ void VM::Init() {
     //Heap::PreGlobalGc = ?;
 
     None::InitType();
+    VM::NoneId = GetConstantId_Obj((Obj*)None::none);
+
     Error::InitType();
+
     Bool::InitType();
+    VM::TrueId  = GetConstantId_Obj((Obj*)Bool::True);
+    VM::FalseId = GetConstantId_Obj((Obj*)Bool::False);
+
     Int::InitType();
     Real::InitType();
     Str::InitType();
@@ -59,6 +65,9 @@ std::vector<Obj*>           VM::constants;
 std::map<v_int, uint>       VM::constantsId_Int{};
 std::map<v_real, uint>      VM::constantsId_Real{};
 std::map<std::string, uint> VM::constantsId_Str{};
+uint                        VM::NoneId;
+uint                        VM::TrueId;
+uint                        VM::FalseId;
 std::array<void*, 1024>     VM::stack;
 int                         VM::stackTop = -1;
 std::stack<uint>            VM::frameStack;
@@ -94,6 +103,7 @@ uint VM::GetConstantId_Str(const std::string & val) {
         return constantsId_Str[val];
 
     void * inPlace = Heap::GetChunk_Constant(sizeof(Real));
+    auto cs = val.c_str();
     Str::New(inPlace, val.c_str());
     constants.push_back((Obj*)inPlace);
     uint id = nextId;
@@ -102,7 +112,14 @@ uint VM::GetConstantId_Str(const std::string & val) {
     return id;
 }
 
-Obj * VM::GetConstant(uint id) {
+uint VM::GetConstantId_Obj(Obj * obj) {
+    constants.push_back(obj);
+    uint id = nextId;
+    nextId++;
+    return id;
+}
+
+Obj * VM::GetConstantById(uint id) {
     return constants.at(id);
 }
 
@@ -134,26 +151,31 @@ void VM::Execute(const ByteCode & bc) {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
                 pos += sizeof(uint64_t);
                 stackTop++;
-                stack[stackTop] = GetConstant(id);
+                stack[stackTop] = GetConstantById(id);
                 break;
             }
             case OpCode::GetLocalVariable :
             {
-                auto * name = (Obj*)stack[stackTop];
+                uint64_t id = *((uint64_t*)(bc.stream + pos));
+                pos += sizeof(uint64_t);
+                Obj  * name    = GetConstantById(id);
                 auto * context = (Context*)stack[frameStack.top()];
-                Obj  * value = context->GetVariable(name);
-                HandlePossibleError(value);
-                stack[stackTop] = value;
+                Obj  * result  = context->GetVariable(name);
+                HandlePossibleError(result);
+                stackTop++;
+                stack[stackTop] = result;
                 break;
             }
             case OpCode::SetLocalVariable :
             {
+                uint64_t id = *((uint64_t*)(bc.stream + pos));
+                pos += sizeof(uint64_t);
+                Obj  * name    = GetConstantById(id);
                 auto * obj     = (Obj*)stack[stackTop];
-                auto * name    = (Obj*)stack[stackTop - 1];
                 auto * context = (Context*)stack[frameStack.top()];
                 auto * result  = context->SetVariable(name, obj);
                 HandlePossibleError(result);
-                stackTop -= 2;
+                stackTop--;
                 break;
             }
             case OpCode::Add :
@@ -202,7 +224,7 @@ void VM::Execute(const ByteCode & bc) {
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
                 auto * obj_1  = (Obj*)stack[stackTop - 1];
-                auto * method = obj_1->type->methodTable->OpMul;
+                auto * method = obj_1->type->methodTable->OpDiv;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "/");
                 }
@@ -216,7 +238,7 @@ void VM::Execute(const ByteCode & bc) {
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
                 auto * obj_1  = (Obj*)stack[stackTop - 1];
-                auto * method = obj_1->type->methodTable->OpMul;
+                auto * method = obj_1->type->methodTable->OpPow;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "^");
                 }
@@ -271,15 +293,33 @@ void VM::ThrowError(const std::string & message) {
 
 void VM::ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol) {
     std::stringstream s;
-    s << "\nObject of type "
+    s << "\nObject of type '"
       << t->name
-      << " does not provide operation "
+      << "' does not provide operation '"
       << opSymbol
-      << '.';
+      << "'.";
     ThrowError(s.str());
 }
 
 void VM::PrintFrames() {
+    if (frameStack.top() == -1)
+        return;
     auto * context = (Context*)stack[frameStack.top()];
     context->Print();
+}
+
+void VM::PrintConstants() {
+    std::cout << "\n\nConstants (" << nextId << ")";
+    for (uint i = 0; i < nextId; i++) {
+        std::string valStr;
+        auto * val = constants[i];
+        auto * method = val->type->methodTable->Dstr;
+        if (method == nullptr) {
+            valStr = val->type->name;
+        } else {
+            valStr = method(val);
+        }
+        std::cout << '\n' << i << " : " << valStr;
+    }
+    std::cout << '\n';
 }

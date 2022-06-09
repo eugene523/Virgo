@@ -83,7 +83,8 @@ struct ExprGetLocalVariable : Expr {
 
 struct ExprSetLocalVariable : Expr {
     uint id {};
-    explicit ExprSetLocalVariable(uint id, uint line);
+    Expr * valueExpr {};
+    explicit ExprSetLocalVariable(uint id, Expr * valueExpr, uint line);
     void Compile(ByteCode & bc) override;
 };
 

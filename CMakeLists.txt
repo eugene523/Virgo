@@ -21,6 +21,8 @@ add_executable(Virgo
         VM.h VM.cpp
         Tokenizer.h Tokenizer.cpp
         Expr.h Expr.cpp
+        Script.h Script.cpp
+        Parser.h Parser.cpp
         #[[
         List.h List.cpp
         Iter.h Iter.cpp

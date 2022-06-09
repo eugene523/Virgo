@@ -54,7 +54,8 @@ Obj * Str_OpNotEq(Obj * self, Obj * other) {
 
 std::string Str_Dstr(Obj * self) {
     assert(self->Is(Str::t));
-    return std::string(((Str*)self)->val);
+    auto * str = (Str*)self;
+    return std::string(str->val);
 }
 
 /*
@@ -99,7 +100,7 @@ void Str::New(void * inPlace, const char * value) {
     uint len = strlen(value);
     char * s_val = (char*)calloc(len + 1, sizeof(char));
     memcpy(s_val, value, len);
-    s->val = value;
+    s->val = s_val;
     s->len = len;
 }
 

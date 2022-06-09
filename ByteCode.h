@@ -46,10 +46,13 @@ struct ByteCode {
     uint pos = 0;
 
     explicit ByteCode();
+    ~ByteCode();
 
     void Enlarge();
     void Write_OpCode(OpCode opCode);
     void Write_uint64(std::uint64_t i);
+    void Write_NewFrame();
+    void Write_CloseFrame();
     void Write_LoadConstant(std::uint64_t id);
     void Write_GetLocalVariable(std::uint64_t id);
     void Write_SetLocalVariable(std::uint64_t id);

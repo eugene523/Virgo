@@ -92,7 +92,7 @@ Token::Token(TokenType   tokenType,
              type{tokenType},
              lexeme{std::move(lexeme)},
              constantId{constantId},
-             constant{VM::GetConstant(constantId)},
+             constant{VM::GetConstantById(constantId)},
              line{line} {}
 
 Token::Token(TokenType tokenType,

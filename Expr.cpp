@@ -44,10 +44,11 @@ void ExprGetLocalVariable::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSetLocalVariable::ExprSetLocalVariable(uint id, uint line) :
-Expr(ExprType::GetLocalVariable, line), id{id} {}
+ExprSetLocalVariable::ExprSetLocalVariable(uint id, Expr * valueExpr, uint line) :
+Expr(ExprType::GetLocalVariable, line), valueExpr{valueExpr}, id{id} {}
 
 void ExprSetLocalVariable::Compile(ByteCode & bc) {
+    valueExpr->Compile(bc);
     bc.Write_SetLocalVariable(id);
 }
 

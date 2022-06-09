@@ -7,6 +7,10 @@ ByteCode::ByteCode() {
     stream = (std::byte*)calloc(maxSize, sizeof(std::byte));
 }
 
+ByteCode::~ByteCode() {
+    free(stream);
+}
+
 void ByteCode::Enlarge() {
     uint newMaxSize = maxSize * 2;
     stream = (std::byte*)realloc(stream, newMaxSize);
@@ -28,6 +32,14 @@ void ByteCode::Write_uint64(std::uint64_t i) {
         Enlarge();
     *((std::uint64_t*)(stream + pos)) = i;
     pos += sizeof(std::uint64_t);
+}
+
+void ByteCode::Write_NewFrame() {
+    Write_OpCode(OpCode::NewFrame);
+}
+
+void ByteCode::Write_CloseFrame() {
+    Write_OpCode(OpCode::CloseFrame);
 }
 
 void ByteCode::Write_LoadConstant(std::uint64_t id) {
