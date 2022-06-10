@@ -123,6 +123,18 @@ Obj * VM::GetConstantById(uint id) {
     return constants.at(id);
 }
 
+std::string VM::ConstantToStr(uint id) {
+    Obj * obj = GetConstantById(id);
+    std::string objStr;
+    auto * method = obj->type->methodTable->Dstr;
+    if (method == nullptr) {
+        objStr = obj->type->name;
+    } else {
+        objStr = method(obj);
+    }
+    return objStr;
+}
+
 void VM::Execute(const ByteCode & bc) {
     uint pos = 0;
     for (;;)
@@ -138,6 +150,7 @@ void VM::Execute(const ByteCode & bc) {
                 frameStack.push(stackTop);
                 break;
             }
+
             case OpCode::CloseFrame :
             {
                 int lastFramePos = frameStack.top();
@@ -146,6 +159,7 @@ void VM::Execute(const ByteCode & bc) {
                 stackTop = lastFramePos - 1;
                 break;
             }
+
             case OpCode::LoadConstant :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
@@ -154,6 +168,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = GetConstantById(id);
                 break;
             }
+
             case OpCode::GetLocalVariable :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
@@ -166,6 +181,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::SetLocalVariable :
             {
                 uint64_t id = *((uint64_t*)(bc.stream + pos));
@@ -178,6 +194,7 @@ void VM::Execute(const ByteCode & bc) {
                 stackTop--;
                 break;
             }
+
             case OpCode::Add :
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
@@ -192,6 +209,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::Sub :
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
@@ -206,6 +224,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::Mul :
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
@@ -220,6 +239,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::Div :
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
@@ -234,6 +254,7 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::Pow :
             {
                 auto * obj_2  = (Obj*)stack[stackTop];
@@ -248,12 +269,14 @@ void VM::Execute(const ByteCode & bc) {
                 stack[stackTop] = result;
                 break;
             }
+
             case OpCode::Jump :
             {
                 uint64_t bcPos = *((uint64_t*)(bc.stream + pos));
                 pos = bcPos;
                 break;
             }
+
             case OpCode::If :
             {
                 auto * obj = (Obj*)stack[stackTop];
@@ -302,7 +325,7 @@ void VM::ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol
 }
 
 void VM::PrintFrames() {
-    if (frameStack.top() == -1)
+    if (stackTop == -1)
         return;
     auto * context = (Context*)stack[frameStack.top()];
     context->Print();

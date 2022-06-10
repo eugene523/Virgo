@@ -30,6 +30,7 @@ struct VM {
     static uint  GetConstantId_Str(const std::string & val);
     static uint  GetConstantId_Obj(Obj * obj);
     static Obj * GetConstantById(uint id);
+    static std::string ConstantToStr(uint id);
 
     static void Execute(const ByteCode & bc);
     static void HandlePossibleError(Obj * obj);

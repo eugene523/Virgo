@@ -11,26 +11,16 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::R_Parenthesis, "R_Parenthesis"},
     { TokenType::L_Bracket,     "L_Bracket"},
     { TokenType::R_Bracket,     "R_Bracket"},
-    { TokenType::L_Brace,       "L_Brace"},
-    { TokenType::R_Brace,       "R_Brace"},
     //
     { TokenType::Comma,         "Comma"},
     { TokenType::Dot,           "Dot"},
-    { TokenType::Colon,         "Colon"},
-    { TokenType::Semicolon,     "Semicolon"},
     { TokenType::Plus,          "Plus"},
     { TokenType::Minus,         "Minus"},
     { TokenType::Star,          "Star"},
     { TokenType::Slash,         "Slash"},
-    { TokenType::Percent,       "Percent"},
     { TokenType::Caret,         "Caret"},
-    { TokenType::Question,      "Question"},
     //
-    { TokenType::VertLine,      "VertLine"},
-    { TokenType::Ampersand,     "Ampersand"},
     { TokenType::Equal,         "Equal"},
-    { TokenType::DoubleEqual,   "DoubleEqual"},
-    { TokenType::Bang,          "Bang"},
     { TokenType::BangEqual,     "BangEqual"},
     { TokenType::Greater,       "Greater"},
     { TokenType::GreaterEqual,  "GreaterEqual"},
@@ -336,7 +326,9 @@ void Tokenizer::Process_Number() {
     }
 }
 
-bool Tokenizer::IsKeyword(const std::string & word) { return keywords.count(word) > 0; }
+bool Tokenizer::IsKeyword(const std::string & word) {
+    return keywords.count(word) > 0;
+}
 
 void Tokenizer::Process_Word() {
     while (isalnum(Peek()) || Peek() == '_')
@@ -366,31 +358,87 @@ void Tokenizer::Process_EndOfFile() {
 void Tokenizer::ScanToken() {
     char c = Advance();
     switch (c) {
-        case '(' : n_opened++; AddToken(TokenType::L_Parenthesis); break;
-        case ')' : n_opened--; AddToken(TokenType::R_Parenthesis); break;
-        case '[' : n_opened++; AddToken(TokenType::L_Bracket);     break;
-        case ']' : n_opened--; AddToken(TokenType::R_Bracket);     break;
-        case '{' : n_opened++; AddToken(TokenType::L_Brace);       break;
-        case '}' : n_opened--; AddToken(TokenType::R_Brace);       break;
-        case ',' : AddToken(TokenType::Comma);     break;
-        case '.' : AddToken(TokenType::Dot);       break;
-        case ':' : AddToken(TokenType::Colon);     break;
-        case ';' : AddToken(TokenType::Semicolon); break;
-        case '?' : AddToken(TokenType::Question);  break;
-        case '+' : Match('=') ? AddToken(TokenType::PlusEq)       : AddToken(TokenType::Plus);      break;
-        case '-' : Match('=') ? AddToken(TokenType::MinusEq)      : AddToken(TokenType::Minus);     break;
-        case '*' : Match('=') ? AddToken(TokenType::MultEq)       : AddToken(TokenType::Star);      break;
-        case '/' : Match('=') ? AddToken(TokenType::DivEq)        : AddToken(TokenType::Slash);     break;
-        case '^' : Match('=') ? AddToken(TokenType::PowEq)        : AddToken(TokenType::Caret);     break;
-        case '=' : Match('=') ? AddToken(TokenType::DoubleEqual)  : AddToken(TokenType::Equal);     break;
-        case '!' : Match('=') ? AddToken(TokenType::BangEqual)    : AddToken(TokenType::Bang);      break;
-        case '>' : Match('=') ? AddToken(TokenType::GreaterEqual) : AddToken(TokenType::Greater);   break;
-        case '<' : Match('=') ? AddToken(TokenType::LessEqual)    : AddToken(TokenType::Less);      break;
-        case '#' : Process_Comment();    break;
-        case ' ' : Process_WhiteSpace(); break;
-        case '\n': Process_NewLine();    break;
-        case '"' : Process_String();     break;
-        default:
+        case '(' :
+            n_opened++;
+            AddToken(TokenType::L_Parenthesis);
+            break;
+
+        case ')' :
+            n_opened--;
+            AddToken(TokenType::R_Parenthesis);
+            break;
+
+        case '[' :
+            n_opened++;
+            AddToken(TokenType::L_Bracket);
+            break;
+
+        case ']' :
+            n_opened--;
+            AddToken(TokenType::R_Bracket);
+            break;
+
+        case ',' :
+            AddToken(TokenType::Comma);
+            break;
+
+        case '.' :
+            AddToken(TokenType::Dot);
+            break;
+
+        case '+' :
+            Match('=') ? AddToken(TokenType::PlusEq) : AddToken(TokenType::Plus);
+            break;
+
+        case '-' :
+            Match('=') ? AddToken(TokenType::MinusEq) : AddToken(TokenType::Minus);
+            break;
+
+        case '*' :
+            Match('=') ? AddToken(TokenType::MultEq) : AddToken(TokenType::Star);
+            break;
+
+        case '/' :
+            Match('=') ? AddToken(TokenType::DivEq) : AddToken(TokenType::Slash);
+            break;
+
+        case '^' :
+            Match('=') ? AddToken(TokenType::PowEq) : AddToken(TokenType::Caret);
+            break;
+
+        case '=' :
+            AddToken(TokenType::Equal);
+            break;
+
+        case '!' :
+            Match('=') ? AddToken(TokenType::BangEqual) : ReportError("Unexpected character.");
+            break;
+
+        case '>' :
+            Match('=') ? AddToken(TokenType::GreaterEqual) : AddToken(TokenType::Greater);
+            break;
+
+        case '<' :
+            Match('=') ? AddToken(TokenType::LessEqual) : AddToken(TokenType::Less);
+            break;
+
+        case '#' :
+            Process_Comment();
+            break;
+
+        case ' ' :
+            Process_WhiteSpace();
+            break;
+
+        case '\n':
+            Process_NewLine();
+            break;
+
+        case '"' :
+            Process_String();
+            break;
+
+        default :
             if      (isdigit(c)) Process_Number();
             else if (isalpha(c)) Process_Word();
             else                 ReportError("Unexpected character.");

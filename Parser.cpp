@@ -164,10 +164,12 @@ Expr * Parser::Parse_Add() {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Mult();
+
         if (op->type == TokenType::Plus)
             a = new ExprAdd(a, b, savedLine);
         else
             a = new ExprSub(a, b, savedLine);
+
         op = CurrentToken();
     }
     return a;
@@ -179,17 +181,17 @@ Expr * Parser::Parse_Mult() {
     Expr * a = Parse_Pow();
     Token * op = CurrentToken();
     while (op->type == TokenType::Star ||
-           op->type == TokenType::Slash ||
-           op->type == TokenType::Percent)
+           op->type == TokenType::Slash)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Pow();
-        switch (op->type) {
-            case TokenType::Star :  a = new ExprMul(a, b, savedLine); break;
-            case TokenType::Slash : a = new ExprDiv(a, b, savedLine); break;
-            default: break;
-        }
+
+        if (op->type == TokenType::Star)
+            a = new ExprMul(a, b, savedLine);
+        else
+            a = new ExprDiv(a, b, savedLine);
+
         op = CurrentToken();
     }
     return a;

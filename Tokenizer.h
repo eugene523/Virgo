@@ -17,52 +17,40 @@
 enum class TokenType {
     Undefined,
 
-    // Not all tokens are used. Some of them are just reserved.
-
     // Different kinds of brackets
     L_Parenthesis, // (
     R_Parenthesis, // )
     L_Bracket,     // [
     R_Bracket,     // ]
-    L_Brace,       // {
-    R_Brace,       // }
 
     // Single character tokens
-    Comma,        // ,
-    Dot,          // .
-    Colon,        // :
-    Semicolon,    // ;
-    Plus,         // +
-    Minus,        // -
-    Star,         // *
-    Slash,        // /
-    Percent,      // %
-    Caret,        // ^
-    Question,     // ?
+    Comma,         // ,
+    Dot,           // .
+    Plus,          // +
+    Minus,         // -
+    Star,          // *
+    Slash,         // /
+    Caret,         // ^
 
     // One or two character tokens
-    VertLine,     // |
-    Ampersand,    // &
-    Equal,        // =
-    DoubleEqual,  // ==
-    Bang,         // !
-    BangEqual,    // !=
-    Greater,      // >
-    GreaterEqual, // >=
-    Less,         // <
-    LessEqual,    // <=
+    Equal,         // =
+    BangEqual,     // !=
+    Greater,       // >
+    GreaterEqual,  // >=
+    Less,          // <
+    LessEqual,     // <=
 
-    PlusEq,       // +=
-    MinusEq,      // -=
-    MultEq,       // *=
-    DivEq,        // /=
-    PowEq,        // ^=
+    PlusEq,        // +=
+    MinusEq,       // -=
+    MultEq,        // *=
+    DivEq,         // /=
+    PowEq,         // ^=
 
     // Literals
     Int,
-    Real,         // 5.1, 0.314e+1
-    String,       // "It's Britney, bitch!"
-    Identifier,   // SomeVariableName
+    Real,          // 5.1, 0.314e+1
+    String,        // "It's Britney, bitch!"
+    Identifier,    // SomeVariableName
 
     // Keywords
     None,
@@ -79,7 +67,6 @@ enum class TokenType {
     Break,
     Skip,
     Return,
-    Class,
 
     // Scope tokens
     EnterScope,
@@ -157,7 +144,6 @@ class Tokenizer {
         {"break",  TokenType::Break},
         {"skip",   TokenType::Skip},
         {"return", TokenType::Return},
-        {"class",  TokenType::Class},
     };
 
     void ScanTokens();

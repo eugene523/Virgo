@@ -49,6 +49,7 @@ struct ByteCode {
     ~ByteCode();
 
     void Enlarge();
+    void Print();
     void Write_OpCode(OpCode opCode);
     void Write_uint64(std::uint64_t i);
     void Write_NewFrame();

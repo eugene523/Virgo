@@ -38,8 +38,10 @@ void RunScript() {
 
     Parser p;
     Script * script = p.Parse(tokenizer.GetTokens());
-    script->Execute();
-    VM::PrintFrames();
+    script->Compile();
+    //script->Execute();
+    script->PrintByteCode();
+    //VM::PrintFrames();
 }
 
 int main() {

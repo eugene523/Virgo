@@ -13,14 +13,20 @@ void Script::AddExpr(Expr * expr) {
     expressions.push_back(expr);
 }
 
-void Script::Execute() {
-    ByteCode bc;
+void Script::Compile() {
     bc.Write_NewFrame();
     for (size_t i = 0; i < expressions.size(); i++) {
         expressions[i]->Compile(bc);
     }
-    //bc.Write_CloseFrame();
+    bc.Write_CloseFrame();
+}
+
+void Script::Execute() {
     VM::Execute(bc);
+}
+
+void Script::PrintByteCode() {
+    bc.Print();
 }
 
 

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "ByteCode.h"
+#include "VM.h"
 
 ByteCode::ByteCode() {
     maxSize = 64;
@@ -18,6 +19,75 @@ void ByteCode::Enlarge() {
         std::cerr << "Error. Not enough memory.";
     }
     maxSize = newMaxSize;
+}
+
+void ByteCode::Print() {
+    uint currPos = 0;
+    for (;;)
+    {
+        OpCode opCode = *((OpCode*)(stream + currPos));
+        currPos += sizeof(OpCode);
+        switch (opCode)
+        {
+            case OpCode::NewFrame :
+                std::cout << "\nNewFrame";
+                break;
+
+            case OpCode::CloseFrame :
+                std::cout << "\nCloseFrame";
+                break;
+
+            case OpCode::LoadConstant :
+            {
+                uint64_t id = *((uint64_t*)(stream + currPos));
+                currPos += sizeof(uint64_t);
+                std::cout << "\nLoadConstant " << VM::ConstantToStr(id);
+                break;
+            }
+
+            case OpCode::GetLocalVariable :
+            {
+                uint64_t id = *((uint64_t*)(stream + currPos));
+                currPos += sizeof(uint64_t);
+                std::cout << "\nGetLocalVariable " << VM::ConstantToStr(id);
+                break;
+            }
+
+            case OpCode::SetLocalVariable :
+            {
+                uint64_t id = *((uint64_t*)(stream + currPos));
+                currPos += sizeof(uint64_t);
+                std::cout << "\nSetLocalVariable " << VM::ConstantToStr(id);
+                break;
+            }
+
+            case OpCode::Add :
+                std::cout << "\nAdd";
+                break;
+
+            case OpCode::Sub :
+                std::cout << "\nSub";
+                break;
+
+            case OpCode::Mul :
+                std::cout << "\nMul";
+                break;
+
+            case OpCode::Div :
+                std::cout << "\nDiv";
+                break;
+
+            case OpCode::Pow :
+                std::cout << "\nPow";
+                break;
+
+            default :
+                std::cout << "\nUnknown operation";
+                break;
+        }
+        if (currPos >= pos)
+            break;
+    }
 }
 
 void ByteCode::Write_OpCode(OpCode opCode) {
