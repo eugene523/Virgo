@@ -164,7 +164,6 @@ std::byte * Page::GetChunk() {
 // We also zeroing out chunk (first 8 bytes must be zero)
 // in order to show garbage collector that this is a free chunk and it must be skipped.
 void Page::FreeChunk(std::byte * chunk) {
-    assert(((ChunkHeader*)chunk)->zeroField != 0);
     Page * page = Page::GetPage(chunk);
     memset(chunk, 0, page->chunkSize);
     ((ChunkHeader*)chunk)->nextChunk = page->nextFreeChunk;
@@ -230,6 +229,59 @@ void Page::Sweep() {
         FreeChunk((std::byte*)obj);
         domain->lastDeleted++;
     }
+}
+
+void Test_Page() {
+    std::byte * pagePtr = MemBank::GetPage();
+    Page::Init(pagePtr, nullptr, 32);
+    Page * p = (Page*)pagePtr;
+
+    assert(p->IsEmpty());
+    assert(p->NumOfObj() == 0);
+    assert(p->HasFreeChunk());
+
+    uint nFree = p->NumOfFreeChunks();
+
+    auto * c0 = p->GetChunk();
+    assert(!p->IsEmpty());
+    assert(p->NumOfFreeChunks() == (nFree - 1));
+    assert(p->NumOfObj() == 1);
+    Page::FreeChunk(c0);
+    assert(p->IsEmpty());
+    assert(p->NumOfFreeChunks() == nFree);
+    assert(p->NumOfObj() == 0);
+
+    auto * c1 = p->GetChunk();
+    auto * c2 = p->GetChunk();
+    auto * c3 = p->GetChunk();
+    assert(!p->IsEmpty());
+    assert(p->NumOfFreeChunks() == (nFree - 3));
+    assert(p->NumOfObj() == 3);
+
+    Page::FreeChunk(c1);
+    assert(!p->IsEmpty());
+    assert(p->NumOfFreeChunks() == (nFree - 2));
+    assert(p->NumOfObj() == 2);
+
+    Page::FreeChunk(c2);
+    assert(!p->IsEmpty());
+
+    assert(p->NumOfFreeChunks() == (nFree - 1));
+    assert(p->NumOfObj() == 1);
+
+    Page::FreeChunk(c3);
+    assert(p->IsEmpty());
+    assert(p->NumOfFreeChunks() == nFree);
+    assert(p->NumOfObj() == 0);
+
+    for (uint i = 0; i < nFree; i++) {
+        auto * c = p->GetChunk();
+    }
+    assert(!p->IsEmpty());
+    assert(p->NumOfObj() == nFree);
+    assert(!p->HasFreeChunk());
+
+    MemBank::AcceptPage(pagePtr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -559,4 +611,10 @@ void Heap::GlobalGc() {
 
 void Heap::UpdateActiveDomain_AfterGlobalGc() {
 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Test_Mem() {
+    Test_Page();
 }

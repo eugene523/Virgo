@@ -72,13 +72,13 @@ Bool * Bool::False {};
 
 void Bool::InitType() {
     Bool::t = new Type("bool");
-    auto mtab = t->methodTable;
-    mtab->OpAnd   = &Bool_OpAnd;
-    mtab->OpOr    = &Bool_OpOr;
-    mtab->OpNot   = &Bool_OpNot;
-    mtab->OpEq    = &Bool_OpEq;
-    mtab->OpNotEq = &Bool_OpNotEq;
-    mtab->Dstr    = &Bool_Dstr;
+    auto mt = t->methodTable;
+    mt->OpAnd   = &Bool_OpAnd;
+    mt->OpOr    = &Bool_OpOr;
+    mt->OpNot   = &Bool_OpNot;
+    mt->OpEq    = &Bool_OpEq;
+    mt->OpNotEq = &Bool_OpNotEq;
+    mt->Dstr    = &Bool_Dstr;
 
     Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
     Obj::Init(Bool::True, Bool::t);

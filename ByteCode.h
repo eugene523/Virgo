@@ -45,6 +45,9 @@ struct ByteCode {
     uint maxSize;
     uint pos = 0;
 
+    int * lines;
+    uint maxSize;
+
     explicit ByteCode();
     ~ByteCode();
 

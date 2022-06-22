@@ -149,4 +149,8 @@ struct Heap {
     static void UpdateActiveDomain_AfterGlobalGc();
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+void Test_Mem();
+
 #endif //VIRGO_MEM_H

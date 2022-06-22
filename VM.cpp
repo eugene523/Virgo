@@ -103,7 +103,6 @@ uint VM::GetConstantId_Str(const std::string & val) {
         return constantsId_Str[val];
 
     void * inPlace = Heap::GetChunk_Constant(sizeof(Real));
-    auto cs = val.c_str();
     Str::New(inPlace, val.c_str());
     constants.push_back((Obj*)inPlace);
     uint id = nextId;

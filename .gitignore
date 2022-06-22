@@ -35,3 +35,10 @@
 cmake-build-debug
 
 .vscode
+
+# CodeBlocks files
+bin
+obj
+*.cbp
+*.depend
+*.layout
