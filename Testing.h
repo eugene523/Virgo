@@ -35,9 +35,9 @@ void RunScript() {
     Parser p;
     Script * script = p.Parse(tokenizer.GetTokens());
     script->Compile();
-    //script->Execute();
-    script->PrintByteCode();
-    //VM::PrintFrames();
+    script->Execute();
+    //script->PrintByteCode();
+    VM::PrintFrames();
 }
 
 #endif // VIRGO_TESTING_H

@@ -113,4 +113,29 @@ struct ExprPow : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
+struct ExprAddEq : ExprBinary {
+    ExprAddEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprSubEq : ExprBinary {
+    ExprSubEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprMulEq : ExprBinary {
+    ExprMulEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprDivEq : ExprBinary {
+    ExprDivEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprPowEq : ExprBinary {
+    ExprPowEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
 #endif //VIRGO_EXPR_H

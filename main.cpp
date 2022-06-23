@@ -1,7 +1,8 @@
 #include "Mem.h"
+#include "Testing.h"
 
 int main()
 {
-    Test_Mem();
+    RunScript();
     return 0;
 }

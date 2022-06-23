@@ -54,7 +54,7 @@ Expr * Parser::Parse_Assignment() {
             b = Parse_Logical();
             //return new ExprSetLocalVariable((ExprAccess*)a, b, savedLine);
             return new ExprSetLocalVariable(((ExprGetLocalVariable*)a)->id, b, savedLine);
-/*
+
         case TokenType::PlusEq:
             currentPosition++;
             b = Parse_Logical();
@@ -79,7 +79,7 @@ Expr * Parser::Parse_Assignment() {
             currentPosition++;
             b = Parse_Logical();
             return new ExprPowEq(a, b, savedLine);
-*/
+
         default:
             return a; // Declaration or function call
     }

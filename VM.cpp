@@ -134,11 +134,12 @@ std::string VM::ConstantToStr(uint id) {
     return objStr;
 }
 
-void VM::Execute(const ByteCode & bc) {
+void VM::Execute(const ByteCode & byteCode) {
+    std::byte * bc = byteCode.bc;
     uint pos = 0;
     for (;;)
     {
-        OpCode opCode = *((OpCode*)(bc.stream + pos));
+        OpCode opCode = *((OpCode*)(bc + pos));
         pos += sizeof(OpCode);
         switch (opCode)
         {
@@ -161,7 +162,7 @@ void VM::Execute(const ByteCode & bc) {
 
             case OpCode::LoadConstant :
             {
-                uint64_t id = *((uint64_t*)(bc.stream + pos));
+                uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
                 stackTop++;
                 stack[stackTop] = GetConstantById(id);
@@ -170,7 +171,7 @@ void VM::Execute(const ByteCode & bc) {
 
             case OpCode::GetLocalVariable :
             {
-                uint64_t id = *((uint64_t*)(bc.stream + pos));
+                uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
                 Obj  * name    = GetConstantById(id);
                 auto * context = (Context*)stack[frameStack.top()];
@@ -183,7 +184,7 @@ void VM::Execute(const ByteCode & bc) {
 
             case OpCode::SetLocalVariable :
             {
-                uint64_t id = *((uint64_t*)(bc.stream + pos));
+                uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
                 Obj  * name    = GetConstantById(id);
                 auto * obj     = (Obj*)stack[stackTop];
@@ -271,7 +272,7 @@ void VM::Execute(const ByteCode & bc) {
 
             case OpCode::Jump :
             {
-                uint64_t bcPos = *((uint64_t*)(bc.stream + pos));
+                uint64_t bcPos = *((uint64_t*)(bc + pos));
                 pos = bcPos;
                 break;
             }
@@ -287,12 +288,12 @@ void VM::Execute(const ByteCode & bc) {
                     pos += sizeof(uint64_t);
                     break;
                 }
-                uint64_t posFalse = *((uint64_t*)(bc.stream + pos));
+                uint64_t posFalse = *((uint64_t*)(bc + pos));
                 pos = posFalse;
                 break;
             }
         }
-        if (pos >= bc.pos)
+        if (pos >= byteCode.bcPos)
             break;
     }
 }

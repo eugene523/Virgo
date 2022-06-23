@@ -1,13 +1,14 @@
+#include <cassert>
 #include "Expr.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-Expr::Expr(ExprType exprType, uint line) : 
+Expr::Expr(ExprType exprType, uint line):
 exprType{exprType}, line{line} {}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprUnary::ExprUnary(ExprType exprType, Expr * a, uint line) : 
+ExprUnary::ExprUnary(ExprType exprType, Expr * a, uint line):
 Expr{exprType, line}, a{a} {}
 
 ExprUnary::~ExprUnary() {
@@ -16,7 +17,7 @@ ExprUnary::~ExprUnary() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprBinary::ExprBinary(ExprType exprType, Expr * a, Expr * b, uint line) :
+ExprBinary::ExprBinary(ExprType exprType, Expr * a, Expr * b, uint line):
 Expr{exprType, line}, a{a}, b{b} {}
 
 ExprBinary::~ExprBinary() {
@@ -26,38 +27,42 @@ ExprBinary::~ExprBinary() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLoadConstant::ExprLoadConstant(uint id, uint line) :
+ExprLoadConstant::ExprLoadConstant(uint id, uint line):
 Expr(ExprType::LoadConstant, line), id{id} {}
 
 void ExprLoadConstant::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     bc.Write_LoadConstant(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGetLocalVariable::ExprGetLocalVariable(uint id, uint line) :
+ExprGetLocalVariable::ExprGetLocalVariable(uint id, uint line):
 Expr(ExprType::GetLocalVariable, line), id{id} {}
 
 void ExprGetLocalVariable::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     bc.Write_GetLocalVariable(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSetLocalVariable::ExprSetLocalVariable(uint id, Expr * valueExpr, uint line) :
+ExprSetLocalVariable::ExprSetLocalVariable(uint id, Expr * valueExpr, uint line):
 Expr(ExprType::GetLocalVariable, line), valueExpr{valueExpr}, id{id} {}
 
 void ExprSetLocalVariable::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     valueExpr->Compile(bc);
     bc.Write_SetLocalVariable(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprAdd::ExprAdd(Expr * a, Expr * b, uint line) :
+ExprAdd::ExprAdd(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Add, a, b, line} {}
 
 void ExprAdd::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Add);
@@ -65,10 +70,11 @@ void ExprAdd::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSub::ExprSub(Expr * a, Expr * b, uint line) :
+ExprSub::ExprSub(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Sub, a, b, line} {}
 
 void ExprSub::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Sub);
@@ -76,10 +82,11 @@ void ExprSub::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprMul::ExprMul(Expr * a, Expr * b, uint line) :
+ExprMul::ExprMul(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Mul, a, b, line} {}
 
 void ExprMul::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Mul);
@@ -87,10 +94,11 @@ void ExprMul::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprDiv::ExprDiv(Expr * a, Expr * b, uint line) :
+ExprDiv::ExprDiv(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Div, a, b, line} {}
 
 void ExprDiv::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Div);
@@ -98,11 +106,87 @@ void ExprDiv::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPow::ExprPow(Expr * a, Expr * b, uint line) :
+ExprPow::ExprPow(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Pow, a, b, line} {}
 
 void ExprPow::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Pow);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::AddEq, a, b, line} {}
+
+void ExprAddEq::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    a->Compile(bc);
+    b->Compile(bc);
+    bc.Write_OpCode(OpCode::Add);
+    assert(a->exprType == ExprType::GetLocalVariable);
+    uint id = ((ExprGetLocalVariable*)a)->id;
+    bc.Write_SetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::SubEq, a, b, line) {}
+
+void ExprSubEq::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    a->Compile(bc);
+    b->Compile(bc);
+    bc.Write_OpCode(OpCode::Sub);
+    assert(a->exprType == ExprType::GetLocalVariable);
+    uint id = ((ExprGetLocalVariable*)a)->id;
+    bc.Write_SetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::MulEq, a, b, line) {}
+
+void ExprMulEq::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    a->Compile(bc);
+    b->Compile(bc);
+    bc.Write_OpCode(OpCode::Mul);
+    assert(a->exprType == ExprType::GetLocalVariable);
+    uint id = ((ExprGetLocalVariable*)a)->id;
+    bc.Write_SetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::DivEq, a, b, line) {}
+
+void ExprDivEq::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    a->Compile(bc);
+    b->Compile(bc);
+    bc.Write_OpCode(OpCode::Div);
+    assert(a->exprType == ExprType::GetLocalVariable);
+    uint id = ((ExprGetLocalVariable*)a)->id;
+    bc.Write_SetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::PowEq, a, b, line) {}
+
+void ExprPowEq::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    a->Compile(bc);
+    b->Compile(bc);
+    bc.Write_OpCode(OpCode::Pow);
+    assert(a->exprType == ExprType::GetLocalVariable);
+    uint id = ((ExprGetLocalVariable*)a)->id;
+    bc.Write_SetLocalVariable(id);
 }

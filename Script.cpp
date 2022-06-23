@@ -18,7 +18,7 @@ void Script::Compile() {
     for (size_t i = 0; i < expressions.size(); i++) {
         expressions[i]->Compile(bc);
     }
-    bc.Write_CloseFrame();
+    //bc.Write_CloseFrame();
 }
 
 void Script::Execute() {
