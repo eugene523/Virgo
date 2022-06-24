@@ -68,8 +68,8 @@ std::map<std::string, uint> VM::constantsId_Str{};
 uint                        VM::NoneId;
 uint                        VM::TrueId;
 uint                        VM::FalseId;
-std::array<void*, 1024>     VM::stack;
-int                         VM::stackTop = -1;
+std::array<void*, 1024>     VM::objStack;
+int                         VM::objStackTop = -1;
 std::stack<uint>            VM::frameStack;
 
 uint VM::GetConstantId_Int(v_int val) {
@@ -143,147 +143,266 @@ void VM::Execute(const ByteCode & byteCode) {
         pos += sizeof(OpCode);
         switch (opCode)
         {
-            case OpCode::NewFrame :
+            case OpCode::Noop:
+                break;
+
+            case OpCode::NewFrame:
             {
-                stackTop++;
-                stack[stackTop] = new Context();
-                frameStack.push(stackTop);
+                objStackTop++;
+                objStack[objStackTop] = new Context();
+                frameStack.push(objStackTop);
                 break;
             }
 
-            case OpCode::CloseFrame :
+            case OpCode::CloseFrame:
             {
                 int lastFramePos = frameStack.top();
                 frameStack.pop();
-                delete ((Context*)stack[lastFramePos]);
-                stackTop = lastFramePos - 1;
+                delete ((Context*)objStack[lastFramePos]);
+                objStackTop = lastFramePos - 1;
                 break;
             }
 
-            case OpCode::LoadConstant :
+            case OpCode::LoadConstant:
             {
                 uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
-                stackTop++;
-                stack[stackTop] = GetConstantById(id);
+                objStackTop++;
+                objStack[objStackTop] = GetConstantById(id);
                 break;
             }
 
-            case OpCode::GetLocalVariable :
+            case OpCode::GetLocalVariable:
             {
                 uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
                 Obj  * name    = GetConstantById(id);
-                auto * context = (Context*)stack[frameStack.top()];
+                auto * context = (Context*)objStack[frameStack.top()];
                 Obj  * result  = context->GetVariable(name);
                 HandlePossibleError(result);
-                stackTop++;
-                stack[stackTop] = result;
+                objStackTop++;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::SetLocalVariable :
+            case OpCode::SetLocalVariable:
             {
                 uint64_t id = *((uint64_t*)(bc + pos));
                 pos += sizeof(uint64_t);
                 Obj  * name    = GetConstantById(id);
-                auto * obj     = (Obj*)stack[stackTop];
-                auto * context = (Context*)stack[frameStack.top()];
+                auto * obj     = (Obj*)objStack[objStackTop];
+                auto * context = (Context*)objStack[frameStack.top()];
                 auto * result  = context->SetVariable(name, obj);
                 HandlePossibleError(result);
-                stackTop--;
+                objStackTop--;
                 break;
             }
 
-            case OpCode::Add :
+            case OpCode::Eq:
             {
-                auto * obj_2  = (Obj*)stack[stackTop];
-                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpEq;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "=");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::NotEq:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpNotEq;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "!=");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Neg:
+            {
+                auto * obj    = (Obj*)objStack[objStackTop];
+                auto * method = obj->type->methodTable->OpNeg;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj->type, "- (negation)");
+                }
+                auto * result = method(obj);
+                HandlePossibleError(result);
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Add:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
                 auto * method = obj_1->type->methodTable->OpAdd;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "+");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                stackTop--;
-                stack[stackTop] = result;
+                objStackTop--;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Sub :
+            case OpCode::Sub:
             {
-                auto * obj_2  = (Obj*)stack[stackTop];
-                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
                 auto * method = obj_1->type->methodTable->OpSub;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "-");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                stackTop--;
-                stack[stackTop] = result;
+                objStackTop--;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Mul :
+            case OpCode::Mul:
             {
-                auto * obj_2  = (Obj*)stack[stackTop];
-                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
                 auto * method = obj_1->type->methodTable->OpMul;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "*");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                stackTop--;
-                stack[stackTop] = result;
+                objStackTop--;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Div :
+            case OpCode::Div:
             {
-                auto * obj_2  = (Obj*)stack[stackTop];
-                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
                 auto * method = obj_1->type->methodTable->OpDiv;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "/");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                stackTop--;
-                stack[stackTop] = result;
+                objStackTop--;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Pow :
+            case OpCode::Pow:
             {
-                auto * obj_2  = (Obj*)stack[stackTop];
-                auto * obj_1  = (Obj*)stack[stackTop - 1];
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
                 auto * method = obj_1->type->methodTable->OpPow;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "^");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
-                stackTop--;
-                stack[stackTop] = result;
+                objStackTop--;
+                objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Jump :
+            case OpCode::Gr:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpGr;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, ">");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::GrEq:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpGrEq;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, ">=");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Ls:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpLs;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "<");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::LsEq:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpLsEq;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "<=");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Not:
+            {
+                auto * obj    = (Obj*)objStack[objStackTop];
+                auto * method = obj->type->methodTable->OpNot;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj->type, "not");
+                }
+                auto * result = method(obj);
+                HandlePossibleError(result);
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Jump:
             {
                 uint64_t bcPos = *((uint64_t*)(bc + pos));
                 pos = bcPos;
                 break;
             }
 
-            case OpCode::If :
+            case OpCode::JumpFalse:
             {
-                auto * obj = (Obj*)stack[stackTop];
+                auto * obj = (Obj*)objStack[objStackTop];
                 if (obj->type != Bool::t) {
-                    ThrowError("Condition result must be of boolean type.");
+                    ThrowError("Condition result must be of a boolean type.");
                 }
-                stackTop--;
+                objStackTop--;
                 if ((Bool*)obj == Bool::True) {
                     pos += sizeof(uint64_t);
                     break;
@@ -292,6 +411,40 @@ void VM::Execute(const ByteCode & byteCode) {
                 pos = posFalse;
                 break;
             }
+
+            case OpCode::And:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpAnd;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "and");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            case OpCode::Or:
+            {
+                auto * obj_2  = (Obj*)objStack[objStackTop];
+                auto * obj_1  = (Obj*)objStack[objStackTop - 1];
+                auto * method = obj_1->type->methodTable->OpOr;
+                if (method == nullptr) {
+                    ThrowError_NoSuchOperation(obj_1->type, "or");
+                }
+                auto * result = method(obj_1, obj_2);
+                HandlePossibleError(result);
+                objStackTop--;
+                objStack[objStackTop] = result;
+                break;
+            }
+
+            default:
+                std::cerr << "\nFatal error: Unknown OpCode.";
+                abort();
         }
         if (pos >= byteCode.bcPos)
             break;
@@ -325,9 +478,9 @@ void VM::ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol
 }
 
 void VM::PrintFrames() {
-    if (stackTop == -1)
+    if (objStackTop == -1)
         return;
-    auto * context = (Context*)stack[frameStack.top()];
+    auto * context = (Context*)objStack[frameStack.top()];
     context->Print();
 }
 

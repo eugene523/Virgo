@@ -30,19 +30,75 @@ bool Parser::Match(TokenType tokenType) {
 }
 
 Expr * Parser::Parse_Expr() {
+    if (Match(TokenType::If))
+        return Parse_If();
+
     return Parse_Assignment();
 }
 
+Expr * Parser::Parse_If() {
+/*
+    [if]  [condition][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
+               ^-- we are here
+    [else][condition][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
+    [else][condition][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
+    ***
+    [else][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
+
+    Notice:
+    [else][condition] is treated as "else if" condition.
+    [else][EnterScope] is treated as ordinary "else", without any clause.
+*/
+
+    // Parsing condition statement
+    auto * exprIf = new ExprIf(CurrentLine());
+    exprIf->condition = Parse_Logical();
+
+    if (CurrentToken()->type != TokenType::EnterScope)
+        ReportError("Empty 'if' statements are not allowed.", CurrentLine());
+
+    currentPosition++;
+
+    // Parsing IF body statements.
+    Expr * expr = nullptr;
+    while (CurrentToken()->type != TokenType::ExitScope) {
+        expr = Parse_Expr();
+        exprIf->trueBranch.push_back(expr);
+    }
+    currentPosition++;
+
+    // Parsing possible ELSE branch statements.
+    if (CurrentToken()->type == TokenType::Else) {
+        currentPosition++;
+        if (CurrentToken()->type == TokenType::EnterScope) {
+            // Parsing ordinary 'else' branch.
+            currentPosition++;
+            while (CurrentToken()->type != TokenType::ExitScope) {
+                expr = Parse_Expr();
+                exprIf->falseBranch.push_back(expr);
+            }
+            currentPosition++;
+        } else {
+            // else (condition) - Parsing 'else if' branch.
+            expr = Parse_If();
+            exprIf->falseBranch.push_back(expr);
+        }
+    }
+    return exprIf;
+}
+
 Expr * Parser::Parse_Assignment() {
-    // Possible cases:
-    // 1) E -> A ~ T
-    // where A is strictly an accessor term.
-    //       T is an accessor or an arithmentic/logic term.
-    //       ~ is (=, +=, -=, *=, /=, ^=)
-    //
-    // 2) E -> A
-    // No operation i.e. A is just a lonely accessor.
-    // In this case this accessor is treated as a declaration of a variable.
+/*
+    Possible cases:
+    1) E -> A ~ T
+    where A is strictly an accessor term.
+          T is an accessor or an arithmentic/logic term.
+          ~ is (=, +=, -=, *=, /=, ^=)
+
+    2) E -> A
+    No operation i.e. A is just a lonely accessor.
+    In this case this accessor is treated as a declaration of a variable.
+*/
 
     Expr * a = Parse_Accessor();
     int savedLine = CurrentLine();
@@ -86,10 +142,11 @@ Expr * Parser::Parse_Assignment() {
 }
 
 Expr * Parser::Parse_Logical() {
-    // E -> T ~ T ~ T ~ ... ~ T
-    // where ~ is (and, or)
+/*
+    E -> T ~ T ~ T ~ ... ~ T
+    where ~ is (and, or)
+*/
     Expr * a = Parse_Equality();
-    /*
     Token* op = CurrentToken();
     while (op->type == TokenType::And ||
            op->type == TokenType::Or)
@@ -103,14 +160,15 @@ Expr * Parser::Parse_Logical() {
             a = new ExprOr(a, b, savedLine);
         op = CurrentToken();
     }
-     */
     return a;
 }
 
 Expr * Parser::Parse_Equality() {
-    // E -> T (=, !=) T
+/*
+    E -> T ~ T
+    where ~ is (=, !=)
+*/
     Expr * a = Parse_Order();
-    /*
     Token * op = CurrentToken();
     if (op->type == TokenType::Equal ||
         op->type == TokenType::BangEqual)
@@ -123,39 +181,54 @@ Expr * Parser::Parse_Equality() {
         else
             a = new ExprNotEq(a, b, savedLine);
     }
-     */
     return a;
 }
 
 Expr * Parser::Parse_Order() {
-    // E -> T (>, >=, <, <=) T
+/*
+    E -> T ~ T
+    where ~ is (>, >=, <, <=)
+*/
     Expr * a = Parse_Add();
-    /*
     Token * op = CurrentToken();
-    if (op->type == TokenType::Greater ||
+    if (op->type == TokenType::Greater      ||
         op->type == TokenType::GreaterEqual ||
-        op->type == TokenType::Less ||
+        op->type == TokenType::Less         ||
         op->type == TokenType::LessEqual)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Add();
         switch(op->type) {
-            case TokenType::Greater :      a = new ExprGr(a, b, savedLine);   break;
-            case TokenType::GreaterEqual : a = new ExprGrEq(a, b, savedLine); break;
-            case TokenType::Less :         a = new ExprLs(a, b, savedLine);   break;
-            case TokenType::LessEqual :    a = new ExprLsEq(a, b, savedLine); break;
-            default: break;
+            case TokenType::Greater:
+                a = new ExprGr(a, b, savedLine);
+                break;
+
+            case TokenType::GreaterEqual:
+                a = new ExprGrEq(a, b, savedLine);
+                break;
+
+            case TokenType::Less:
+                a = new ExprLs(a, b, savedLine);
+                break;
+
+            case TokenType::LessEqual:
+                a = new ExprLsEq(a, b, savedLine);
+                break;
+
+            default:
+                break;
         }
     }
-     */
     return a;
 }
 
 Expr * Parser::Parse_Add() {
-    // E -> (+, -) T ~ T ~ T ~ ... ~ T
-    // where ~ is (+, -)
-    // Notice possible leading sign before the first term.
+/*
+    E -> (+, -) T ~ T ~ T ~ ... ~ T
+    where ~ is (+, -)
+    Notice possible leading sign before the first term.
+*/
     Expr * a = Parse_Mult();
     Token * op = CurrentToken();
     while (op->type == TokenType::Plus ||
@@ -176,8 +249,10 @@ Expr * Parser::Parse_Add() {
 }
 
 Expr * Parser::Parse_Mult() {
-    // M -> P ~ P ~ P ~ ... ~ P
-    // where ~ is (*, /)
+/*
+    M -> P ~ P ~ P ~ ... ~ P
+    where ~ is (*, /)
+*/
     Expr * a = Parse_Pow();
     Token * op = CurrentToken();
     while (op->type == TokenType::Star ||
@@ -198,7 +273,9 @@ Expr * Parser::Parse_Mult() {
 }
 
 Expr * Parser::Parse_Pow() {
-    // P -> T ^ T ^ T ^ ... ^ T
+/*
+    P -> T ^ T ^ T ^ ... ^ T
+*/
     Expr * a = Parse_Term();
     Token * op = CurrentToken();
     while (op->type == TokenType::Caret) {
@@ -212,7 +289,7 @@ Expr * Parser::Parse_Pow() {
 }
 
 Expr * Parser::Parse_Term() {
-    Expr * a {nullptr};
+    Expr * a = nullptr;
 
     // Process possible parentheses.
     // That means that the parsing term is actually an expression.
@@ -232,6 +309,7 @@ Expr * Parser::Parse_Term() {
         a = Parse_List();
         return a;
     }
+     */
 
     // Process possible 'not' or '-' sign.
     TokenType op = CurrentToken()->type;
@@ -254,7 +332,6 @@ Expr * Parser::Parse_Term() {
             a = new ExprNeg(a, savedLine);
         return a;
     }
-     */
 
     // Process possible '+' sign. We just skip it.
     while(Match(TokenType::Plus));

@@ -12,6 +12,7 @@ class Parser {
     int     CurrentLine();
     bool    Match(TokenType tokenType);
     Expr *  Parse_Expr();
+    Expr *  Parse_If();
     Expr *  Parse_Assignment();
     Expr *  Parse_Logical();
     Expr *  Parse_Equality();

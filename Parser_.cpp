@@ -137,7 +137,7 @@ Expr * Parser::Parse_If() {
 
     // By now empty IFs are not allowed.
     if (CurrentToken()->type != TokenType::EnterScope)
-        ReportError("Empty \"if\" statements are not allowed.", CurrentLine());
+        ReportError("Empty 'if' statements are not allowed.", CurrentLine());
 
     currentPosition++;
 
@@ -806,6 +806,6 @@ Expr * Parser::Parse_Accessor() {
 }
 
 void Parser::ReportError(const std::string & errorMessage, uint line) {
-    std::cerr << "Parsing error. Line " << line << ". " << errorMessage << std::endl;
+    std::cerr << "Syntax error. Line " << line << ". " << errorMessage << std::endl;
     exit(1);
 }

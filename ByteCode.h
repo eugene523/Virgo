@@ -7,6 +7,7 @@
 
 enum OpCode : uint64_t
 {
+    Noop,
     NewFrame,
     CloseFrame,
 
@@ -28,16 +29,24 @@ enum OpCode : uint64_t
     // Stack     : Obj* (new value)
     // Result    : ---
 
-    Add,            //             Obj*, Obj*
-    Sub,            //             Obj*, Obj*
-    Mul,            //             Obj*, Obj*
-    Div,            //             Obj*, Obj*
-    Pow,            //             Obj*, Obj*
-    Jump,           // pos
+    Eq,
+    NotEq,
+    Neg,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+    Gr,
+    GrEq,
+    Ls,
+    LsEq,
+    Not,
+    And,
+    Or,
 
-    If
-    // A : posFalse
-    // E : Bool*
+    Jump,
+    JumpFalse,
 };
 
 struct loc {
@@ -60,19 +69,22 @@ struct ByteCode {
     ~ByteCode();
 
     void Enlarge();
-    void Print();
     void Write_OpCode(OpCode opCode);
     void Write_uint64(uint64_t i);
+    uint Reserve(uint numOfReservedBytes);
+    void Write_OpCode_uint64_AtPos(uint atPos, OpCode opCode, uint64_t i);
     void Write_NewFrame();
     void Write_CloseFrame();
     void Write_LoadConstant(uint64_t id);
     void Write_GetLocalVariable(uint64_t id);
     void Write_SetLocalVariable(uint64_t id);
-    void Write_Jump(uint64_t jumpPos);
-    void Write_If(uint64_t falsePos);
+    void Write_Jump(uint64_t toPos);
+    void Write_JumpFalse(uint64_t toPos);
 
     void EnlargeLocs();
     void Write_Line(uint line);
+
+    void Print();
 };
 
 #endif //VIRGO_BYTECODE_H

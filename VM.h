@@ -19,9 +19,9 @@ struct VM {
     static uint                        TrueId;
     static uint                        FalseId;
 
-    static std::array<void*, 1024> stack;
-    static int stackTop;
-    static std::stack<uint> frameStack;
+    static std::array<void*, 1024> objStack;
+    static int                     objStackTop;
+    static std::stack<uint>        frameStack;
 
     static void Init();
 

@@ -15,10 +15,12 @@ struct Bool {
     static void InitType();
 
     static inline Bool * New(bool value) {
-        return (value) ? Bool::True : Bool::False;
+        return value ? Bool::True : Bool::False;
     }
 
-    inline Bool * Invert() { return val ? Bool::False : Bool::True; }
+    inline Bool * Invert() {
+        return val ? Bool::False : Bool::True;
+    }
 };
 
 #endif //VIRGO_BOOL_H

@@ -1,6 +1,7 @@
 #ifndef VIRGO_EXPR_H
 #define VIRGO_EXPR_H
 
+#include <vector>
 #include "Common.h"
 #include "ByteCode.h"
 
@@ -10,21 +11,21 @@ enum class ExprType
     LoadConstant,
     GetLocalVariable,
     SetLocalVariable,
+    Eq,
+    NotEq,
+    Neg,
     Add,
     Sub,
     Mul,
     Div,
     Pow,
-    Neg,
     Gr,
     GrEq,
     Ls,
     LsEq,
+    Not,
     And,
     Or,
-    Not,
-    Eq,
-    NotEq,
     NameAccess,
     FieldAccess,
     CallAccess,
@@ -88,6 +89,21 @@ struct ExprSetLocalVariable : Expr {
     void Compile(ByteCode & bc) override;
 };
 
+struct ExprEq : ExprBinary {
+    ExprEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprNotEq : ExprBinary {
+    ExprNotEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprNeg : ExprUnary {
+    ExprNeg(Expr * a, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
 struct ExprAdd : ExprBinary {
     ExprAdd(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
@@ -110,6 +126,49 @@ struct ExprDiv : ExprBinary {
 
 struct ExprPow : ExprBinary {
     ExprPow(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprGr : ExprBinary {
+    ExprGr(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprGrEq : ExprBinary {
+    ExprGrEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprLs : ExprBinary {
+    ExprLs(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprLsEq : ExprBinary {
+    ExprLsEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprNot : ExprUnary {
+    ExprNot(Expr * a, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprAnd : ExprBinary {
+    ExprAnd(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprOr : ExprBinary {
+    ExprOr(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprIf : Expr {
+    Expr * condition{};
+    std::vector<Expr*> trueBranch;
+    std::vector<Expr*> falseBranch;
+    explicit ExprIf(uint line);
     void Compile(ByteCode & bc) override;
 };
 

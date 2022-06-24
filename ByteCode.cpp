@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include "ByteCode.h"
@@ -24,6 +25,97 @@ void ByteCode::Enlarge() {
     bcMaxSize = newMaxSize;
 }
 
+void ByteCode::Write_OpCode(OpCode opCode) {
+    if ((bcMaxSize - bcPos) < sizeof(OpCode))
+        Enlarge();
+    *((OpCode*)(bc + bcPos)) = opCode;
+    bcPos += sizeof(OpCode);
+}
+
+void ByteCode::Write_uint64(uint64_t i) {
+    if ((bcMaxSize - bcPos) < sizeof(uint64_t))
+        Enlarge();
+    *((uint64_t*)(bc + bcPos)) = i;
+    bcPos += sizeof(uint64_t);
+}
+
+uint ByteCode::Reserve(uint numOfReservedBytes) {
+    uint savedPos = bcPos;
+    if ((bcMaxSize - bcPos) < numOfReservedBytes)
+        Enlarge();
+    bcPos += numOfReservedBytes;
+    return savedPos;
+}
+
+void ByteCode::Write_OpCode_uint64_AtPos(uint atPos, OpCode opCode, uint64_t i) {
+    assert(atPos + sizeof(opCode) + sizeof(uint64_t) <= bcMaxSize);
+    *((OpCode*)(bc + atPos)) = opCode;
+    *((uint64_t*)(bc + atPos + sizeof(OpCode))) = i;
+}
+
+void ByteCode::Write_NewFrame() {
+    Write_OpCode(OpCode::NewFrame);
+}
+
+void ByteCode::Write_CloseFrame() {
+    Write_OpCode(OpCode::CloseFrame);
+}
+
+void ByteCode::Write_LoadConstant(uint64_t id) {
+    Write_OpCode(OpCode::LoadConstant);
+    Write_uint64(id);
+}
+
+void ByteCode::Write_GetLocalVariable(uint64_t id) {
+    Write_OpCode(OpCode::GetLocalVariable);
+    Write_uint64(id);
+}
+
+void ByteCode::Write_SetLocalVariable(uint64_t id) {
+    Write_OpCode(OpCode::SetLocalVariable);
+    Write_uint64(id);
+}
+
+void ByteCode::Write_Jump(uint64_t toPos) {
+    Write_OpCode(OpCode::Jump);
+    Write_uint64(toPos);
+}
+
+void ByteCode::Write_JumpFalse(uint64_t toPos) {
+    Write_OpCode(OpCode::JumpFalse);
+    Write_uint64(toPos);
+}
+
+void ByteCode::EnlargeLocs() {
+    uint newMaxSize = locsMaxSize * 2;
+    locs = (loc*)realloc(locs, newMaxSize * sizeof(loc));
+    if (locs == nullptr) {
+        std::cerr << "Error. Not enough memory.";
+    }
+    locsMaxSize = newMaxSize;
+}
+
+void ByteCode::Write_Line(uint line) {
+    if (currentLine == 0) {
+        locs[0].line = line;
+        locs[0].bcPos = 0;
+        locsPos = 1;
+        currentLine = line;
+        return;
+    }
+
+    if (line == currentLine)
+        return;
+
+    if (locsPos == locsMaxSize)
+        EnlargeLocs();
+
+    locs[locsPos].line = line;
+    locs[locsPos].bcPos = bcPos;
+    locsPos++;
+    currentLine = line;
+}
+
 void ByteCode::Print() {
     uint currPos = 0;
     uint nextLocPos = 0;
@@ -38,6 +130,10 @@ void ByteCode::Print() {
         currPos += sizeof(OpCode);
         switch (opCode)
         {
+            case OpCode::Noop:
+                std::cout << "\nNoop";
+                break;
+
             case OpCode::NewFrame:
                 std::cout << "\nNewFrame";
                 break;
@@ -70,6 +166,18 @@ void ByteCode::Print() {
                 break;
             }
 
+            case OpCode::Eq:
+                std::cout << "\nEq";
+                break;
+
+            case OpCode::NotEq:
+                std::cout << "\nNotEq";
+                break;
+
+            case OpCode::Neg:
+                std::cout << "\nNeg";
+                break;
+
             case OpCode::Add:
                 std::cout << "\nAdd";
                 break;
@@ -90,6 +198,50 @@ void ByteCode::Print() {
                 std::cout << "\nPow";
                 break;
 
+            case OpCode::Gr:
+                std::cout << "\nGr";
+                break;
+
+            case OpCode::GrEq:
+                std::cout << "\nGrEq";
+                break;
+
+            case OpCode::Ls:
+                std::cout << "\nLs";
+                break;
+
+            case OpCode::LsEq:
+                std::cout << "\nLsEq";
+                break;
+
+            case OpCode::Not:
+                std::cout << "\nNot";
+                break;
+
+            case OpCode::And:
+                std::cout << "\nAnd";
+                break;
+
+            case OpCode::Or:
+                std::cout << "\nOr";
+                break;
+
+            case OpCode::Jump:
+            {
+                uint64_t toPos = *((uint64_t*)(bc + currPos));
+                currPos += sizeof(uint64_t);
+                std::cout << "\nJump " << toPos;
+                break;
+            }
+
+            case OpCode::JumpFalse:
+            {
+                uint64_t toPos = *((uint64_t*)(bc + currPos));
+                currPos += sizeof(uint64_t);
+                std::cout << "\nJumpFalse " << toPos;
+                break;
+            }
+
             default:
                 std::cout << "\nUnknown operation";
                 break;
@@ -97,81 +249,4 @@ void ByteCode::Print() {
         if (currPos >= bcPos)
             break;
     }
-}
-
-void ByteCode::Write_OpCode(OpCode opCode) {
-    if ((bcMaxSize - bcPos) < sizeof(OpCode))
-        Enlarge();
-    *((OpCode*)(bc + bcPos)) = opCode;
-    bcPos += sizeof(OpCode);
-}
-
-void ByteCode::Write_uint64(uint64_t i) {
-    if ((bcMaxSize - bcPos) < sizeof(uint64_t))
-        Enlarge();
-    *((uint64_t*)(bc + bcPos)) = i;
-    bcPos += sizeof(uint64_t);
-}
-
-void ByteCode::Write_NewFrame() {
-    Write_OpCode(OpCode::NewFrame);
-}
-
-void ByteCode::Write_CloseFrame() {
-    Write_OpCode(OpCode::CloseFrame);
-}
-
-void ByteCode::Write_LoadConstant(uint64_t id) {
-    Write_OpCode(OpCode::LoadConstant);
-    Write_uint64(id);
-}
-
-void ByteCode::Write_GetLocalVariable(uint64_t id) {
-    Write_OpCode(OpCode::GetLocalVariable);
-    Write_uint64(id);
-}
-
-void ByteCode::Write_SetLocalVariable(uint64_t id) {
-    Write_OpCode(OpCode::SetLocalVariable);
-    Write_uint64(id);
-}
-
-void ByteCode::Write_Jump(uint64_t jumpPos) {
-    Write_OpCode(OpCode::Jump);
-    Write_uint64(jumpPos);
-}
-
-void ByteCode::Write_If(uint64_t falsePos) {
-    Write_OpCode(OpCode::If);
-    Write_uint64(falsePos);
-}
-
-void ByteCode::EnlargeLocs() {
-    uint newMaxSize = locsMaxSize * 2;
-    locs = (loc*)realloc(locs, newMaxSize * sizeof(loc));
-    if (locs == nullptr) {
-        std::cerr << "Error. Not enough memory.";
-    }
-    locsMaxSize = newMaxSize;
-}
-
-void ByteCode::Write_Line(uint line) {
-    if (currentLine == 0) {
-        locs[0].line = line;
-        locs[0].bcPos = 0;
-        locsPos = 1;
-        currentLine = line;
-        return;
-    }
-
-    if (line == currentLine)
-        return;
-
-    if (locsPos == locsMaxSize)
-        EnlargeLocs();
-
-    locs[locsPos].line = line;
-    locs[locsPos].bcPos = bcPos;
-    locsPos++;
-    currentLine = line;
 }

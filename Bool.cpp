@@ -7,6 +7,12 @@
 
 const char * ERR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
 
+Obj * Bool_OpNot(Obj * self) {
+    assert(self->Is(Bool::t));
+    bool selfVal = ((Bool*)self)->val;
+    return (Obj*)Bool::New(!selfVal);
+}
+
 Obj * Bool_OpAnd(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
@@ -27,12 +33,6 @@ Obj * Bool_OpOr(Obj * self, Obj * other) {
     bool selfVal = ((Bool*)self)->val;
     bool otherVal = ((Bool*)other)->val;
     return (Obj*)Bool::New(selfVal || otherVal);
-}
-
-Obj * Bool_OpNot(Obj * self) {
-    assert(self->Is(Bool::t));
-    bool selfVal = ((Bool*)self)->val;
-    return (Obj*)Bool::New(selfVal);
 }
 
 Obj * Bool_OpEq(Obj * self, Obj * other) {
@@ -73,9 +73,9 @@ Bool * Bool::False {};
 void Bool::InitType() {
     Bool::t = new Type("bool");
     auto mt = t->methodTable;
+    mt->OpNot   = &Bool_OpNot;
     mt->OpAnd   = &Bool_OpAnd;
     mt->OpOr    = &Bool_OpOr;
-    mt->OpNot   = &Bool_OpNot;
     mt->OpEq    = &Bool_OpEq;
     mt->OpNotEq = &Bool_OpNotEq;
     mt->Dstr    = &Bool_Dstr;

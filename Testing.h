@@ -36,7 +36,9 @@ void RunScript() {
     Script * script = p.Parse(tokenizer.GetTokens());
     script->Compile();
     script->Execute();
-    //script->PrintByteCode();
+    std::cout << "\n----------------------";
+    script->PrintByteCode();
+    std::cout << "\n----------------------";
     VM::PrintFrames();
 }
 
