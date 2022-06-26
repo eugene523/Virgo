@@ -33,6 +33,9 @@ Expr * Parser::Parse_Expr() {
     if (Match(TokenType::If))
         return Parse_If();
 
+    if (Match(TokenType::For))
+        return Parse_For();
+
     return Parse_Assignment();
 }
 
@@ -85,6 +88,31 @@ Expr * Parser::Parse_If() {
         }
     }
     return exprIf;
+}
+
+Expr * Parser::Parse_For() {
+/*
+    [for][condition][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
+              ^--- we are here
+*/
+    // Parsing condition statement
+    auto * exprFor = new ExprFor(CurrentLine());
+    exprFor->condition = Parse_Logical();
+
+    // Empty 'for' loops are not allowed.
+    if (CurrentToken()->type != TokenType::EnterScope)
+        ReportError("Empty 'for' loops are not allowed.", CurrentLine());
+
+    currentPosition++;
+
+    // Parsing 'for' loop body statements.
+    Expr * expr {nullptr};
+    while (CurrentToken()->type != TokenType::ExitScope) {
+        expr = Parse_Expr();
+        exprFor->expressions.push_back(expr);
+    }
+    currentPosition++;
+    return exprFor;
 }
 
 Expr * Parser::Parse_Assignment() {

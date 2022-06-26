@@ -236,41 +236,6 @@ void ExprOr::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprIf::ExprIf(uint line):
-Expr{ExprType::If, line} {}
-
-void ExprIf::Compile(ByteCode & bc) {
-    bc.Write_Line(line);
-
-    // Compiling condition
-    condition->Compile(bc);
-
-    // Reserving space for JumpFalse instruction
-    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
-
-    // Compiling true-branch
-    for (size_t i = 0; i < trueBranch.size(); i++) {
-        trueBranch[i]->Compile(bc);
-    }
-
-    if (falseBranch.empty()) {
-        bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
-        return;
-    }
-
-    // Reserving space for Jump instruction
-    uint pos_AfterTrueBranch = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
-
-    // Compiling false-branch
-    for (size_t i = 0; i < falseBranch.size(); i++) {
-        falseBranch[i]->Compile(bc);
-    }
-    bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, bc.bcPos);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::AddEq, a, b, line} {}
 
@@ -342,4 +307,63 @@ void ExprPowEq::Compile(ByteCode & bc) {
     assert(a->exprType == ExprType::GetLocalVariable);
     uint id = ((ExprGetLocalVariable*)a)->id;
     bc.Write_SetLocalVariable(id);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprIf::ExprIf(uint line):
+Expr{ExprType::If, line} {}
+
+void ExprIf::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+
+    // Compiling condition
+    condition->Compile(bc);
+
+    // Reserving space for JumpFalse instruction
+    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+
+    // Compiling true-branch
+    for (size_t i = 0; i < trueBranch.size(); i++) {
+        trueBranch[i]->Compile(bc);
+    }
+
+    if (falseBranch.empty()) {
+        bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
+        return;
+    }
+
+    // Reserving space for Jump instruction
+    uint pos_AfterTrueBranch = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
+
+    // Compiling false-branch
+    for (size_t i = 0; i < falseBranch.size(); i++) {
+        falseBranch[i]->Compile(bc);
+    }
+    bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, bc.bcPos);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprFor::ExprFor(uint line):
+Expr{ExprType::For, line} {}
+
+void ExprFor::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+
+    uint pos_Condition = bc.bcPos;
+
+    // Compiling condition
+    condition->Compile(bc);
+
+    // Reserving space for JumpFalse instruction
+    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+
+    // Compiling loop expressions
+    for (size_t i = 0; i < expressions.size(); i++) {
+        expressions[i]->Compile(bc);
+    }
+    bc.Write_Jump(pos_Condition);
+    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
 }

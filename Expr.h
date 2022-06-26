@@ -164,14 +164,6 @@ struct ExprOr : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprIf : Expr {
-    Expr * condition{};
-    std::vector<Expr*> trueBranch;
-    std::vector<Expr*> falseBranch;
-    explicit ExprIf(uint line);
-    void Compile(ByteCode & bc) override;
-};
-
 struct ExprAddEq : ExprBinary {
     ExprAddEq(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
@@ -194,6 +186,21 @@ struct ExprDivEq : ExprBinary {
 
 struct ExprPowEq : ExprBinary {
     ExprPowEq(Expr * a, Expr * b, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprIf : Expr {
+    Expr * condition{};
+    std::vector<Expr*> trueBranch;
+    std::vector<Expr*> falseBranch;
+    explicit ExprIf(uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprFor : Expr {
+    Expr * condition {};
+    std::vector<Expr*> expressions;
+    explicit ExprFor(uint line);
     void Compile(ByteCode & bc) override;
 };
 
