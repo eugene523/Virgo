@@ -55,7 +55,7 @@ Expr * Parser::Parse_If() {
 
     // Parsing condition statement
     auto * exprIf = new ExprIf(CurrentLine());
-    exprIf->condition = Parse_Logical();
+    exprIf->SetCondition(Parse_Logical());
 
     if (CurrentToken()->type != TokenType::EnterScope)
         ReportError("Empty 'if' statements are not allowed.", CurrentLine());
@@ -66,7 +66,7 @@ Expr * Parser::Parse_If() {
     Expr * expr = nullptr;
     while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
-        exprIf->trueBranch.push_back(expr);
+        exprIf->AddTrueExpr(expr);
     }
     currentPosition++;
 
@@ -78,13 +78,13 @@ Expr * Parser::Parse_If() {
             currentPosition++;
             while (CurrentToken()->type != TokenType::ExitScope) {
                 expr = Parse_Expr();
-                exprIf->falseBranch.push_back(expr);
+                exprIf->AddFalseExpr(expr);
             }
             currentPosition++;
         } else {
             // else (condition) - Parsing 'else if' branch.
             expr = Parse_If();
-            exprIf->falseBranch.push_back(expr);
+            exprIf->AddFalseExpr(expr);
         }
     }
     return exprIf;
@@ -97,7 +97,7 @@ Expr * Parser::Parse_For() {
 */
     // Parsing condition statement
     auto * exprFor = new ExprFor(CurrentLine());
-    exprFor->condition = Parse_Logical();
+    exprFor->SetCondition(Parse_Logical());
 
     // Empty 'for' loops are not allowed.
     if (CurrentToken()->type != TokenType::EnterScope)
@@ -109,7 +109,7 @@ Expr * Parser::Parse_For() {
     Expr * expr {nullptr};
     while (CurrentToken()->type != TokenType::ExitScope) {
         expr = Parse_Expr();
-        exprFor->expressions.push_back(expr);
+        exprFor->AddExpr(expr);
     }
     currentPosition++;
     return exprFor;

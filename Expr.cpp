@@ -236,7 +236,7 @@ void ExprOr::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line):
+ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::AddEq, a, b, line} {}
 
 void ExprAddEq::Compile(ByteCode & bc) {
@@ -251,7 +251,7 @@ void ExprAddEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line):
+ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line) :
 ExprBinary(ExprType::SubEq, a, b, line) {}
 
 void ExprSubEq::Compile(ByteCode & bc) {
@@ -266,7 +266,7 @@ void ExprSubEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line):
+ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line) :
 ExprBinary(ExprType::MulEq, a, b, line) {}
 
 void ExprMulEq::Compile(ByteCode & bc) {
@@ -281,7 +281,7 @@ void ExprMulEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line):
+ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line) :
 ExprBinary(ExprType::DivEq, a, b, line) {}
 
 void ExprDivEq::Compile(ByteCode & bc) {
@@ -296,7 +296,7 @@ void ExprDivEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line):
+ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line) :
 ExprBinary(ExprType::PowEq, a, b, line) {}
 
 void ExprPowEq::Compile(ByteCode & bc) {
@@ -311,8 +311,51 @@ void ExprPowEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+ExprBreak::ExprBreak(uint line) :
+Expr(ExprType::Break, line) {}
+
+void ExprBreak::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+}
+
+void ExprBreak::Correct(ByteCode & bc) {
+    // Get parent of ExprFor type
+    auto * currentParentExpr = parentExpr;
+    while (currentParentExpr != nullptr) {
+        if (currentParentExpr->exprType == ExprType::For)
+            break;
+        currentParentExpr = currentParentExpr->parentExpr;
+    }
+
+    if (currentParentExpr == nullptr) {
+        std::cerr << "Syntax error. Line " << line
+                  << "Can't find outer 'for' loop for a 'break' statement.";
+    }
+
+    auto * exprFor = (ExprFor*)currentParentExpr;
+    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_AfterFor);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 ExprIf::ExprIf(uint line):
 Expr{ExprType::If, line} {}
+
+void ExprIf::SetCondition(Expr * expr) {
+    condition = expr;
+    condition->parentExpr = this;
+}
+
+void ExprIf::AddTrueExpr(Expr * expr) {
+    trueBranch.push_back(expr);
+    expr->parentExpr = this;
+}
+
+void ExprIf::AddFalseExpr(Expr * expr) {
+    falseBranch.push_back(expr);
+    expr->parentExpr = this;
+}
 
 void ExprIf::Compile(ByteCode & bc) {
     bc.Write_Line(line);
@@ -349,6 +392,16 @@ void ExprIf::Compile(ByteCode & bc) {
 ExprFor::ExprFor(uint line):
 Expr{ExprType::For, line} {}
 
+void ExprFor::SetCondition(Expr * expr) {
+    condition = expr;
+    condition->parentExpr = this;
+}
+
+void ExprFor::AddExpr(Expr * expr) {
+    expressions.push_back(expr);
+    expr->parentExpr = this;
+}
+
 void ExprFor::Compile(ByteCode & bc) {
     bc.Write_Line(line);
 
@@ -366,4 +419,5 @@ void ExprFor::Compile(ByteCode & bc) {
     }
     bc.Write_Jump(pos_Condition);
     bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
+    pos_AfterFor = bc.bcPos;
 }

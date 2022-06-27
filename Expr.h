@@ -52,39 +52,40 @@ enum class ExprType
 struct Expr {
     const ExprType exprType;
     const uint line;
+    Expr * parentExpr;
     Expr(ExprType exprType, uint line);
     virtual void Compile(ByteCode & bc) = 0;
     virtual ~Expr() = default;
 };
 
 struct ExprUnary : Expr {
-    Expr * a {};
+    Expr * a{};
     ExprUnary(ExprType exprType, Expr * a, uint line);
     ~ExprUnary() override;
 };
 
 struct ExprBinary : Expr {
-    Expr * a {};
-    Expr * b {};
+    Expr * a{};
+    Expr * b{};
     ExprBinary(ExprType exprType, Expr * a, Expr * b, uint line);
     ~ExprBinary() override;
 };
 
 struct ExprLoadConstant : Expr {
-    uint id {};
+    uint id{};
     ExprLoadConstant(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprGetLocalVariable : Expr {
-    uint id {};
+    uint id{};
     explicit ExprGetLocalVariable(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprSetLocalVariable : Expr {
-    uint id {};
-    Expr * valueExpr {};
+    uint id{};
+    Expr * valueExpr{};
     explicit ExprSetLocalVariable(uint id, Expr * valueExpr, uint line);
     void Compile(ByteCode & bc) override;
 };
@@ -189,19 +190,39 @@ struct ExprPowEq : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
+struct ExprBreak : Expr {
+    uint pos_Jump{};
+    void Compile(ByteCode & bc) override;
+    void Correct(ByteCode & bc);
+};
+
 struct ExprIf : Expr {
     Expr * condition{};
     std::vector<Expr*> trueBranch;
     std::vector<Expr*> falseBranch;
+
     explicit ExprIf(uint line);
+    void SetCondition(Expr * expr);
+    void AddTrueExpr(Expr * expr);
+    void AddFalseExpr(Expr * expr);
     void Compile(ByteCode & bc) override;
+    void CorrectBreaks(ByteCode & bc);
 };
 
 struct ExprFor : Expr {
-    Expr * condition {};
+    Expr * condition{};
     std::vector<Expr*> expressions;
+    uint pos_AfterFor{};
+
     explicit ExprFor(uint line);
+    void SetCondition(Expr * expr);
+    void AddExpr(Expr * expr);
     void Compile(ByteCode & bc) override;
+    void CorrectBreaks(ByteCode & bc);
+};
+
+struct ExprScript : Expr {
+
 };
 
 #endif //VIRGO_EXPR_H
