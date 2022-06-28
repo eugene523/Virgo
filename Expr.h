@@ -47,6 +47,7 @@ enum class ExprType
     ForIn,
     Call,
     Define,
+    Script,
 };
 
 struct Expr {
@@ -59,33 +60,33 @@ struct Expr {
 };
 
 struct ExprUnary : Expr {
-    Expr * a{};
+    Expr * a;
     ExprUnary(ExprType exprType, Expr * a, uint line);
     ~ExprUnary() override;
 };
 
 struct ExprBinary : Expr {
-    Expr * a{};
-    Expr * b{};
+    Expr * a;
+    Expr * b;
     ExprBinary(ExprType exprType, Expr * a, Expr * b, uint line);
     ~ExprBinary() override;
 };
 
 struct ExprLoadConstant : Expr {
-    uint id{};
+    uint id;
     ExprLoadConstant(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprGetLocalVariable : Expr {
-    uint id{};
+    uint id;
     explicit ExprGetLocalVariable(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
 struct ExprSetLocalVariable : Expr {
-    uint id{};
-    Expr * valueExpr{};
+    uint id;
+    Expr * valueExpr;
     explicit ExprSetLocalVariable(uint id, Expr * valueExpr, uint line);
     void Compile(ByteCode & bc) override;
 };
@@ -192,6 +193,14 @@ struct ExprPowEq : ExprBinary {
 
 struct ExprBreak : Expr {
     uint pos_Jump{};
+    explicit ExprBreak(uint line);
+    void Compile(ByteCode & bc) override;
+    void Correct(ByteCode & bc);
+};
+
+struct ExprSkip : Expr {
+    uint pos_Jump{};
+    explicit ExprSkip(uint line);
     void Compile(ByteCode & bc) override;
     void Correct(ByteCode & bc);
 };
@@ -207,22 +216,45 @@ struct ExprIf : Expr {
     void AddFalseExpr(Expr * expr);
     void Compile(ByteCode & bc) override;
     void CorrectBreaks(ByteCode & bc);
+    void CorrectSkips(ByteCode & bc);
+};
+
+enum class ForType
+{
+    Undefined,
+    Ordinary,
+    CStyled,
+    Foreach
 };
 
 struct ExprFor : Expr {
-    Expr * condition{};
-    std::vector<Expr*> expressions;
+    ForType            forType{};
+    std::vector<Expr*> init;
+    Expr *             condition{};
+    std::vector<Expr*> iter;
+    std::vector<Expr*> body;
     uint pos_AfterFor{};
+    uint pos_StartIteration{};
 
     explicit ExprFor(uint line);
+    void AddInitExpr(Expr * expr);
     void SetCondition(Expr * expr);
-    void AddExpr(Expr * expr);
+    void AddIterExpr(Expr * expr);
+    void AddBodyExpr(Expr * expr);
     void Compile(ByteCode & bc) override;
+    void Compile_Ordinary(ByteCode & bc);
+    void Compile_CStyled(ByteCode & bc);
     void CorrectBreaks(ByteCode & bc);
+    void CorrectSkips(ByteCode & bc);
 };
 
 struct ExprScript : Expr {
-
+    std::vector<Expr*> expressions;
+    explicit ExprScript();
+    void AddExpr(Expr * expr);
+    void Compile(ByteCode & bc) override;
+    void CorrectBreaks(ByteCode & bc);
+    void CorrectSkips(ByteCode & bc);
 };
 
 #endif //VIRGO_EXPR_H

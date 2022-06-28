@@ -4,12 +4,14 @@
 
 Script * Parser::Parse(std::vector<Token*> tokens_) {
     tokens = std::move(tokens_);
-    auto * script = new Script();
+    auto * exprScript = new ExprScript();
     while (CurrentToken()->type != TokenType::EndOfFile) {
         Expr * expr = Parse_Expr();
         assert(expr != nullptr);
-        script->AddExpr(expr);
+        exprScript->AddExpr(expr);
     }
+    auto * script = new Script();
+    script->SetExprScript(exprScript);
     return script;
 }
 
@@ -33,8 +35,18 @@ Expr * Parser::Parse_Expr() {
     if (Match(TokenType::If))
         return Parse_If();
 
-    if (Match(TokenType::For))
-        return Parse_For();
+    if (Match(TokenType::For)) {
+        if (Is_For_CStyled())
+            return Parse_For_CStyled();
+
+        return Parse_For_Ordinary();
+    }
+
+    if (Match(TokenType::Break))
+        return Parse_Break();
+
+    if (Match(TokenType::Skip))
+        return Parse_Skip();
 
     return Parse_Assignment();
 }
@@ -90,13 +102,14 @@ Expr * Parser::Parse_If() {
     return exprIf;
 }
 
-Expr * Parser::Parse_For() {
+Expr * Parser::Parse_For_Ordinary() {
 /*
     [for][condition][EnterScope][expr_1][expr_2]...[expr_n][ExitScope]
               ^--- we are here
 */
     // Parsing condition statement
     auto * exprFor = new ExprFor(CurrentLine());
+    exprFor->forType = ForType::Ordinary;
     exprFor->SetCondition(Parse_Logical());
 
     // Empty 'for' loops are not allowed.
@@ -106,13 +119,94 @@ Expr * Parser::Parse_For() {
     currentPosition++;
 
     // Parsing 'for' loop body statements.
-    Expr * expr {nullptr};
     while (CurrentToken()->type != TokenType::ExitScope) {
-        expr = Parse_Expr();
-        exprFor->AddExpr(expr);
+        auto * expr = Parse_Expr();
+        exprFor->AddBodyExpr(expr);
     }
     currentPosition++;
     return exprFor;
+}
+
+bool Parser::Is_For_CStyled() {
+/*
+    for (initialization ; condition ; iteration)
+        ^--- we are here, at possible left parenthesis
+*/
+    int pos = currentPosition;
+    if (tokens.at(pos)->type != TokenType::L_Parenthesis)
+        return false;
+    pos++;
+
+    int numOfOpened = 1;
+    int numOfSemicolons = 0;
+    while (tokens.at(pos)->type != TokenType::EndOfFile && numOfOpened > 0) {
+        if (tokens.at(pos)->type == TokenType::Semicolon)
+            numOfSemicolons++;
+        else if (tokens.at(pos)->type == TokenType::L_Parenthesis)
+            numOfOpened++;
+        else if (tokens.at(pos)->type == TokenType::R_Parenthesis)
+            numOfOpened--;
+        pos++;
+    }
+
+    if (numOfSemicolons != 2)
+        ReportError("Wrong 'for (C styled)' syntax. It must have two semicolons.", CurrentLine());
+
+    return true;
+}
+
+Expr * Parser::Parse_For_CStyled() {
+/*
+    for (initialization ; condition ; iteration)
+        ^-- we are here, at possible left parenthesis
+*/
+    int savedLine = CurrentLine();
+    assert(Match(TokenType::L_Parenthesis));
+
+    auto * exprForC = new ExprFor(savedLine);
+    exprForC->forType = ForType::CStyled;
+
+    // Parsing initialization statement
+    Expr * init = Parse_Assignment();
+    exprForC->AddInitExpr(init);
+
+    if(!Match(TokenType::Semicolon))
+        ReportError("Can't find semicolon after the first statement in the 'for (C styled)' loop header.", savedLine);
+
+    // Parsing condition
+    Expr * condition = Parse_Logical();
+    exprForC->SetCondition(condition);
+
+    if(!Match(TokenType::Semicolon))
+        ReportError("Can't find semicolon after the second statement in the 'for (C styled)' loop header.", savedLine);
+
+    // Parsing iteration
+    Expr * post = Parse_Assignment();
+    exprForC->AddIterExpr(post);
+
+    if(!Match(TokenType::R_Parenthesis))
+        ReportError("Can't find closing right brace of the 'for (C styled)' loop header.", savedLine);
+
+    // Empty loops are not allowed.
+    if (!Match(TokenType::EnterScope))
+        ReportError("Empty 'for' loops are not allowed.", CurrentLine());
+
+    // Parsing body statements.
+    Expr * expr {nullptr};
+    while (CurrentToken()->type != TokenType::ExitScope) {
+        expr = Parse_Expr();
+        exprForC->AddBodyExpr(expr);
+    }
+    currentPosition++;
+    return exprForC;
+}
+
+Expr * Parser::Parse_Break() {
+    return new ExprBreak(CurrentLine());
+}
+
+Expr * Parser::Parse_Skip() {
+    return new ExprSkip(CurrentLine());
 }
 
 Expr * Parser::Parse_Assignment() {

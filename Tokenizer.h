@@ -26,6 +26,7 @@ enum class TokenType {
     // Single character tokens
     Comma,         // ,
     Dot,           // .
+    Semicolon,     // ;
     Plus,          // +
     Minus,         // -
     Star,          // *

@@ -5,13 +5,13 @@
 #include "Expr.h"
 
 class Script {
-    std::vector<Expr*> expressions;
+    ExprScript * exprScript;
     ByteCode bc{};
 
 public:
     explicit Script();
     ~Script();
-    void AddExpr(Expr * expr);
+    void SetExprScript(ExprScript * exprScript_);
     void Compile();
     void Execute();
     void PrintByteCode();

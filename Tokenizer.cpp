@@ -6,38 +6,39 @@
 std::map<TokenType, std::string> TokenTypeNames =
 {
     { TokenType::Undefined,     "Undefined"},
-    //
+
     { TokenType::L_Parenthesis, "L_Parenthesis"},
     { TokenType::R_Parenthesis, "R_Parenthesis"},
     { TokenType::L_Bracket,     "L_Bracket"},
     { TokenType::R_Bracket,     "R_Bracket"},
-    //
+
     { TokenType::Comma,         "Comma"},
     { TokenType::Dot,           "Dot"},
+    { TokenType::Semicolon,     "Semicolon"},
     { TokenType::Plus,          "Plus"},
     { TokenType::Minus,         "Minus"},
     { TokenType::Star,          "Star"},
     { TokenType::Slash,         "Slash"},
     { TokenType::Caret,         "Caret"},
-    //
+
     { TokenType::Equal,         "Equal"},
     { TokenType::BangEqual,     "BangEqual"},
     { TokenType::Greater,       "Greater"},
     { TokenType::GreaterEqual,  "GreaterEqual"},
     { TokenType::Less,          "Less"},
     { TokenType::LessEqual,     "LessEqual"},
-    //
+
     { TokenType::PlusEq,        "PlusEq"},
     { TokenType::MinusEq,       "MinusEq"},
     { TokenType::MultEq,        "MultEq"},
     { TokenType::DivEq,         "DivEq"},
     { TokenType::PowEq,         "PowEq"},
-    //
+
     { TokenType::Int,           "Int"},
     { TokenType::Real,          "Real"},
     { TokenType::String,        "String"},
     { TokenType::Identifier,    "Identifier"},
-    //
+
     { TokenType::None,          "None"},
     { TokenType::True,          "True"},
     { TokenType::False,         "False"},
@@ -51,11 +52,11 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::Break,         "Break"},
     { TokenType::Skip,          "Skip"},
     { TokenType::Return,        "Return"},
-    //
-    { TokenType::EnterScope,    "EnterScope"},
-    { TokenType::ExitScope,     "ExitScope"},
-    //
-    { TokenType::EndOfFile,     "EndOfFile"},
+
+    { TokenType::EnterScope,    "EnterScope" },
+    { TokenType::ExitScope,     "ExitScope" },
+
+    { TokenType::EndOfFile,     "EndOfFile" },
 };
 
 std::string TokenTypeToString(TokenType tokenType) {
@@ -386,6 +387,10 @@ void Tokenizer::ScanToken() {
             AddToken(TokenType::Dot);
             break;
 
+        case ';' :
+            AddToken(TokenType::Semicolon);
+            break;
+
         case '+' :
             Match('=') ? AddToken(TokenType::PlusEq) : AddToken(TokenType::Plus);
             break;
@@ -430,7 +435,7 @@ void Tokenizer::ScanToken() {
             Process_WhiteSpace();
             break;
 
-        case '\n':
+        case '\n' :
             Process_NewLine();
             break;
 
@@ -438,11 +443,16 @@ void Tokenizer::ScanToken() {
             Process_String();
             break;
 
-        default :
-            if      (isdigit(c)) Process_Number();
-            else if (isalpha(c)) Process_Word();
-            else                 ReportError("Unexpected character.");
+        default:
+        {
+            if (isdigit(c))
+                Process_Number();
+            else if (isalpha(c))
+                Process_Word();
+            else
+                ReportError("Unexpected character.");
             break;
+        }
     }
 }
 

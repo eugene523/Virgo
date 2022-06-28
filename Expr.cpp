@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 #include "Expr.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ void ExprGetLocalVariable::Compile(ByteCode & bc) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ExprSetLocalVariable::ExprSetLocalVariable(uint id, Expr * valueExpr, uint line):
-Expr(ExprType::GetLocalVariable, line), valueExpr{valueExpr}, id{id} {}
+Expr(ExprType::GetLocalVariable, line), id{id}, valueExpr{valueExpr} {}
 
 void ExprSetLocalVariable::Compile(ByteCode & bc) {
     bc.Write_Line(line);
@@ -329,12 +330,95 @@ void ExprBreak::Correct(ByteCode & bc) {
     }
 
     if (currentParentExpr == nullptr) {
-        std::cerr << "Syntax error. Line " << line
+        std::cerr << "Syntax error. Line " << line << ". "
                   << "Can't find outer 'for' loop for a 'break' statement.";
+        abort();
     }
 
     auto * exprFor = (ExprFor*)currentParentExpr;
     bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_AfterFor);
+}
+
+void CorrectBreaksRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
+    for (size_t i = 0; i < expressions.size(); i++)
+    {
+        auto * expr = expressions[i];
+        switch (expr->exprType)
+        {
+            case ExprType::Break:
+                ((ExprBreak*)expr)->Correct(bc);
+                break;
+
+            case ExprType::If:
+                ((ExprIf*)expr)->CorrectBreaks(bc);
+                break;
+
+            case ExprType::For:
+                ((ExprFor*)expr)->CorrectBreaks(bc);
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprSkip::ExprSkip(uint line) :
+Expr(ExprType::Skip, line) {}
+
+void ExprSkip::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+}
+
+void ExprSkip::Correct(ByteCode & bc) {
+    // Get parent of ExprFor type
+    auto * currentParentExpr = parentExpr;
+    while (currentParentExpr != nullptr) {
+        if (currentParentExpr->exprType == ExprType::For)
+            break;
+        currentParentExpr = currentParentExpr->parentExpr;
+    }
+
+    if (currentParentExpr == nullptr) {
+        std::cerr << "Syntax error. Line " << line << ". "
+                  << "Can't find outer 'for' loop for a 'skip' statement.";
+        abort();
+    }
+
+    auto * exprFor = (ExprFor*)currentParentExpr;
+    if (exprFor->pos_StartIteration == 0) {
+        std::cerr << "Syntax error. Line " << line << ". "
+                  << "Can't find iteration code in outer 'for' loop for a 'skip' statement.";
+        abort();
+    }
+    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_StartIteration);
+}
+
+void CorrectSkipsRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
+    for (size_t i = 0; i < expressions.size(); i++)
+    {
+        auto * expr = expressions[i];
+        switch (expr->exprType)
+        {
+            case ExprType::Skip:
+                ((ExprSkip*)expr)->Correct(bc);
+                break;
+
+            case ExprType::If:
+                ((ExprIf*)expr)->CorrectSkips(bc);
+                break;
+
+            case ExprType::For:
+                ((ExprFor*)expr)->CorrectSkips(bc);
+                break;
+
+            default:
+                break;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,6 +442,64 @@ void ExprIf::AddFalseExpr(Expr * expr) {
 }
 
 void ExprIf::Compile(ByteCode & bc) {
+/**********************************************************
+
+Variant 1: No false-branch.
+
+Code:
+    if condition
+        true-branch-code
+
+Diagram:
+                        -------------------------------
+                        |
+                        | CONDITION CODE
+                        |
+  pos_AfterCondition -> --------------------------------
+                        | JumpFalse pos_AfterIf
+                        --------------------------------
+                        |
+                        | TRUE BRANCH CODE
+                        |
+         pos_AfterIf -> --------------------------------
+                        |
+                        | AFTER 'if' CODE
+                        |
+
+***********************************************************
+
+Variant 2: Has false-branch.
+
+Code:
+    if condition
+        true-branch
+    else
+        false-branch
+
+Diagram:
+                        -------------------------------
+                        |
+                        | CONDITION CODE
+                        |
+  pos_AfterCondition -> --------------------------------
+                        | JumpFalse pos_StartFalseBranch
+                        --------------------------------
+                        |
+                        | TRUE BRANCH CODE
+                        |
+ pos_AfterTrueBranch -> --------------------------------
+                        | Jump pos_AfterIf
+pos_StartFalseBranch -> --------------------------------
+                        |
+                        | FALSE BRANCH CODE
+                        |
+         pos_AfterIf -> --------------------------------
+                        |
+                        | AFTER 'if' CODE
+                        |
+
+**********************************************************/
+
     bc.Write_Line(line);
 
     // Compiling condition
@@ -372,19 +514,37 @@ void ExprIf::Compile(ByteCode & bc) {
     }
 
     if (falseBranch.empty()) {
-        bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
+        uint pos_AfterIf = bc.bcPos;
+        bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterIf);
         return;
     }
 
     // Reserving space for Jump instruction
     uint pos_AfterTrueBranch = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
+    uint pos_StartFalseBranch = bc.bcPos;
+    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_StartFalseBranch);
 
     // Compiling false-branch
     for (size_t i = 0; i < falseBranch.size(); i++) {
         falseBranch[i]->Compile(bc);
     }
-    bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, bc.bcPos);
+
+    uint pos_AfterIf = bc.bcPos;
+    bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, pos_AfterIf);
+}
+
+void ExprIf::CorrectBreaks(ByteCode & bc) {
+    std::vector <Expr*> allExpressions;
+    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
+    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
+    CorrectBreaksRecursive(allExpressions, bc);
+}
+
+void ExprIf::CorrectSkips(ByteCode & bc) {
+    std::vector <Expr*> allExpressions;
+    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
+    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
+    CorrectSkipsRecursive(allExpressions, bc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -392,20 +552,74 @@ void ExprIf::Compile(ByteCode & bc) {
 ExprFor::ExprFor(uint line):
 Expr{ExprType::For, line} {}
 
+void ExprFor::AddInitExpr(Expr * expr) {
+    init.push_back(expr);
+    expr->parentExpr = expr;
+}
+
 void ExprFor::SetCondition(Expr * expr) {
     condition = expr;
     condition->parentExpr = this;
 }
 
-void ExprFor::AddExpr(Expr * expr) {
-    expressions.push_back(expr);
+void ExprFor::AddIterExpr(Expr * expr) {
+    iter.push_back(expr);
+    expr->parentExpr = expr;
+}
+
+void ExprFor::AddBodyExpr(Expr * expr) {
+    body.push_back(expr);
     expr->parentExpr = this;
 }
 
 void ExprFor::Compile(ByteCode & bc) {
+    switch (forType)
+    {
+        case ForType::Ordinary:
+            Compile_Ordinary(bc);
+            break;
+
+        case ForType::CStyled:
+            Compile_CStyled(bc);
+            break;
+
+        default:
+            std::cerr << "Unknown type of 'for' loop.";
+            abort();
+    }
+}
+
+void ExprFor::Compile_Ordinary(ByteCode & bc) {
+/**********************************************************
+
+Code:
+    for condition
+        body
+
+Diagram:
+
+  pos_StartCondition -> -------------------------------
+                        |
+                        | CONDITION CODE
+                        |
+  pos_AfterCondition -> --------------------------------
+                        | JumpFalse pos_AfterFor
+                        --------------------------------
+                        |
+                        | BODY CODE
+                        |
+                        --------------------------------
+                        | Jump pos_StartCondition
+        pos_AfterFor -> --------------------------------
+                        |
+                        | AFTER 'for' CODE
+                        |
+
+**********************************************************/
+
     bc.Write_Line(line);
 
-    uint pos_Condition = bc.bcPos;
+    uint pos_StartCondition = bc.bcPos;
 
     // Compiling condition
     condition->Compile(bc);
@@ -413,11 +627,114 @@ void ExprFor::Compile(ByteCode & bc) {
     // Reserving space for JumpFalse instruction
     uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
 
-    // Compiling loop expressions
+    // Compiling loop body expressions
+    for (size_t i = 0; i < body.size(); i++) {
+        body[i]->Compile(bc);
+    }
+
+    bc.Write_Jump(pos_StartCondition);
+
+    pos_AfterFor = bc.bcPos;
+    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+}
+
+void ExprFor::Compile_CStyled(ByteCode & bc) {
+/**********************************************************
+
+Code:
+    for (initialization; condition; iteration)
+        body
+
+Diagram:
+                        -------------------------------
+                        |
+                        | INITIALIZATION CODE
+                        |
+  pos_StartCondition -> -------------------------------
+                        |
+                        | CONDITION CODE
+                        |
+  pos_AfterCondition -> --------------------------------
+                        | JumpFalse pos_AfterFor
+                        --------------------------------
+                        |
+                        | BODY CODE
+                        |
+  pos_StartIteration -> --------------------------------
+                        |
+                        | ITERATION CODE
+                        |
+                        --------------------------------
+                        | Jump pos_StartCondition
+        pos_AfterFor -> --------------------------------
+                        |
+                        | AFTER 'for' CODE
+                        |
+
+**********************************************************/
+
+    bc.Write_Line(line);
+
+    for (size_t i = 0; i < init.size(); i++) {
+        init[i]->Compile(bc);
+    }
+
+    uint pos_StartCondition = bc.bcPos;
+
+    // Compiling condition
+    condition->Compile(bc);
+
+    // Reserving space for JumpFalse instruction
+    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+
+    // Compiling loop body expressions
+    for (size_t i = 0; i < body.size(); i++) {
+        body[i]->Compile(bc);
+    }
+
+    if (iter.size() > 0) {
+        pos_StartIteration = bc.bcPos;
+        for (size_t i = 0; i < iter.size(); i++) {
+            iter[i]->Compile(bc);
+        }
+    }
+
+    bc.Write_Jump(pos_StartCondition);
+
+    pos_AfterFor = bc.bcPos;
+    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+}
+
+void ExprFor::CorrectBreaks(ByteCode & bc) {
+    CorrectBreaksRecursive(body, bc);
+}
+
+void ExprFor::CorrectSkips(ByteCode & bc) {
+    CorrectSkipsRecursive(body, bc);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprScript::ExprScript():
+Expr(ExprType::Script, 0) {}
+
+void ExprScript::AddExpr(Expr * expr) {
+    expressions.push_back(expr);
+    expr->parentExpr = this;
+}
+
+void ExprScript::Compile(ByteCode & bc) {
+    bc.Write_NewFrame();
     for (size_t i = 0; i < expressions.size(); i++) {
         expressions[i]->Compile(bc);
     }
-    bc.Write_Jump(pos_Condition);
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, bc.bcPos);
-    pos_AfterFor = bc.bcPos;
+    //bc.Write_CloseFrame();
+}
+
+void ExprScript::CorrectBreaks(ByteCode & bc) {
+    CorrectBreaksRecursive(expressions, bc);
+}
+
+void ExprScript::CorrectSkips(ByteCode & bc) {
+    CorrectSkipsRecursive(expressions, bc);
 }

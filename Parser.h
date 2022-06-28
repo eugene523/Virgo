@@ -13,7 +13,11 @@ class Parser {
     bool    Match(TokenType tokenType);
     Expr *  Parse_Expr();
     Expr *  Parse_If();
-    Expr *  Parse_For();
+    Expr *  Parse_For_Ordinary();
+    bool    Is_For_CStyled();
+    Expr *  Parse_For_CStyled();
+    Expr *  Parse_Break();
+    Expr *  Parse_Skip();
     Expr *  Parse_Assignment();
     Expr *  Parse_Logical();
     Expr *  Parse_Equality();

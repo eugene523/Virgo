@@ -4,21 +4,17 @@
 Script::Script() = default;
 
 Script::~Script() {
-    for (auto e : expressions) {
-        delete e;
-    }
+    delete exprScript;
 }
 
-void Script::AddExpr(Expr * expr) {
-    expressions.push_back(expr);
+void Script::SetExprScript(ExprScript * exprScript_) {
+    exprScript = exprScript_;
 }
 
 void Script::Compile() {
-    bc.Write_NewFrame();
-    for (size_t i = 0; i < expressions.size(); i++) {
-        expressions[i]->Compile(bc);
-    }
-    //bc.Write_CloseFrame();
+    exprScript->Compile(bc);
+    exprScript->CorrectBreaks(bc);
+    exprScript->CorrectSkips(bc);
 }
 
 void Script::Execute() {
@@ -28,6 +24,3 @@ void Script::Execute() {
 void Script::PrintByteCode() {
     bc.Print();
 }
-
-
-
