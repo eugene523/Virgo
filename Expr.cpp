@@ -773,6 +773,18 @@ void ExprFor::CorrectSkips(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+ExprAssert::ExprAssert(uint line, uint lineId, uint messageId) :
+Expr(ExprType::Assert, line), lineId{lineId}, messageId{messageId} {}
+
+void ExprAssert::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    checkingExpr->Compile(bc);
+    bc.Write_LoadConstant(lineId);
+    bc.Write_LoadConstant(messageId);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 ExprScript::ExprScript() :
 Expr(ExprType::Script, 0) {}
 

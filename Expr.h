@@ -51,6 +51,7 @@ enum class ExprType
     ForIn,
     Call,
     Define,
+    Assert,
     Script,
 };
 
@@ -268,6 +269,15 @@ struct ExprFor : Expr {
     void CorrectJumps(ByteCode & bc);
     void CorrectBreaks(ByteCode & bc);
     void CorrectSkips(ByteCode & bc);
+};
+
+struct ExprAssert : Expr {
+    Expr * checkingExpr{};
+    uint lineId;
+    uint messageId;
+
+    ExprAssert(uint line, uint lineId, uint messageId);
+    void Compile(ByteCode & bc) override;
 };
 
 struct ExprScript : Expr {

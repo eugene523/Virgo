@@ -44,9 +44,9 @@ enum OpCode : uint64_t
     Not,
     And,
     Or,
-
     Jump,
     JumpFalse,
+    Assert,
 };
 
 struct loc {

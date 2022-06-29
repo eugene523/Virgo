@@ -5,8 +5,8 @@
 
 struct Str {
     Obj obj;
-    const char * val {};
-    uint len {};
+    const char * val{};
+    uint len{};
 
     static Type * t;
     static void InitType();
