@@ -1,7 +1,9 @@
 #ifndef VIRGO_EXPR_H
 #define VIRGO_EXPR_H
 
+#include <string>
 #include <vector>
+#include <map>
 #include "Common.h"
 #include "ByteCode.h"
 
@@ -38,6 +40,8 @@ enum class ExprType
     MulEq,
     DivEq,
     PowEq,
+    Label,
+    Jump,
     Skip,
     Break,
     Return,
@@ -54,7 +58,9 @@ struct Expr {
     const ExprType exprType;
     const uint line;
     Expr * parentExpr;
+
     Expr(ExprType exprType, uint line);
+    Expr * GetParentOfType(ExprType parentType);
     virtual void Compile(ByteCode & bc) = 0;
     virtual ~Expr() = default;
 };
@@ -191,6 +197,20 @@ struct ExprPowEq : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
+struct ExprLabel : Expr {
+    std::string labelName;
+    ExprLabel(std::string labelName, uint line);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprJump : Expr {
+    std::string labelName;
+    uint pos_Jump{};
+    ExprJump(std::string labelName, uint line);
+    void Compile(ByteCode & bc) override;
+    void Correct(ByteCode & bc);
+};
+
 struct ExprBreak : Expr {
     uint pos_Jump{};
     explicit ExprBreak(uint line);
@@ -215,6 +235,7 @@ struct ExprIf : Expr {
     void AddTrueExpr(Expr * expr);
     void AddFalseExpr(Expr * expr);
     void Compile(ByteCode & bc) override;
+    void CorrectJumps(ByteCode & bc);
     void CorrectBreaks(ByteCode & bc);
     void CorrectSkips(ByteCode & bc);
 };
@@ -233,8 +254,8 @@ struct ExprFor : Expr {
     Expr *             condition{};
     std::vector<Expr*> iter;
     std::vector<Expr*> body;
-    uint pos_AfterFor{};
-    uint pos_StartIteration{};
+    uint               pos_AfterFor{};
+    uint               pos_StartIteration{};
 
     explicit ExprFor(uint line);
     void AddInitExpr(Expr * expr);
@@ -244,17 +265,20 @@ struct ExprFor : Expr {
     void Compile(ByteCode & bc) override;
     void Compile_Ordinary(ByteCode & bc);
     void Compile_CStyled(ByteCode & bc);
+    void CorrectJumps(ByteCode & bc);
     void CorrectBreaks(ByteCode & bc);
     void CorrectSkips(ByteCode & bc);
 };
 
 struct ExprScript : Expr {
     std::vector<Expr*> expressions;
+    std::map<std::string, uint> labels;
+
     explicit ExprScript();
     void AddExpr(Expr * expr);
+    void AddLabel(std::string labelName, uint labelPos, uint labelLine);
+    uint GetLabelPos(std::string labelName, uint jumpLine);
     void Compile(ByteCode & bc) override;
-    void CorrectBreaks(ByteCode & bc);
-    void CorrectSkips(ByteCode & bc);
 };
 
 #endif //VIRGO_EXPR_H

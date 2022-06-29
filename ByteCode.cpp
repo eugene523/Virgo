@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include "ByteCode.h"
 #include "VM.h"
 
@@ -126,27 +127,29 @@ void ByteCode::Print() {
             nextLocPos++;
         }
 
+        std::cout << '\n' << std::setw(8) << std::left << currPos << " : ";
         OpCode opCode = *((OpCode*)(bc + currPos));
         currPos += sizeof(OpCode);
+        std::cout << std::setw(20) << std::left;
         switch (opCode)
         {
             case OpCode::Noop:
-                std::cout << "\nNoop";
+                std::cout << "Noop";
                 break;
 
             case OpCode::NewFrame:
-                std::cout << "\nNewFrame";
+                std::cout << "NewFrame";
                 break;
 
             case OpCode::CloseFrame:
-                std::cout << "\nCloseFrame";
+                std::cout << "CloseFrame";
                 break;
 
             case OpCode::LoadConstant:
             {
                 uint64_t id = *((uint64_t*)(bc + currPos));
                 currPos += sizeof(uint64_t);
-                std::cout << "\nLoadConstant " << VM::ConstantToStr(id);
+                std::cout << "LoadConstant " << '\'' << VM::ConstantToStr(id) << '\'';
                 break;
             }
 
@@ -154,7 +157,7 @@ void ByteCode::Print() {
             {
                 uint64_t id = *((uint64_t*)(bc + currPos));
                 currPos += sizeof(uint64_t);
-                std::cout << "\nGetLocalVariable " << VM::ConstantToStr(id);
+                std::cout << "GetLocalVariable " << '\'' << VM::ConstantToStr(id) << '\'';
                 break;
             }
 
@@ -162,75 +165,75 @@ void ByteCode::Print() {
             {
                 uint64_t id = *((uint64_t*)(bc + currPos));
                 currPos += sizeof(uint64_t);
-                std::cout << "\nSetLocalVariable " << VM::ConstantToStr(id);
+                std::cout << "SetLocalVariable " << '\'' << VM::ConstantToStr(id) << '\'';
                 break;
             }
 
             case OpCode::Eq:
-                std::cout << "\nEq";
+                std::cout << "Eq";
                 break;
 
             case OpCode::NotEq:
-                std::cout << "\nNotEq";
+                std::cout << "NotEq";
                 break;
 
             case OpCode::Neg:
-                std::cout << "\nNeg";
+                std::cout << "Neg";
                 break;
 
             case OpCode::Add:
-                std::cout << "\nAdd";
+                std::cout << "Add";
                 break;
 
             case OpCode::Sub:
-                std::cout << "\nSub";
+                std::cout << "Sub";
                 break;
 
             case OpCode::Mul:
-                std::cout << "\nMul";
+                std::cout << "Mul";
                 break;
 
             case OpCode::Div:
-                std::cout << "\nDiv";
+                std::cout << "Div";
                 break;
 
             case OpCode::Pow:
-                std::cout << "\nPow";
+                std::cout << "Pow";
                 break;
 
             case OpCode::Gr:
-                std::cout << "\nGr";
+                std::cout << "Gr";
                 break;
 
             case OpCode::GrEq:
-                std::cout << "\nGrEq";
+                std::cout << "GrEq";
                 break;
 
             case OpCode::Ls:
-                std::cout << "\nLs";
+                std::cout << "Ls";
                 break;
 
             case OpCode::LsEq:
-                std::cout << "\nLsEq";
+                std::cout << "LsEq";
                 break;
 
             case OpCode::Not:
-                std::cout << "\nNot";
+                std::cout << "Not";
                 break;
 
             case OpCode::And:
-                std::cout << "\nAnd";
+                std::cout << "And";
                 break;
 
             case OpCode::Or:
-                std::cout << "\nOr";
+                std::cout << "Or";
                 break;
 
             case OpCode::Jump:
             {
                 uint64_t toPos = *((uint64_t*)(bc + currPos));
                 currPos += sizeof(uint64_t);
-                std::cout << "\nJump " << toPos;
+                std::cout << "Jump " << toPos;
                 break;
             }
 
@@ -238,12 +241,12 @@ void ByteCode::Print() {
             {
                 uint64_t toPos = *((uint64_t*)(bc + currPos));
                 currPos += sizeof(uint64_t);
-                std::cout << "\nJumpFalse " << toPos;
+                std::cout << "JumpFalse " << toPos;
                 break;
             }
 
             default:
-                std::cout << "\nUnknown operation";
+                std::cout << "Unknown operation";
                 break;
         }
         if (currPos >= bcPos)

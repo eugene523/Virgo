@@ -7,6 +7,16 @@
 Expr::Expr(ExprType exprType, uint line):
 exprType{exprType}, line{line} {}
 
+Expr * Expr::GetParentOfType(ExprType parentType) {
+    auto * parent = parentExpr;
+    while (parent != nullptr) {
+        if (parent->exprType == parentType)
+            return parent;
+        parent = parent->parentExpr;
+    }
+    return nullptr;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ExprUnary::ExprUnary(ExprType exprType, Expr * a, uint line):
@@ -83,7 +93,7 @@ void ExprNotEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprNeg::ExprNeg(Expr * a, uint line) :
+ExprNeg::ExprNeg(Expr * a, uint line):
 ExprUnary{ExprType::Neg, a, line} {}
 
 void ExprNeg::Compile(ByteCode & bc) {
@@ -154,7 +164,7 @@ void ExprPow::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGr::ExprGr(Expr * a, Expr * b, uint line) :
+ExprGr::ExprGr(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Gr, a, b, line} {}
 
 void ExprGr::Compile(ByteCode & bc) {
@@ -166,7 +176,7 @@ void ExprGr::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGrEq::ExprGrEq(Expr * a, Expr * b, uint line) :
+ExprGrEq::ExprGrEq(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::GrEq, a, b, line} {}
 
 void ExprGrEq::Compile(ByteCode & bc) {
@@ -178,7 +188,7 @@ void ExprGrEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLs::ExprLs(Expr * a, Expr * b, uint line) :
+ExprLs::ExprLs(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Ls, a, b, line} {}
 
 void ExprLs::Compile(ByteCode & bc) {
@@ -190,7 +200,7 @@ void ExprLs::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLsEq::ExprLsEq(Expr * a, Expr * b, uint line) :
+ExprLsEq::ExprLsEq(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::LsEq, a, b, line} {}
 
 void ExprLsEq::Compile(ByteCode & bc) {
@@ -202,7 +212,7 @@ void ExprLsEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprNot::ExprNot(Expr * a, uint line) :
+ExprNot::ExprNot(Expr * a, uint line):
 ExprUnary{ExprType::Not, a, line} {}
 
 void ExprNot::Compile(ByteCode & bc) {
@@ -213,7 +223,7 @@ void ExprNot::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprAnd::ExprAnd(Expr * a, Expr * b, uint line) :
+ExprAnd::ExprAnd(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::And, a, b, line} {}
 
 void ExprAnd::Compile(ByteCode & bc) {
@@ -225,7 +235,7 @@ void ExprAnd::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprOr::ExprOr(Expr * a, Expr * b, uint line) :
+ExprOr::ExprOr(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Or, a, b, line} {}
 
 void ExprOr::Compile(ByteCode & bc) {
@@ -237,7 +247,7 @@ void ExprOr::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line) :
+ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::AddEq, a, b, line} {}
 
 void ExprAddEq::Compile(ByteCode & bc) {
@@ -252,7 +262,7 @@ void ExprAddEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line) :
+ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line):
 ExprBinary(ExprType::SubEq, a, b, line) {}
 
 void ExprSubEq::Compile(ByteCode & bc) {
@@ -267,7 +277,7 @@ void ExprSubEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line) :
+ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line):
 ExprBinary(ExprType::MulEq, a, b, line) {}
 
 void ExprMulEq::Compile(ByteCode & bc) {
@@ -282,7 +292,7 @@ void ExprMulEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line) :
+ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line):
 ExprBinary(ExprType::DivEq, a, b, line) {}
 
 void ExprDivEq::Compile(ByteCode & bc) {
@@ -297,7 +307,7 @@ void ExprDivEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line) :
+ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line):
 ExprBinary(ExprType::PowEq, a, b, line) {}
 
 void ExprPowEq::Compile(ByteCode & bc) {
@@ -312,7 +322,60 @@ void ExprPowEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprBreak::ExprBreak(uint line) :
+ExprLabel::ExprLabel(std::string labelName, uint line):
+Expr(ExprType::Label, line), labelName{labelName} {}
+
+void ExprLabel::Compile(ByteCode & bc) {
+    auto * labelAggregator = GetParentOfType(ExprType::Script);
+    assert(labelAggregator != nullptr);
+    uint labelPos = bc.bcPos;
+    ((ExprScript*)labelAggregator)->AddLabel(labelName, labelPos, line);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprJump::ExprJump(std::string labelName, uint line):
+Expr(ExprType::Jump, line), labelName{labelName} {}
+
+void ExprJump::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+}
+
+void ExprJump::Correct(ByteCode & bc) {
+    auto * labelAggregator = GetParentOfType(ExprType::Script);
+    assert(labelAggregator != nullptr);
+    uint jumpToPos = ((ExprScript*)labelAggregator)->GetLabelPos(labelName, line);
+    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, jumpToPos);
+}
+
+void CorrectJumpsRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
+    for (size_t i = 0; i < expressions.size(); i++)
+    {
+        auto * expr = expressions[i];
+        switch (expr->exprType)
+        {
+            case ExprType::Jump:
+                ((ExprJump*)expr)->Correct(bc);
+                break;
+
+            case ExprType::If:
+                ((ExprIf*)expr)->CorrectJumps(bc);
+                break;
+
+            case ExprType::For:
+                ((ExprFor*)expr)->CorrectJumps(bc);
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprBreak::ExprBreak(uint line):
 Expr(ExprType::Break, line) {}
 
 void ExprBreak::Compile(ByteCode & bc) {
@@ -321,21 +384,12 @@ void ExprBreak::Compile(ByteCode & bc) {
 }
 
 void ExprBreak::Correct(ByteCode & bc) {
-    // Get parent of ExprFor type
-    auto * currentParentExpr = parentExpr;
-    while (currentParentExpr != nullptr) {
-        if (currentParentExpr->exprType == ExprType::For)
-            break;
-        currentParentExpr = currentParentExpr->parentExpr;
-    }
-
-    if (currentParentExpr == nullptr) {
+    auto * exprFor = (ExprFor*)GetParentOfType(ExprType::For);
+    if (exprFor == nullptr) {
         std::cerr << "Syntax error. Line " << line << ". "
                   << "Can't find outer 'for' loop for a 'break' statement.";
         abort();
     }
-
-    auto * exprFor = (ExprFor*)currentParentExpr;
     bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_AfterFor);
 }
 
@@ -365,7 +419,7 @@ void CorrectBreaksRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSkip::ExprSkip(uint line) :
+ExprSkip::ExprSkip(uint line):
 Expr(ExprType::Skip, line) {}
 
 void ExprSkip::Compile(ByteCode & bc) {
@@ -375,23 +429,16 @@ void ExprSkip::Compile(ByteCode & bc) {
 
 void ExprSkip::Correct(ByteCode & bc) {
     // Get parent of ExprFor type
-    auto * currentParentExpr = parentExpr;
-    while (currentParentExpr != nullptr) {
-        if (currentParentExpr->exprType == ExprType::For)
-            break;
-        currentParentExpr = currentParentExpr->parentExpr;
-    }
-
-    if (currentParentExpr == nullptr) {
-        std::cerr << "Syntax error. Line " << line << ". "
-                  << "Can't find outer 'for' loop for a 'skip' statement.";
+    auto * exprFor = (ExprFor*)GetParentOfType(ExprType::For);
+    if (exprFor == nullptr) {
+        std::cerr << "Syntax error. Line " << line
+                  << ". Can't find outer 'for' loop for a 'skip' statement.";
         abort();
     }
 
-    auto * exprFor = (ExprFor*)currentParentExpr;
     if (exprFor->pos_StartIteration == 0) {
-        std::cerr << "Syntax error. Line " << line << ". "
-                  << "Can't find iteration code in outer 'for' loop for a 'skip' statement.";
+        std::cerr << "Syntax error. Line " << line
+                  << ". Can't find iteration code in outer 'for' loop for a 'skip' statement.";
         abort();
     }
     bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_StartIteration);
@@ -531,6 +578,13 @@ pos_StartFalseBranch -> --------------------------------
 
     uint pos_AfterIf = bc.bcPos;
     bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, pos_AfterIf);
+}
+
+void ExprIf::CorrectJumps(ByteCode & bc) {
+    std::vector <Expr*> allExpressions;
+    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
+    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
+    CorrectJumpsRecursive(allExpressions, bc);
 }
 
 void ExprIf::CorrectBreaks(ByteCode & bc) {
@@ -705,6 +759,10 @@ Diagram:
     bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
 }
 
+void ExprFor::CorrectJumps(ByteCode & bc) {
+    CorrectJumpsRecursive(body, bc);
+}
+
 void ExprFor::CorrectBreaks(ByteCode & bc) {
     CorrectBreaksRecursive(body, bc);
 }
@@ -715,12 +773,30 @@ void ExprFor::CorrectSkips(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprScript::ExprScript():
+ExprScript::ExprScript() :
 Expr(ExprType::Script, 0) {}
 
 void ExprScript::AddExpr(Expr * expr) {
     expressions.push_back(expr);
     expr->parentExpr = this;
+}
+
+void ExprScript::AddLabel(std::string labelName, uint labelPos, uint labelLine) {
+    if (labels.count(labelName) > 0) {
+        std::cout << "Syntax Error. Line " << labelLine
+                  << ". Redefinition of '" << labelName << "' label.";
+        abort();
+    }
+    labels[labelName] = labelPos;
+}
+
+uint ExprScript::GetLabelPos(std::string labelName, uint jumpLine) {
+    if (labels.count(labelName) == 0) {
+        std::cout << "Syntax Error. Line " << jumpLine
+                  << ". No such label '" << labelName << "'.";
+        abort();
+    }
+    return labels[labelName];
 }
 
 void ExprScript::Compile(ByteCode & bc) {
@@ -729,12 +805,7 @@ void ExprScript::Compile(ByteCode & bc) {
         expressions[i]->Compile(bc);
     }
     //bc.Write_CloseFrame();
-}
-
-void ExprScript::CorrectBreaks(ByteCode & bc) {
+    CorrectJumpsRecursive(expressions, bc);
     CorrectBreaksRecursive(expressions, bc);
-}
-
-void ExprScript::CorrectSkips(ByteCode & bc) {
     CorrectSkipsRecursive(expressions, bc);
 }

@@ -49,6 +49,7 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::If,            "If"},
     { TokenType::Else,          "Else"},
     { TokenType::For,           "For"},
+    { TokenType::Jump,          "Jump"},
     { TokenType::Break,         "Break"},
     { TokenType::Skip,          "Skip"},
     { TokenType::Return,        "Return"},
@@ -385,6 +386,10 @@ void Tokenizer::ScanToken() {
 
         case '.' :
             AddToken(TokenType::Dot);
+            break;
+
+        case ':' :
+            AddToken(TokenType::Colon);
             break;
 
         case ';' :

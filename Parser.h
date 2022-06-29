@@ -5,8 +5,8 @@
 #include "Script.h"
 
 class Parser {
-    int                 currentPosition {};
-    std::vector<Token*> tokens {};
+    int                 currentPosition{};
+    std::vector<Token*> tokens;
 
     Token * CurrentToken();
     int     CurrentLine();
@@ -18,6 +18,9 @@ class Parser {
     Expr *  Parse_For_CStyled();
     Expr *  Parse_Break();
     Expr *  Parse_Skip();
+    bool    IsLabel();
+    Expr *  Parse_Label();
+    Expr *  Parse_Jump();
     Expr *  Parse_Assignment();
     Expr *  Parse_Logical();
     Expr *  Parse_Equality();

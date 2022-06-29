@@ -1,5 +1,8 @@
-c = 0
-for (a = 0; a < 10; a += 1)
-  if a >= 5
-    jump
-  c += 1
+a = 5
+b = 3
+for (i = 0; i < 10; i += 1)
+  for (j = 0; j < 10; j += 1)
+    jump(quit)
+
+quit:
+q = 10

@@ -26,6 +26,7 @@ enum class TokenType {
     // Single character tokens
     Comma,         // ,
     Dot,           // .
+    Colon,         // :
     Semicolon,     // ;
     Plus,          // +
     Minus,         // -
@@ -65,6 +66,7 @@ enum class TokenType {
     Else,
     For,
     In,
+    Jump,
     Break,
     Skip,
     Return,
@@ -142,6 +144,7 @@ class Tokenizer {
         {"else",   TokenType::Else},
         {"for",    TokenType::For},
         {"in",     TokenType::In},
+        {"jump",   TokenType::Jump},
         {"break",  TokenType::Break},
         {"skip",   TokenType::Skip},
         {"return", TokenType::Return},

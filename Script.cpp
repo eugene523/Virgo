@@ -13,8 +13,6 @@ void Script::SetExprScript(ExprScript * exprScript_) {
 
 void Script::Compile() {
     exprScript->Compile(bc);
-    exprScript->CorrectBreaks(bc);
-    exprScript->CorrectSkips(bc);
 }
 
 void Script::Execute() {

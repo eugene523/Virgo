@@ -48,6 +48,12 @@ Expr * Parser::Parse_Expr() {
     if (Match(TokenType::Skip))
         return Parse_Skip();
 
+    if (IsLabel())
+        return Parse_Label();
+
+    if (Match(TokenType::Jump))
+        return Parse_Jump();
+
     return Parse_Assignment();
 }
 
@@ -149,8 +155,11 @@ bool Parser::Is_For_CStyled() {
         pos++;
     }
 
+    if (numOfSemicolons == 0)
+        return false;
+
     if (numOfSemicolons != 2)
-        ReportError("Wrong 'for (C styled)' syntax. It must have two semicolons.", CurrentLine());
+        ReportError("Wrong 'for (C styled)' syntax. Condition section must have two semicolons.", CurrentLine());
 
     return true;
 }
@@ -207,6 +216,50 @@ Expr * Parser::Parse_Break() {
 
 Expr * Parser::Parse_Skip() {
     return new ExprSkip(CurrentLine());
+}
+
+bool Parser::IsLabel() {
+    return (tokens.at(currentPosition)->type     == TokenType::Identifier &&
+            tokens.at(currentPosition + 1)->type == TokenType::Colon);
+}
+
+Expr * Parser::Parse_Label() {
+/*
+    labelName:
+        ^--- we are here
+*/
+    int savedLine = CurrentLine();
+    auto * idToken = CurrentToken();
+    assert(idToken->type == TokenType::Identifier);
+    std::string labelName = idToken->lexeme;
+    currentPosition++;
+    assert(Match(TokenType::Colon));
+    return new ExprLabel(labelName, savedLine);
+}
+
+Expr * Parser::Parse_Jump() {
+/*
+    jump(labelName)
+        ^--- we are here at left parenthesis
+*/
+    std::string errMsg = "Wrong 'jump' syntax. Proper usage is: 'jump(labelName)'.";
+
+    int savedLine = CurrentLine();
+
+    if (!Match(TokenType::L_Parenthesis))
+        ReportError(errMsg, savedLine);
+
+    auto * idToken = CurrentToken();
+    if (idToken->type != TokenType::Identifier)
+        ReportError(errMsg, savedLine);
+
+    std::string labelName = idToken->lexeme;
+    currentPosition++;
+
+    if (!Match(TokenType::R_Parenthesis))
+        ReportError(errMsg, savedLine);
+
+    return new ExprJump(labelName, savedLine);
 }
 
 Expr * Parser::Parse_Assignment() {
