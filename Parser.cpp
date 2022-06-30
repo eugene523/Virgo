@@ -54,6 +54,9 @@ Expr * Parser::Parse_Expr() {
     if (Match(TokenType::Jump))
         return Parse_Jump();
 
+    if (Match(TokenType::Assert))
+        return Parse_Assert();
+
     return Parse_Assignment();
 }
 
@@ -242,7 +245,8 @@ Expr * Parser::Parse_Jump() {
     jump(labelName)
         ^--- we are here at left parenthesis
 */
-    std::string errMsg = "Wrong 'jump' syntax. Proper usage is: 'jump(labelName)'.";
+    std::string errMsg = "Wrong 'jump' syntax. "
+                         "Proper usage is: 'jump(labelName)'.";
 
     int savedLine = CurrentLine();
 
@@ -260,6 +264,40 @@ Expr * Parser::Parse_Jump() {
         ReportError(errMsg, savedLine);
 
     return new ExprJump(labelName, savedLine);
+}
+
+Expr * Parser::Parse_Assert() {
+/*
+    assert(expression,["error message"])
+          ^--- we are here
+
+    Notice that "error message" is optional.
+*/
+    std::string errMsg = "Wrong 'assert' syntax. "
+                         "Proper usage is 'assert(expression,['error message'])'.";
+
+    int  savedLine   = CurrentLine();
+    uint savedLineId = VM::GetConstantId_Int(savedLine);
+    uint messageId   = 0;
+
+    if (!Match(TokenType::L_Parenthesis))
+        ReportError(errMsg, savedLine);
+
+    Expr * checkingExpr = Parse_Logical();
+    auto * tok = CurrentToken();
+    if (tok->type == TokenType::Comma) {
+        currentPosition++;
+        tok = CurrentToken();
+        if (tok->type != TokenType::String)
+            ReportError(errMsg, savedLine);
+        messageId = tok->constantId;
+        currentPosition++;
+    }
+
+    if (!Match(TokenType::R_Parenthesis))
+        ReportError(errMsg, savedLine);
+
+    return new ExprAssert(checkingExpr, savedLine, savedLineId, messageId);
 }
 
 Expr * Parser::Parse_Assignment() {
@@ -322,7 +360,7 @@ Expr * Parser::Parse_Logical() {
     where ~ is (and, or)
 */
     Expr * a = Parse_Equality();
-    Token* op = CurrentToken();
+    Token * op = CurrentToken();
     while (op->type == TokenType::And ||
            op->type == TokenType::Or)
     {

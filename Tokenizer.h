@@ -61,7 +61,6 @@ enum class TokenType {
     And,
     Or,
     Not,
-    Assert,
     If,
     Else,
     For,
@@ -70,6 +69,7 @@ enum class TokenType {
     Break,
     Skip,
     Return,
+    Assert,
 
     // Scope tokens
     EnterScope,
@@ -129,7 +129,7 @@ class Tokenizer {
     std::string errorMessage        {};
     int         currentNestingLevel {};
 
-    std::vector<Token*> tokens {};
+    std::vector<Token*> tokens;
 
     std::map<std::string, TokenType> keywords =
     {
@@ -139,7 +139,6 @@ class Tokenizer {
         {"and",    TokenType::And},
         {"or",     TokenType::Or},
         {"not",    TokenType::Not},
-        {"assert", TokenType::Assert},
         {"if",     TokenType::If},
         {"else",   TokenType::Else},
         {"for",    TokenType::For},
@@ -148,6 +147,7 @@ class Tokenizer {
         {"break",  TokenType::Break},
         {"skip",   TokenType::Skip},
         {"return", TokenType::Return},
+        {"assert", TokenType::Assert},
     };
 
     void ScanTokens();

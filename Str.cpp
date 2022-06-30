@@ -28,7 +28,7 @@ Obj * Str_OpAdd(Obj * self, Obj * other) {
         const char * concatenated = str_concat(selfVal, otherVal);
         return (Obj*)Str::New(concatenated);
     }
-    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
 Obj * Str_OpEq(Obj * self, Obj * other) {
@@ -42,7 +42,7 @@ Obj * Str_OpEq(Obj * self, Obj * other) {
         const char * otherVal = ((Str*)other)->val;
         return (Obj*)Bool::New(strcmp(selfVal, otherVal));
     }
-    return (Obj*)Error::New(ERR_OP_WRONG_TYPE);
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
 Obj * Str_OpNotEq(Obj * self, Obj * other) {

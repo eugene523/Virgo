@@ -45,7 +45,6 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::And,           "And"},
     { TokenType::Or,            "Or"},
     { TokenType::Not,           "Not"},
-    { TokenType::Assert,        "Assert"},
     { TokenType::If,            "If"},
     { TokenType::Else,          "Else"},
     { TokenType::For,           "For"},
@@ -53,6 +52,7 @@ std::map<TokenType, std::string> TokenTypeNames =
     { TokenType::Break,         "Break"},
     { TokenType::Skip,          "Skip"},
     { TokenType::Return,        "Return"},
+    { TokenType::Assert,        "Assert"},
 
     { TokenType::EnterScope,    "EnterScope" },
     { TokenType::ExitScope,     "ExitScope" },
@@ -132,10 +132,10 @@ std::string Tokenizer::GetErrorMessage() { return errorMessage; }
 std::vector<Token*> Tokenizer::GetTokens() { return tokens; }
 
 void Tokenizer::PrintTokens() {
-    int width = 25;
+    int width = 20;
     Printw("TokenType", width);
     Printw("Lexeme", width);
-    Printw("Constant", width);
+    Printw("ConstantId", width);
     Printw("Line", 10);
     std::cout << '\n' << std::string(width * 3 + 10, '-') << "\n";
 
@@ -147,7 +147,7 @@ void Tokenizer::PrintTokens() {
         }
         Printw(TokenTypeToString(i->type), width);
         Printw(i->lexeme, width);
-        Printw(None::IsNone(i->constant) ? "-" : ((Str*)i->constant)->val, width);
+        Printw(i->constantId == 0 ? "" : std::to_string(i->constantId), width);
         Printw(std::to_string(i->line), width);
         std::cout << std::endl;
     }
@@ -233,18 +233,20 @@ void Tokenizer::Process_NewLine() {
 }
 
 void Tokenizer::Process_Comment() {
-    // One line comment starts with one symbol "#" like this:
-    // # This is a comment.
-    //
-    // Multiline comment starts with two symbols ("##"),
-    // and ends with the same two symbols ("##") like this:
-    // ##
-    // Write less comments.
-    // Especially multiline comments.
-    // ##
-    // It's possible (but not recommended) to have unclosed
-    // multiline comment if it ends with EOF.
+/*
+    One line comment starts with one symbol "#" like this:
+    # This is a comment.
 
+    Multiline comment starts with two symbols ("##"),
+    and ends with the same two symbols ("##") like this:
+    ##
+    Write less comments.
+    Especially multiline comments.
+    ##
+
+    It's possible (but not recommended) to have unclosed
+    multiline comment if it ends with EOF.
+*/
     if (Peek() == '#') {
         // Multiline comment.
         // Notice that we have already processed one '#" character in global switch loop.
@@ -348,9 +350,9 @@ void Tokenizer::Process_Word() {
 
 void Tokenizer::Process_EndOfFile() {
     // It is possible that code file ends without exiting
-    // from nesting scopes (IFs, FORs, declarations, etc).
+    // from nesting scopes ('if', 'for', declarations, etc).
     // To ensure that all scopes are closed we add
-    // additional Token_ExitScope tokens
+    // additional ExitScope tokens
     // according to the current nesting level.
     for (int i = 0; i < currentNestingLevel; i++)
         tokens.push_back(new Token(TokenType::ExitScope, currentLine));

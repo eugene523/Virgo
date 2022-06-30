@@ -455,7 +455,7 @@ void VM::Execute(const ByteCode & byteCode) {
                     std::stringstream s;
                     v_int line = ((Int*)obj_2)->val;
                     s << "\nLine " << line << ". Assertion failed. ";
-                    if (obj_3 != None::none) {
+                    if (obj_3 != (Obj*)None::none) {
                         const char * message = ((Str*)obj_3)->val;
                         s << message;
                     }

@@ -276,7 +276,7 @@ struct ExprAssert : Expr {
     uint lineId;
     uint messageId;
 
-    ExprAssert(uint line, uint lineId, uint messageId);
+    ExprAssert(Expr * checkingExpr, uint line, uint lineId, uint messageId);
     void Compile(ByteCode & bc) override;
 };
 

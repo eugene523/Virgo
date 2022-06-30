@@ -19,7 +19,7 @@ void RunScript() {
     Init();
 
     std::fstream f;
-    f.open(R"(C:\code\Virgo\Tests\1_arithmetics_add.v)");
+    f.open(R"(C:\code\Virgo\Tests\1_arithmetics_int_vars.v)");
     std::stringstream s;
     s << f.rdbuf();
     std::string src = s.str();
@@ -36,9 +36,11 @@ void RunScript() {
     Script * script = p.Parse(tokenizer.GetTokens());
     script->Compile();
     script->Execute();
+    /*
     std::cout << "\n----------------------";
     script->PrintByteCode();
     std::cout << "\n----------------------";
+    */
     VM::PrintFrames();
 }
 

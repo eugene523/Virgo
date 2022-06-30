@@ -18,7 +18,7 @@ Ref List_OpAdd(Ref a, Ref b) {
         return NEW_REF(new Err(ERR_SECOND_ARG_IS_NULL));
 
     if (!b_obj->Is(List::t))
-        return NEW_REF(new Err(ERR_OP_WRONG_TYPE));
+        return NEW_REF(new Err(ERROR_INCOMPATIBLE_TYPES));
 
     auto a_elems = ((List*)a_obj)->elements;
     auto b_elems = ((List*)b_obj)->elements;

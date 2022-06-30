@@ -21,6 +21,7 @@ class Parser {
     bool    IsLabel();
     Expr *  Parse_Label();
     Expr *  Parse_Jump();
+    Expr *  Parse_Assert();
     Expr *  Parse_Assignment();
     Expr *  Parse_Logical();
     Expr *  Parse_Equality();
