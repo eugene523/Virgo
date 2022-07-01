@@ -9,7 +9,51 @@
 #include "ErrorMessages.h"
 #include "Str.h"
 
-Obj * Int_OpAdd(Obj * self, Obj * other) {
+Obj * Int_Eq(Obj * self, Obj * other) {
+    if (self == other)
+        return (Obj*)Bool::New(true);
+
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal == otherVal);
+    }
+    else if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal == otherVal);
+    }
+    return (Obj*)Bool::New(false);
+}
+
+Obj * Int_NotEq(Obj * self, Obj * other) {
+    if (self == other)
+        return (Obj*)Bool::New(false);
+
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)->val;
+    if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)-> val;
+        return (Obj*)Bool::New(selfVal != otherVal);
+    }
+    else if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal != otherVal);
+    }
+    return (Obj*)Bool::New(true);
+}
+
+Obj * Int_Neg(Obj * self) {
+    assert(self->Is(Int::t));
+    v_int selfVal = ((Int*)self)-> val;
+    return (Obj*)Int::New(-selfVal);
+}
+
+Obj * Int_Add(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -25,7 +69,7 @@ Obj * Int_OpAdd(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpSub(Obj * self, Obj * other) {
+Obj * Int_Sub(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -41,7 +85,7 @@ Obj * Int_OpSub(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpMul(Obj * self, Obj * other) {
+Obj * Int_Mul(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -57,7 +101,7 @@ Obj * Int_OpMul(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpDiv(Obj * self, Obj * other) {
+Obj * Int_Div(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -79,7 +123,7 @@ Obj * Int_OpDiv(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpPow(Obj * self, Obj * other) {
+Obj * Int_Pow(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -95,13 +139,7 @@ Obj * Int_OpPow(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpNeg(Obj * self) {
-    assert(self->Is(Int::t));
-    v_int selfVal = ((Int*)self)-> val;
-    return (Obj*)Int::New(-selfVal);
-}
-
-Obj * Int_OpGr(Obj * self, Obj * other) {
+Obj * Int_Gr(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -117,7 +155,7 @@ Obj * Int_OpGr(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpGrEq(Obj * self, Obj * other) {
+Obj * Int_GrEq(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -133,7 +171,7 @@ Obj * Int_OpGrEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpLs(Obj * self, Obj * other) {
+Obj * Int_Ls(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -149,7 +187,7 @@ Obj * Int_OpLs(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpLsEq(Obj * self, Obj * other) {
+Obj * Int_LsEq(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -165,45 +203,7 @@ Obj * Int_OpLsEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_OpEq(Obj * self, Obj * other) {
-    if (self == other)
-        return (Obj*)Bool::New(true);
-
-    assert(self->Is(Int::t));
-    v_int selfVal = ((Int*)self)->val;
-    if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)-> val;
-        return (Obj*)Bool::New(selfVal == otherVal);
-    }
-    else if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal == otherVal);
-    }
-    return (Obj*)Bool::New(false);
-}
-
-Obj * Int_OpNotEq(Obj * self, Obj * other) {
-    if (self == other)
-        return (Obj*)Bool::New(false);
-
-    assert(self->Is(Int::t));
-    v_int selfVal = ((Int*)self)->val;
-    if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)-> val;
-        return (Obj*)Bool::New(selfVal != otherVal);
-    }
-    else if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal != otherVal);
-    }
-    return (Obj*)Bool::New(true);
-}
-
-std::string Int_Dstr(Obj * self) {
+std::string Int_DebugStr(Obj * self) {
     assert(self->Is(Int::t));
     return std::to_string(((Int*)self)->val);
 }
@@ -215,19 +215,19 @@ Type * Int::t;
 void Int::InitType() {
     Int::t = new Type("int");
     auto mt = Int::t->methodTable;
-    mt->OpAdd   = &Int_OpAdd;
-    mt->OpSub   = &Int_OpSub;
-    mt->OpMul   = &Int_OpMul;
-    mt->OpDiv   = &Int_OpDiv;
-    mt->OpPow   = &Int_OpPow;
-    mt->OpNeg   = &Int_OpNeg;
-    mt->OpGr    = &Int_OpGr;
-    mt->OpGrEq  = &Int_OpGrEq;
-    mt->OpLs    = &Int_OpLs;
-    mt->OpLsEq  = &Int_OpLsEq;
-    mt->OpEq    = &Int_OpEq;
-    mt->OpNotEq = &Int_OpNotEq;
-    mt->Dstr    = &Int_Dstr;
+    mt->Eq       = &Int_Eq;
+    mt->NotEq    = &Int_NotEq;
+    mt->Neg      = &Int_Neg;
+    mt->Add      = &Int_Add;
+    mt->Sub      = &Int_Sub;
+    mt->Mul      = &Int_Mul;
+    mt->Div      = &Int_Div;
+    mt->Pow      = &Int_Pow;
+    mt->Gr       = &Int_Gr;
+    mt->GrEq     = &Int_GrEq;
+    mt->Ls       = &Int_Ls;
+    mt->LsEq     = &Int_LsEq;
+    mt->DebugStr = &Int_DebugStr;
 }
 
 void Int::New(void * inPlace, v_int value) {

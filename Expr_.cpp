@@ -141,7 +141,7 @@ return assignResultRef; \
 
 Ref Err_NoSuchOperation(Obj * obj, const std::string & opName, uint line) {
     std::stringstream s;
-    s << "Object of type '" << obj->type->name 
+    s << "Object of type '" << obj->type->name
       << "' does not provide '"<< opName << "' operation.";
     return NEW_REF(new Err(s.str(), line));
 }
@@ -179,7 +179,7 @@ ExprAdd::ExprAdd(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Add, a, b, line} {}
 
 Ref ExprAdd::Execute() {
-    EXPR_BINARY_IMPL(OpAdd, "+")
+    EXPR_BINARY_IMPL(Add, "+")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ ExprSub::ExprSub(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Sub, a, b, line} {}
 
 Ref ExprSub::Execute() {
-    EXPR_BINARY_IMPL(OpSub, "-")
+    EXPR_BINARY_IMPL(Sub, "-")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +197,7 @@ ExprMul::ExprMul(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Mul, a, b, line} {}
 
 Ref ExprMul::Execute() {
-    EXPR_BINARY_IMPL(OpMul, "*")
+    EXPR_BINARY_IMPL(Mul, "*")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +206,7 @@ ExprDiv::ExprDiv(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Div, a, b, line} {}
 
 Ref ExprDiv::Execute() {
-    EXPR_BINARY_IMPL(OpDiv, "/")
+    EXPR_BINARY_IMPL(Div, "/")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ ExprPow::ExprPow(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Pow, a, b, line} {}
 
 Ref ExprPow::Execute() {
-    EXPR_BINARY_IMPL(OpPow, "^")
+    EXPR_BINARY_IMPL(Pow, "^")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +224,7 @@ ExprNeg::ExprNeg(Expr * a, uint line) :
 ExprUnary{ExprType::Neg, a, line} {}
 
 Ref ExprNeg::Execute() {
-    EXPR_UNARY_IMPL(OpNeg, "-")
+    EXPR_UNARY_IMPL(Neg, "-")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +233,7 @@ ExprGr::ExprGr(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Gr, a, b, line} {}
 
 Ref ExprGr::Execute() {
-    EXPR_BINARY_IMPL(OpGr, ">")
+    EXPR_BINARY_IMPL(Gr, ">")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ ExprGrEq::ExprGrEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::GrEq, a, b, line} {}
 
 Ref ExprGrEq::Execute() {
-    EXPR_BINARY_IMPL(OpGrEq, ">=")
+    EXPR_BINARY_IMPL(GrEq, ">=")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ ExprLs::ExprLs(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Ls, a, b, line} {}
 
 Ref ExprLs::Execute() {
-    EXPR_BINARY_IMPL(OpLs, "<")
+    EXPR_BINARY_IMPL(Ls, "<")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +260,7 @@ ExprLsEq::ExprLsEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::LsEq, a, b, line} {}
 
 Ref ExprLsEq::Execute() {
-    EXPR_BINARY_IMPL(OpLsEq, "<=")
+    EXPR_BINARY_IMPL(LsEq, "<=")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +269,7 @@ ExprAnd::ExprAnd(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::And, a, b, line} {}
 
 Ref ExprAnd::Execute() {
-    EXPR_BINARY_IMPL(OpAnd, "and")
+    EXPR_BINARY_IMPL(And, "and")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +278,7 @@ ExprOr::ExprOr(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Or, a, b, line} {}
 
 Ref ExprOr::Execute() {
-    EXPR_BINARY_IMPL(OpOr, "or")
+    EXPR_BINARY_IMPL(Or, "or")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +287,7 @@ ExprNot::ExprNot(Expr * a, uint line) :
 ExprUnary{ExprType::Not, a, line} {}
 
 Ref ExprNot::Execute() {
-    EXPR_UNARY_IMPL(OpNot, "not")
+    EXPR_UNARY_IMPL(Not, "not")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,7 +296,7 @@ ExprEq::ExprEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::Eq, a, b, line} {}
 
 Ref ExprEq::Execute() {
-    EXPR_BINARY_IMPL(OpEq, "=")
+    EXPR_BINARY_IMPL(Eq, "=")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,7 +305,7 @@ ExprNotEq::ExprNotEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::NotEq, a, b, line} {}
 
 Ref ExprNotEq::Execute() {
-    EXPR_BINARY_IMPL(OpNotEq, "!=")
+    EXPR_BINARY_IMPL(NotEq, "!=")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -624,7 +624,7 @@ ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::AddEq, a, b, line} {}
 
 Ref ExprAddEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpAdd, "+")
+    EXPR_BINARY_EQ_IMPL(Add, "+")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -633,7 +633,7 @@ ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::SubEq, a, b, line} {}
 
 Ref ExprSubEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpSub, "-")
+    EXPR_BINARY_EQ_IMPL(Sub, "-")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -642,7 +642,7 @@ ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::MulEq, a, b, line} {}
 
 Ref ExprMulEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpMul, "*")
+    EXPR_BINARY_EQ_IMPL(Mul, "*")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -651,7 +651,7 @@ ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::DivEq, a, b, line} {}
 
 Ref ExprDivEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpDiv, "/")
+    EXPR_BINARY_EQ_IMPL(Div, "/")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -660,7 +660,7 @@ ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line) :
 ExprBinary{ExprType::PowEq, a, b, line} {}
 
 Ref ExprPowEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(OpPow, "^")
+    EXPR_BINARY_EQ_IMPL(Pow, "^")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -701,7 +701,7 @@ ExprIf::ExprIf(uint line) : Expr{ExprType::If, line} {}
 Ref ExprIf::Execute() {
     Ref result = condition->Execute();
     Obj * resultObj = GET_OBJ(result);
-    
+
     if (resultObj->Is(Err::t))
         return result;
 
@@ -760,10 +760,10 @@ Ref ExprFor::Execute() {
                 if (result != Ref::none) {
                     if (i->exprType == ExprType::Return || resultObj->Is(Err::t))
                         return result;
-                    
+
                     if (resultObj->Is(Skip::t))
                         break;
-                    
+
                     if (resultObj->Is(Break::t))
                         return Ref::none;
                 }
@@ -787,13 +787,13 @@ Ref ExprForC::Execute() {
     for(;;) {
         Ref result = condition->Execute();
         Obj * resultObj = GET_OBJ(result);
-        
+
         if (resultObj->Is(Err::t))
             return result;
-        
+
         if (!resultObj->Is(Bool::t))
             return NEW_REF(new Err("Condition result must be of boolean type.", line));
-        
+
         auto r = ((Bool*)resultObj)->val;
         if (r) {
             for (auto i : expressions) {
@@ -802,10 +802,10 @@ Ref ExprForC::Execute() {
                 if (result != Ref::none) {
                     if (i->exprType == ExprType::Return || resultObj->Is(Err::t))
                         return result;
-                    
+
                     if (resultObj->Is(Skip::t))
                         break;
-                    
+
                     if (resultObj->Is(Break::t))
                         return Ref::none;
                 }

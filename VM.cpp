@@ -125,7 +125,7 @@ Obj * VM::GetConstantById(uint id) {
 std::string VM::ConstantToStr(uint id) {
     Obj * obj = GetConstantById(id);
     std::string objStr;
-    auto * method = obj->type->methodTable->Dstr;
+    auto * method = obj->type->methodTable->DebugStr;
     if (method == nullptr) {
         objStr = obj->type->name;
     } else {
@@ -135,12 +135,10 @@ std::string VM::ConstantToStr(uint id) {
 }
 
 void VM::Execute(const ByteCode & byteCode) {
-    std::byte * bc = byteCode.bc;
-    uint pos = 0;
+    ByteCodeReader bcr(byteCode);
     for (;;)
     {
-        OpCode opCode = *((OpCode*)(bc + pos));
-        pos += sizeof(OpCode);
+        OpCode opCode = bcr.Read_OpCode();
         switch (opCode)
         {
             case OpCode::Noop :
@@ -165,8 +163,7 @@ void VM::Execute(const ByteCode & byteCode) {
 
             case OpCode::LoadConstant :
             {
-                uint64_t id = *((uint64_t*)(bc + pos));
-                pos += sizeof(uint64_t);
+                OpArg id = bcr.Read_OpArg();
                 objStackTop++;
                 objStack[objStackTop] = GetConstantById(id);
                 break;
@@ -174,8 +171,7 @@ void VM::Execute(const ByteCode & byteCode) {
 
             case OpCode::GetLocalVariable :
             {
-                uint64_t id = *((uint64_t*)(bc + pos));
-                pos += sizeof(uint64_t);
+                OpArg  id      = bcr.Read_OpArg();
                 Obj  * name    = GetConstantById(id);
                 auto * context = (Context*)objStack[frameStack.top()];
                 Obj  * result  = context->GetVariable(name);
@@ -187,8 +183,7 @@ void VM::Execute(const ByteCode & byteCode) {
 
             case OpCode::SetLocalVariable :
             {
-                uint64_t id = *((uint64_t*)(bc + pos));
-                pos += sizeof(uint64_t);
+                OpArg  id      = bcr.Read_OpArg();
                 Obj  * name    = GetConstantById(id);
                 auto * obj     = (Obj*)objStack[objStackTop];
                 auto * context = (Context*)objStack[frameStack.top()];
@@ -202,9 +197,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpEq;
+                auto * method = obj_1->type->methodTable->Eq;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "=");
+                    ThrowError_NoSuchOperation(obj_1->type, "'='");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -217,9 +212,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpNotEq;
+                auto * method = obj_1->type->methodTable->NotEq;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "!=");
+                    ThrowError_NoSuchOperation(obj_1->type, "'!='");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -231,9 +226,9 @@ void VM::Execute(const ByteCode & byteCode) {
             case OpCode::Neg :
             {
                 auto * obj    = (Obj*)objStack[objStackTop];
-                auto * method = obj->type->methodTable->OpNeg;
+                auto * method = obj->type->methodTable->Neg;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj->type, "- (negation)");
+                    ThrowError_NoSuchOperation(obj->type, "'-' (negation)");
                 }
                 auto * result = method(obj);
                 HandlePossibleError(result);
@@ -245,9 +240,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpAdd;
+                auto * method = obj_1->type->methodTable->Add;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "+");
+                    ThrowError_NoSuchOperation(obj_1->type, "'+'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -260,9 +255,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpSub;
+                auto * method = obj_1->type->methodTable->Sub;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "-");
+                    ThrowError_NoSuchOperation(obj_1->type, "'-'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -275,9 +270,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpMul;
+                auto * method = obj_1->type->methodTable->Mul;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "*");
+                    ThrowError_NoSuchOperation(obj_1->type, "'*'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -290,9 +285,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpDiv;
+                auto * method = obj_1->type->methodTable->Div;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "/");
+                    ThrowError_NoSuchOperation(obj_1->type, "'/'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -305,9 +300,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpPow;
+                auto * method = obj_1->type->methodTable->Pow;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "^");
+                    ThrowError_NoSuchOperation(obj_1->type, "'^'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -320,9 +315,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpGr;
+                auto * method = obj_1->type->methodTable->Gr;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, ">");
+                    ThrowError_NoSuchOperation(obj_1->type, "'>'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -335,9 +330,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpGrEq;
+                auto * method = obj_1->type->methodTable->GrEq;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, ">=");
+                    ThrowError_NoSuchOperation(obj_1->type, "'>='");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -350,9 +345,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpLs;
+                auto * method = obj_1->type->methodTable->Ls;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "<");
+                    ThrowError_NoSuchOperation(obj_1->type, "'<'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -365,9 +360,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpLsEq;
+                auto * method = obj_1->type->methodTable->LsEq;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "<=");
+                    ThrowError_NoSuchOperation(obj_1->type, "'<='");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -379,9 +374,9 @@ void VM::Execute(const ByteCode & byteCode) {
             case OpCode::Not :
             {
                 auto * obj    = (Obj*)objStack[objStackTop];
-                auto * method = obj->type->methodTable->OpNot;
+                auto * method = obj->type->methodTable->Not;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj->type, "not");
+                    ThrowError_NoSuchOperation(obj->type, "'not'");
                 }
                 auto * result = method(obj);
                 HandlePossibleError(result);
@@ -393,9 +388,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpAnd;
+                auto * method = obj_1->type->methodTable->And;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "and");
+                    ThrowError_NoSuchOperation(obj_1->type, "'and'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -408,9 +403,9 @@ void VM::Execute(const ByteCode & byteCode) {
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->OpOr;
+                auto * method = obj_1->type->methodTable->Or;
                 if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "or");
+                    ThrowError_NoSuchOperation(obj_1->type, "'or'");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
@@ -421,8 +416,7 @@ void VM::Execute(const ByteCode & byteCode) {
 
             case OpCode::Jump :
             {
-                uint64_t bcPos = *((uint64_t*)(bc + pos));
-                pos = bcPos;
+                bcr.Read_OpArg_SetAsPos();
                 break;
             }
 
@@ -434,11 +428,10 @@ void VM::Execute(const ByteCode & byteCode) {
                 }
                 objStackTop--;
                 if ((Bool*)obj == Bool::True) {
-                    pos += sizeof(uint64_t);
+                    bcr.Skip_OpArg();
                     break;
                 }
-                uint64_t posFalse = *((uint64_t*)(bc + pos));
-                pos = posFalse;
+                bcr.Read_OpArg_SetAsPos();
                 break;
             }
 
@@ -452,6 +445,7 @@ void VM::Execute(const ByteCode & byteCode) {
                     ThrowError("Asserting expression must be of a boolean type.");
 
                 if ((Bool*)obj_1 == Bool::False) {
+                    assert(obj_2->Is(Int::t));
                     std::stringstream s;
                     v_int line = ((Int*)obj_2)->val;
                     s << "\nLine " << line << ". Assertion failed. ";
@@ -469,7 +463,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 std::cerr << "\nFatal error: Unknown OpCode.";
                 abort();
         }
-        if (pos >= byteCode.bcPos)
+        if (bcr.IsAtEnd())
             break;
     }
 }
@@ -494,9 +488,9 @@ void VM::ThrowError_NoSuchOperation(const Type * t, const std::string & opSymbol
     std::stringstream s;
     s << "\nObject of type '"
       << t->name
-      << "' does not provide operation '"
+      << "' does not provide operation "
       << opSymbol
-      << "'.";
+      << ".";
     ThrowError(s.str());
 }
 
@@ -512,7 +506,7 @@ void VM::PrintConstants() {
     for (uint i = 0; i < nextId; i++) {
         std::string valStr;
         auto * val = constants[i];
-        auto * method = val->type->methodTable->Dstr;
+        auto * method = val->type->methodTable->DebugStr;
         if (method == nullptr) {
             valStr = val->type->name;
         } else {

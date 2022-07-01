@@ -328,7 +328,7 @@ Expr(ExprType::Label, line), labelName{labelName} {}
 void ExprLabel::Compile(ByteCode & bc) {
     auto * labelAggregator = GetParentOfType(ExprType::Script);
     assert(labelAggregator != nullptr);
-    uint labelPos = bc.bcPos;
+    uint labelPos = bc.pos;
     ((ExprScript*)labelAggregator)->AddLabel(labelName, labelPos, line);
 }
 
@@ -339,14 +339,14 @@ Expr(ExprType::Jump, line), labelName{labelName} {}
 
 void ExprJump::Compile(ByteCode & bc) {
     bc.Write_Line(line);
-    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    pos_Jump = bc.Reserve_OpCode_OpArg();
 }
 
 void ExprJump::Correct(ByteCode & bc) {
     auto * labelAggregator = GetParentOfType(ExprType::Script);
     assert(labelAggregator != nullptr);
     uint jumpToPos = ((ExprScript*)labelAggregator)->GetLabelPos(labelName, line);
-    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, jumpToPos);
+    bc.Write_OpCode_OpArg_AtPos(pos_Jump, OpCode::Jump, jumpToPos);
 }
 
 void CorrectJumpsRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
@@ -380,7 +380,7 @@ Expr(ExprType::Break, line) {}
 
 void ExprBreak::Compile(ByteCode & bc) {
     bc.Write_Line(line);
-    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    pos_Jump = bc.Reserve_OpCode_OpArg();
 }
 
 void ExprBreak::Correct(ByteCode & bc) {
@@ -390,7 +390,7 @@ void ExprBreak::Correct(ByteCode & bc) {
                   << "Can't find outer 'for' loop for a 'break' statement.";
         abort();
     }
-    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_AfterFor);
+    bc.Write_OpCode_OpArg_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_AfterFor);
 }
 
 void CorrectBreaksRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
@@ -424,7 +424,7 @@ Expr(ExprType::Skip, line) {}
 
 void ExprSkip::Compile(ByteCode & bc) {
     bc.Write_Line(line);
-    pos_Jump = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    pos_Jump = bc.Reserve_OpCode_OpArg();
 }
 
 void ExprSkip::Correct(ByteCode & bc) {
@@ -441,7 +441,7 @@ void ExprSkip::Correct(ByteCode & bc) {
                   << ". Can't find iteration code in outer 'for' loop for a 'skip' statement.";
         abort();
     }
-    bc.Write_OpCode_uint64_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_StartIteration);
+    bc.Write_OpCode_OpArg_AtPos(pos_Jump, OpCode::Jump, exprFor->pos_StartIteration);
 }
 
 void CorrectSkipsRecursive(std::vector<Expr*> & expressions, ByteCode & bc) {
@@ -553,7 +553,7 @@ pos_StartFalseBranch -> --------------------------------
     condition->Compile(bc);
 
     // Reserving space for JumpFalse instruction
-    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling true-branch
     for (size_t i = 0; i < trueBranch.size(); i++) {
@@ -561,23 +561,23 @@ pos_StartFalseBranch -> --------------------------------
     }
 
     if (falseBranch.empty()) {
-        uint pos_AfterIf = bc.bcPos;
-        bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterIf);
+        uint pos_AfterIf = bc.pos;
+        bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterIf);
         return;
     }
 
     // Reserving space for Jump instruction
-    uint pos_AfterTrueBranch = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
-    uint pos_StartFalseBranch = bc.bcPos;
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_StartFalseBranch);
+    uint pos_AfterTrueBranch = bc.Reserve_OpCode_OpArg();
+    uint pos_StartFalseBranch = bc.pos;
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_StartFalseBranch);
 
     // Compiling false-branch
     for (size_t i = 0; i < falseBranch.size(); i++) {
         falseBranch[i]->Compile(bc);
     }
 
-    uint pos_AfterIf = bc.bcPos;
-    bc.Write_OpCode_uint64_AtPos(pos_AfterTrueBranch, OpCode::Jump, pos_AfterIf);
+    uint pos_AfterIf = bc.pos;
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterTrueBranch, OpCode::Jump, pos_AfterIf);
 }
 
 void ExprIf::CorrectJumps(ByteCode & bc) {
@@ -673,13 +673,13 @@ Diagram:
 
     bc.Write_Line(line);
 
-    uint pos_StartCondition = bc.bcPos;
+    uint pos_StartCondition = bc.pos;
 
     // Compiling condition
     condition->Compile(bc);
 
     // Reserving space for JumpFalse instruction
-    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling loop body expressions
     for (size_t i = 0; i < body.size(); i++) {
@@ -688,8 +688,8 @@ Diagram:
 
     bc.Write_Jump(pos_StartCondition);
 
-    pos_AfterFor = bc.bcPos;
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+    pos_AfterFor = bc.pos;
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
 }
 
 void ExprFor::Compile_CStyled(ByteCode & bc) {
@@ -733,13 +733,13 @@ Diagram:
         init[i]->Compile(bc);
     }
 
-    uint pos_StartCondition = bc.bcPos;
+    uint pos_StartCondition = bc.pos;
 
     // Compiling condition
     condition->Compile(bc);
 
     // Reserving space for JumpFalse instruction
-    uint pos_AfterCondition = bc.Reserve(sizeof(OpCode) + sizeof(uint64_t));
+    uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling loop body expressions
     for (size_t i = 0; i < body.size(); i++) {
@@ -747,7 +747,7 @@ Diagram:
     }
 
     if (iter.size() > 0) {
-        pos_StartIteration = bc.bcPos;
+        pos_StartIteration = bc.pos;
         for (size_t i = 0; i < iter.size(); i++) {
             iter[i]->Compile(bc);
         }
@@ -755,8 +755,8 @@ Diagram:
 
     bc.Write_Jump(pos_StartCondition);
 
-    pos_AfterFor = bc.bcPos;
-    bc.Write_OpCode_uint64_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+    pos_AfterFor = bc.pos;
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
 }
 
 void ExprFor::CorrectJumps(ByteCode & bc) {

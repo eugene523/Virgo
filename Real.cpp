@@ -8,161 +8,7 @@
 #include "Error.h"
 #include "ErrorMessages.h"
 
-Obj * Real_OpAdd(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Real::New(selfVal + otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Real::New(selfVal + otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpSub(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Real::New(selfVal - otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Real::New(selfVal - otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpMult(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Real::New(selfVal * otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Real::New(selfVal * otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpDiv(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        if (otherVal == 0)
-            return (Obj*)Error::New(ERROR_DIVISION_BY_ZERO);
-        return (Obj*)Real::New(selfVal / otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        if (otherVal == 0)
-            return (Obj*)Error::New(ERROR_DIVISION_BY_ZERO);
-        return (Obj*)Real::New(selfVal / otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpPow(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Real::New(powl(selfVal, otherVal));
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Real::New(powl(selfVal, otherVal));
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpNeg(Obj * self) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    return (Obj*)Real::New(-selfVal);
-}
-
-Obj * Real_OpGr(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal > otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Bool::New(selfVal > otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpGrEq(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal >= otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Bool::New(selfVal >= otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpLs(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal < otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Bool::New(selfVal < otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpLsEq(Obj * self, Obj * other) {
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)-> val;
-        return (Obj*)Bool::New(selfVal <= otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Bool::New(selfVal <= otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_OpEq(Obj * self, Obj * other) {
+Obj * Real_Eq(Obj * self, Obj * other) {
     if (self == other)
         return (Obj*)Bool::New(true);
 
@@ -181,7 +27,7 @@ Obj * Real_OpEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_OpNotEq(Obj * self, Obj * other) {
+Obj * Real_NotEq(Obj * self, Obj * other) {
     if (self == other)
         return (Obj*)Bool::New(false);
 
@@ -200,7 +46,161 @@ Obj * Real_OpNotEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-std::string Real_Dstr(Obj * self) {
+Obj * Real_Neg(Obj * self) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    return (Obj*)Real::New(-selfVal);
+}
+
+Obj * Real_Add(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal + otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Real::New(selfVal + otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Sub(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal - otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Real::New(selfVal - otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Mul(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(selfVal * otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Real::New(selfVal * otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Div(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        if (otherVal == 0)
+            return (Obj*)Error::New(ERROR_DIVISION_BY_ZERO);
+        return (Obj*)Real::New(selfVal / otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        if (otherVal == 0)
+            return (Obj*)Error::New(ERROR_DIVISION_BY_ZERO);
+        return (Obj*)Real::New(selfVal / otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Pow(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Real::New(powl(selfVal, otherVal));
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Real::New(powl(selfVal, otherVal));
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Gr(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal > otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Bool::New(selfVal > otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_GrEq(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal >= otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Bool::New(selfVal >= otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_Ls(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)->val;
+        return (Obj*)Bool::New(selfVal < otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Bool::New(selfVal < otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+Obj * Real_LsEq(Obj * self, Obj * other) {
+    assert(self->Is(Real::t));
+    v_real selfVal = ((Real*)self)->val;
+    if (other->Is(Real::t))
+    {
+        v_real otherVal = ((Real*)other)-> val;
+        return (Obj*)Bool::New(selfVal <= otherVal);
+    }
+    else if (other->Is(Int::t))
+    {
+        v_int otherVal = ((Int*)other)->val;
+        return (Obj*)Bool::New(selfVal <= otherVal);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
+}
+
+std::string Real_DebugStr(Obj * self) {
     assert(self->Is(Real::t));
     return std::to_string(((Real*)self)->val);
 }
@@ -212,19 +212,19 @@ Type * Real::t;
 void Real::InitType() {
     Real::t = new Type("real");
     auto mt = t->methodTable;
-    mt->OpAdd   = &Real_OpAdd;
-    mt->OpSub   = &Real_OpSub;
-    mt->OpMul   = &Real_OpMult;
-    mt->OpDiv   = &Real_OpDiv;
-    mt->OpPow   = &Real_OpPow;
-    mt->OpNeg   = &Real_OpNeg;
-    mt->OpGr    = &Real_OpGr;
-    mt->OpGrEq  = &Real_OpGrEq;
-    mt->OpLs    = &Real_OpLs;
-    mt->OpLsEq  = &Real_OpLsEq;
-    mt->OpEq    = &Real_OpEq;
-    mt->OpNotEq = &Real_OpNotEq;
-    mt->Dstr    = &Real_Dstr;
+    mt->Eq       = &Real_Eq;
+    mt->NotEq    = &Real_NotEq;
+    mt->Neg      = &Real_Neg;
+    mt->Add      = &Real_Add;
+    mt->Sub      = &Real_Sub;
+    mt->Mul      = &Real_Mul;
+    mt->Div      = &Real_Div;
+    mt->Pow      = &Real_Pow;
+    mt->Gr       = &Real_Gr;
+    mt->GrEq     = &Real_GrEq;
+    mt->Ls       = &Real_Ls;
+    mt->LsEq     = &Real_LsEq;
+    mt->DebugStr = &Real_DebugStr;
 }
 
 void Real::New(void * inPlace, v_real value) {

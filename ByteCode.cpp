@@ -6,52 +6,51 @@
 #include "VM.h"
 
 ByteCode::ByteCode() {
-    bcMaxSize = 64;
-    bc = (std::byte*)calloc(bcMaxSize, sizeof(std::byte));
-
-    locsMaxSize = 8;
-    locs = (loc*)calloc(locsMaxSize, sizeof(loc));
+    maxSize = 64;
+    bcStream = (std::byte*)calloc(maxSize, sizeof(std::byte));
 }
 
 ByteCode::~ByteCode() {
-    free(bc);
+    free(bcStream);
 }
 
 void ByteCode::Enlarge() {
-    uint newMaxSize = bcMaxSize * 2;
-    bc = (std::byte*)realloc(bc, newMaxSize);
-    if (bc == nullptr) {
+    uint newMaxSize = maxSize * 2;
+    bcStream = (std::byte*)realloc(bcStream, newMaxSize);
+    if (bcStream == nullptr) {
         std::cerr << "Error. Not enough memory.";
+        abort();
     }
-    bcMaxSize = newMaxSize;
+    maxSize = newMaxSize;
 }
 
 void ByteCode::Write_OpCode(OpCode opCode) {
-    if ((bcMaxSize - bcPos) < sizeof(OpCode))
+    if ((maxSize - pos) < sizeof(OpCode))
         Enlarge();
-    *((OpCode*)(bc + bcPos)) = opCode;
-    bcPos += sizeof(OpCode);
+    *((OpCode*)(bcStream + pos)) = opCode;
+    pos += sizeof(OpCode);
 }
 
-void ByteCode::Write_uint64(uint64_t i) {
-    if ((bcMaxSize - bcPos) < sizeof(uint64_t))
+void ByteCode::Write_OpArg(OpArg opArg) {
+    if ((maxSize - pos) < sizeof(OpArg))
         Enlarge();
-    *((uint64_t*)(bc + bcPos)) = i;
-    bcPos += sizeof(uint64_t);
+    *((OpArg*)(bcStream + pos)) = opArg;
+    pos += sizeof(OpArg);
 }
 
-uint ByteCode::Reserve(uint numOfReservedBytes) {
-    uint savedPos = bcPos;
-    if ((bcMaxSize - bcPos) < numOfReservedBytes)
+uint ByteCode::Reserve_OpCode_OpArg() {
+    uint savedPos = pos;
+    uint numOfReservedBytes = sizeof(OpCode) + sizeof(OpArg);
+    if ((maxSize - pos) < numOfReservedBytes)
         Enlarge();
-    bcPos += numOfReservedBytes;
+    pos += numOfReservedBytes;
     return savedPos;
 }
 
-void ByteCode::Write_OpCode_uint64_AtPos(uint atPos, OpCode opCode, uint64_t i) {
-    assert(atPos + sizeof(opCode) + sizeof(uint64_t) <= bcMaxSize);
-    *((OpCode*)(bc + atPos)) = opCode;
-    *((uint64_t*)(bc + atPos + sizeof(OpCode))) = i;
+void ByteCode::Write_OpCode_OpArg_AtPos(uint atPos, OpCode opCode, OpArg opArg) {
+    assert(atPos + sizeof(opCode) + sizeof(OpArg) <= maxSize);
+    *((OpCode*)(bcStream + atPos)) = opCode;
+    *((OpArg*)(bcStream + atPos + sizeof(OpCode))) = opArg;
 }
 
 void ByteCode::Write_NewFrame() {
@@ -62,198 +61,129 @@ void ByteCode::Write_CloseFrame() {
     Write_OpCode(OpCode::CloseFrame);
 }
 
-void ByteCode::Write_LoadConstant(uint64_t id) {
+void ByteCode::Write_LoadConstant(OpArg id) {
     Write_OpCode(OpCode::LoadConstant);
-    Write_uint64(id);
+    Write_OpArg(id);
 }
 
-void ByteCode::Write_GetLocalVariable(uint64_t id) {
+void ByteCode::Write_GetLocalVariable(OpArg id) {
     Write_OpCode(OpCode::GetLocalVariable);
-    Write_uint64(id);
+    Write_OpArg(id);
 }
 
-void ByteCode::Write_SetLocalVariable(uint64_t id) {
+void ByteCode::Write_SetLocalVariable(OpArg id) {
     Write_OpCode(OpCode::SetLocalVariable);
-    Write_uint64(id);
+    Write_OpArg(id);
 }
 
-void ByteCode::Write_Jump(uint64_t toPos) {
+void ByteCode::Write_Jump(OpArg toPos) {
     Write_OpCode(OpCode::Jump);
-    Write_uint64(toPos);
+    Write_OpArg(toPos);
 }
 
-void ByteCode::Write_JumpFalse(uint64_t toPos) {
+void ByteCode::Write_JumpFalse(OpArg toPos) {
     Write_OpCode(OpCode::JumpFalse);
-    Write_uint64(toPos);
-}
-
-void ByteCode::EnlargeLocs() {
-    uint newMaxSize = locsMaxSize * 2;
-    locs = (loc*)realloc(locs, newMaxSize * sizeof(loc));
-    if (locs == nullptr) {
-        std::cerr << "Error. Not enough memory.";
-    }
-    locsMaxSize = newMaxSize;
+    Write_OpArg(toPos);
 }
 
 void ByteCode::Write_Line(uint line) {
-    if (currentLine == 0) {
-        locs[0].line = line;
-        locs[0].bcPos = 0;
-        locsPos = 1;
-        currentLine = line;
-        return;
-    }
-
-    if (line == currentLine)
+    if (line == numOfLines)
         return;
 
-    if (locsPos == locsMaxSize)
-        EnlargeLocs();
-
-    locs[locsPos].line = line;
-    locs[locsPos].bcPos = bcPos;
-    locsPos++;
-    currentLine = line;
+    linePos.push_back(pos);
+    numOfLines = line;
 }
+
+std::map<OpCode, std::string> OpCodeNames =
+{
+    { OpCode::Noop,             "Noop"             },
+    { OpCode::NewFrame,         "NewFrame"         },
+    { OpCode::CloseFrame,       "CloseFrame"       },
+    { OpCode::LoadConstant,     "LoadConstant"     },
+    { OpCode::GetLocalVariable, "GetLocalVariable" },
+    { OpCode::SetLocalVariable, "SetLocalVariable" },
+    { OpCode::Eq,               "Eq"               },
+    { OpCode::NotEq,            "NotEq"            },
+    { OpCode::Neg,              "Neg"              },
+    { OpCode::Add,              "Add"              },
+    { OpCode::Sub,              "Sub"              },
+    { OpCode::Mul,              "Mul"              },
+    { OpCode::Div,              "Div"              },
+    { OpCode::Pow,              "Pow"              },
+    { OpCode::Gr,               "Gr"               },
+    { OpCode::GrEq,             "GrEq"             },
+    { OpCode::Ls,               "Ls"               },
+    { OpCode::LsEq,             "LsEq"             },
+    { OpCode::Not,              "Not"              },
+    { OpCode::And,              "And"              },
+    { OpCode::Or,               "Or"               },
+    { OpCode::Jump,             "Jump"             },
+    { OpCode::JumpFalse,        "JumpFalse"        },
+    { OpCode::Assert,           "Assert"           },
+};
 
 void ByteCode::Print() {
     uint currPos = 0;
-    uint nextLocPos = 0;
+    uint nextLine = 1;
     for (;;)
     {
-        if (locs[nextLocPos].bcPos == currPos) {
-            std::cout << "\n\nLine " << locs[nextLocPos].line;
-            nextLocPos++;
+        if (nextLine < linePos.size() && linePos[nextLine] == currPos) {
+            std::cout << "\n\nLine " << nextLine;
+            nextLine++;
         }
 
         std::cout << '\n' << std::setw(8) << std::left << currPos << " : ";
-        OpCode opCode = *((OpCode*)(bc + currPos));
+        OpCode opCode = *((OpCode*)(bcStream + currPos));
         currPos += sizeof(OpCode);
         std::cout << std::setw(20) << std::left;
         switch (opCode)
         {
             case OpCode::Noop :
-                std::cout << "Noop";
-                break;
-
             case OpCode::NewFrame :
-                std::cout << "NewFrame";
-                break;
-
             case OpCode::CloseFrame :
-                std::cout << "CloseFrame";
+            case OpCode::Eq :
+            case OpCode::NotEq :
+            case OpCode::Neg :
+            case OpCode::Add :
+            case OpCode::Sub :
+            case OpCode::Mul :
+            case OpCode::Div :
+            case OpCode::Pow :
+            case OpCode::Gr :
+            case OpCode::GrEq :
+            case OpCode::Ls :
+            case OpCode::LsEq :
+            case OpCode::Not :
+            case OpCode::And :
+            case OpCode::Or :
+            case OpCode::Assert :
+                std::cout << OpCodeNames[opCode];
                 break;
 
             case OpCode::LoadConstant :
-            {
-                uint64_t id = *((uint64_t*)(bc + currPos));
-                currPos += sizeof(uint64_t);
-                std::cout << "LoadConstant " << '\'' << VM::ConstantToStr(id) << '\'';
-                break;
-            }
-
             case OpCode::GetLocalVariable :
-            {
-                uint64_t id = *((uint64_t*)(bc + currPos));
-                currPos += sizeof(uint64_t);
-                std::cout << "GetLocalVariable " << '\'' << VM::ConstantToStr(id) << '\'';
-                break;
-            }
-
             case OpCode::SetLocalVariable :
             {
-                uint64_t id = *((uint64_t*)(bc + currPos));
-                currPos += sizeof(uint64_t);
-                std::cout << "SetLocalVariable " << '\'' << VM::ConstantToStr(id) << '\'';
+                OpArg id = *((OpArg*)(bcStream + currPos));
+                currPos += sizeof(OpArg);
+                std::cout << OpCodeNames[opCode] << '\'' << VM::ConstantToStr(id) << '\'';
                 break;
             }
-
-            case OpCode::Eq :
-                std::cout << "Eq";
-                break;
-
-            case OpCode::NotEq :
-                std::cout << "NotEq";
-                break;
-
-            case OpCode::Neg :
-                std::cout << "Neg";
-                break;
-
-            case OpCode::Add :
-                std::cout << "Add";
-                break;
-
-            case OpCode::Sub :
-                std::cout << "Sub";
-                break;
-
-            case OpCode::Mul :
-                std::cout << "Mul";
-                break;
-
-            case OpCode::Div :
-                std::cout << "Div";
-                break;
-
-            case OpCode::Pow :
-                std::cout << "Pow";
-                break;
-
-            case OpCode::Gr :
-                std::cout << "Gr";
-                break;
-
-            case OpCode::GrEq :
-                std::cout << "GrEq";
-                break;
-
-            case OpCode::Ls :
-                std::cout << "Ls";
-                break;
-
-            case OpCode::LsEq :
-                std::cout << "LsEq";
-                break;
-
-            case OpCode::Not :
-                std::cout << "Not";
-                break;
-
-            case OpCode::And :
-                std::cout << "And";
-                break;
-
-            case OpCode::Or :
-                std::cout << "Or";
-                break;
 
             case OpCode::Jump :
-            {
-                uint64_t toPos = *((uint64_t*)(bc + currPos));
-                currPos += sizeof(uint64_t);
-                std::cout << "Jump " << toPos;
-                break;
-            }
-
             case OpCode::JumpFalse :
             {
-                uint64_t toPos = *((uint64_t*)(bc + currPos));
-                currPos += sizeof(uint64_t);
-                std::cout << "JumpFalse " << toPos;
+                OpArg toPos = *((OpArg*)(bcStream + currPos));
+                currPos += sizeof(OpArg);
+                std::cout << OpCodeNames[opCode] << "->" << toPos;
                 break;
             }
-
-            case OpCode::Assert :
-                std::cout << "Assert";
-                break;
 
             default:
                 std::cout << "Unknown operation";
                 break;
         }
-        if (currPos >= bcPos)
+        if (currPos >= pos)
             break;
     }
 }

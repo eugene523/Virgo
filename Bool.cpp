@@ -5,37 +5,9 @@
 #include "Error.h"
 #include "Str.h"
 
-const char * ERR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
+const char * ERROR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
 
-Obj * Bool_OpNot(Obj * self) {
-    assert(self->Is(Bool::t));
-    bool selfVal = ((Bool*)self)->val;
-    return (Obj*)Bool::New(!selfVal);
-}
-
-Obj * Bool_OpAnd(Obj * self, Obj * other) {
-    assert(self->Is(Bool::t));
-
-    if (!(other->Is(Bool::t)))
-        return (Obj*)Error::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
-
-    bool selfVal = ((Bool*)self)->val;
-    bool otherVal = ((Bool*)other)->val;
-    return (Obj*)Bool::New(selfVal && otherVal);
-}
-
-Obj * Bool_OpOr(Obj * self, Obj * other) {
-    assert(self->Is(Bool::t));
-
-    if (!(other->Is(Bool::t)))
-        return (Obj*)Error::New(ERR_LOGICAL_EXPR_WRONG_TYPE);
-
-    bool selfVal = ((Bool*)self)->val;
-    bool otherVal = ((Bool*)other)->val;
-    return (Obj*)Bool::New(selfVal || otherVal);
-}
-
-Obj * Bool_OpEq(Obj * self, Obj * other) {
+Obj * Bool_Eq(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
@@ -46,7 +18,7 @@ Obj * Bool_OpEq(Obj * self, Obj * other) {
     return (Obj*)Bool::New(selfVal == otherVal);
 }
 
-Obj * Bool_OpNotEq(Obj * self, Obj * other) {
+Obj * Bool_NotEq(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
@@ -57,7 +29,35 @@ Obj * Bool_OpNotEq(Obj * self, Obj * other) {
     return (Obj*)Bool::New(selfVal != otherVal);
 }
 
-std::string Bool_Dstr(Obj * self) {
+Obj * Bool_Not(Obj * self) {
+    assert(self->Is(Bool::t));
+    bool selfVal = ((Bool*)self)->val;
+    return (Obj*)Bool::New(!selfVal);
+}
+
+Obj * Bool_And(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
+
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Error::New(ERROR_LOGICAL_EXPR_WRONG_TYPE);
+
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal && otherVal);
+}
+
+Obj * Bool_Or(Obj * self, Obj * other) {
+    assert(self->Is(Bool::t));
+
+    if (!(other->Is(Bool::t)))
+        return (Obj*)Error::New(ERROR_LOGICAL_EXPR_WRONG_TYPE);
+
+    bool selfVal = ((Bool*)self)->val;
+    bool otherVal = ((Bool*)other)->val;
+    return (Obj*)Bool::New(selfVal || otherVal);
+}
+
+std::string Bool_DebugStr(Obj * self) {
     assert(self->type == Bool::t);
     return (self == (Obj*)Bool::True) ? "true" : "false";
 }
@@ -66,19 +66,19 @@ std::string Bool_Dstr(Obj * self) {
 
 Type * Bool::t;
 
-Bool * Bool::True {};
+Bool * Bool::True;
 
-Bool * Bool::False {};
+Bool * Bool::False;
 
 void Bool::InitType() {
     Bool::t = new Type("bool");
     auto mt = t->methodTable;
-    mt->OpNot   = &Bool_OpNot;
-    mt->OpAnd   = &Bool_OpAnd;
-    mt->OpOr    = &Bool_OpOr;
-    mt->OpEq    = &Bool_OpEq;
-    mt->OpNotEq = &Bool_OpNotEq;
-    mt->Dstr    = &Bool_Dstr;
+    mt->Eq       = &Bool_Eq;
+    mt->NotEq    = &Bool_NotEq;
+    mt->Not      = &Bool_Not;
+    mt->And      = &Bool_And;
+    mt->Or       = &Bool_Or;
+    mt->DebugStr = &Bool_DebugStr;
 
     Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
     Obj::Init(Bool::True, Bool::t);

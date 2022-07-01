@@ -9,7 +9,7 @@
 #include "ErrorMessages.h"
 #include "VM.h"
 
-Ref List_OpAdd(Ref a, Ref b) {
+Ref List_Add(Ref a, Ref b) {
     Obj * a_obj = GET_OBJ(a);
     assert(a_obj->Is(List::t));
 
@@ -109,7 +109,7 @@ Type * List::t;
 void List::InitType() {
     List::t = new Type("list");
     auto ot = List::t->opTable;
-    ot->OpAdd    = &List_OpAdd;
+    ot->Add    = &List_Add;
     ot->Get      = &List_Get;
     ot->Set      = &List_Set;
     ot->GetField = &List_GetField;

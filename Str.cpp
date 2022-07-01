@@ -19,7 +19,7 @@ const char * str_concat(const char * a, const char * b) {
     return c;
 }
 
-Obj * Str_OpAdd(Obj * self, Obj * other) {
+Obj * Str_Add(Obj * self, Obj * other) {
     assert(self->Is(Str::t));
     const char * selfVal = ((Str*)self)->val;
     if (other->Is(Str::t))
@@ -31,7 +31,7 @@ Obj * Str_OpAdd(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Str_OpEq(Obj * self, Obj * other) {
+Obj * Str_Eq(Obj * self, Obj * other) {
     assert(self->Is(Str::t));
     if (self == other)
         return (Obj*)Bool::True;
@@ -45,14 +45,14 @@ Obj * Str_OpEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Str_OpNotEq(Obj * self, Obj * other) {
-    Obj * result = Str_OpEq(self, other);
+Obj * Str_NotEq(Obj * self, Obj * other) {
+    Obj * result = Str_Eq(self, other);
     if (result->Is(Error::t))
         return result;
     return (Obj*)(((Bool*)result)->Invert());
 }
 
-std::string Str_Dstr(Obj * self) {
+std::string Str_DebugStr(Obj * self) {
     assert(self->Is(Str::t));
     auto * str = (Str*)self;
     return std::string(str->val);
@@ -87,10 +87,10 @@ Type * Str::t;
 void Str::InitType() {
     Str::t = new Type("str");
     auto mt = Str::t->methodTable;
-    mt->OpAdd   = &Str_OpAdd;
-    mt->OpEq    = &Str_OpEq;
-    mt->OpNotEq = &Str_OpNotEq;
-    mt->Dstr    = &Str_Dstr;
+    mt->Add      = &Str_Add;
+    mt->Eq       = &Str_Eq;
+    mt->NotEq    = &Str_NotEq;
+    mt->DebugStr = &Str_DebugStr;
     //mt->Get     = &Str_Get;
 }
 

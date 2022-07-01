@@ -7,34 +7,34 @@
 struct Obj;
 
 struct MethodTable {
-    void  (*Mark)        (Obj * self) {};
-    void  (*Delete)      (Obj * self) {};
-    Obj * (*Get)         (Obj * self, Obj * args) {};
-    Obj * (*Set)         (Obj * self, Obj * args, Obj * val) {};
-    Obj * (*GetField)    (Obj * self, Obj * fieldName) {};
-    Obj * (*SetField)    (Obj * self, Obj * fieldName, Obj * val) {};
-    Obj * (*ToStr)       (Obj * self) {};
+    void  (*Mark)      (Obj * self) {};
+    void  (*Delete)    (Obj * self) {};
+    Obj * (*Get)       (Obj * self, Obj * args) {};
+    Obj * (*Set)       (Obj * self, Obj * args, Obj * val) {};
+    Obj * (*GetField)  (Obj * self, Obj * fieldName) {};
+    Obj * (*SetField)  (Obj * self, Obj * fieldName, Obj * val) {};
+    Obj * (*ToStr)     (Obj * self) {};
 
-    Obj * (*OpEq)        (Obj * self, Obj * other) {};
-    Obj * (*OpNotEq)     (Obj * self, Obj * other) {};
+    Obj * (*Eq)        (Obj * self, Obj * other) {};
+    Obj * (*NotEq)     (Obj * self, Obj * other) {};
 
-    Obj * (*OpNeg)       (Obj * self) {};
-    Obj * (*OpAdd)       (Obj * self, Obj * other) {};
-    Obj * (*OpSub)       (Obj * self, Obj * other) {};
-    Obj * (*OpMul)       (Obj * self, Obj * other) {};
-    Obj * (*OpDiv)       (Obj * self, Obj * other) {};
-    Obj * (*OpPow)       (Obj * self, Obj * other) {};
-    Obj * (*OpGr)        (Obj * self, Obj * other) {};
-    Obj * (*OpGrEq)      (Obj * self, Obj * other) {};
-    Obj * (*OpLs)        (Obj * self, Obj * other) {};
-    Obj * (*OpLsEq)      (Obj * self, Obj * other) {};
+    Obj * (*Neg)       (Obj * self) {};
+    Obj * (*Add)       (Obj * self, Obj * other) {};
+    Obj * (*Sub)       (Obj * self, Obj * other) {};
+    Obj * (*Mul)       (Obj * self, Obj * other) {};
+    Obj * (*Div)       (Obj * self, Obj * other) {};
+    Obj * (*Pow)       (Obj * self, Obj * other) {};
+    Obj * (*Gr)        (Obj * self, Obj * other) {};
+    Obj * (*GrEq)      (Obj * self, Obj * other) {};
+    Obj * (*Ls)        (Obj * self, Obj * other) {};
+    Obj * (*LsEq)      (Obj * self, Obj * other) {};
 
-    Obj * (*OpNot)       (Obj * self) {};
-    Obj * (*OpAnd)       (Obj * self, Obj * other) {};
-    Obj * (*OpOr)        (Obj * self, Obj * other) {};
+    Obj * (*Not)       (Obj * self) {};
+    Obj * (*And)       (Obj * self, Obj * other) {};
+    Obj * (*Or)        (Obj * self, Obj * other) {};
 
     // Used for debugging.
-    std::string (*Dstr) (Obj * self) {};
+    std::string (*DebugStr) (Obj * self) {};
 };
 
 struct Type {

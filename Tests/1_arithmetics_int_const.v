@@ -3,7 +3,7 @@ In this test we are testing basic arithmetic operations for 'int' type:
 (+, -, *)
 (> , >=, <, <=)
 We don't test division '/' and power '^' because they return 'real' type.
-Tests are performed on constants only.
+This tests are performed on constants only.
 ##
 
 # Primarily addition

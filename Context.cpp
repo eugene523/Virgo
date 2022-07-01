@@ -26,8 +26,8 @@ Obj * Context::SetVariable(Obj * name, Obj * value) {
 void Context::Print() {
     for (auto const & [key, val] : variables) {
         std::string keyStr, valStr;
-        keyStr = key->type->methodTable->Dstr(key);
-        auto * method = val->type->methodTable->Dstr;
+        keyStr = key->type->methodTable->DebugStr(key);
+        auto * method = val->type->methodTable->DebugStr;
         if (method == nullptr) {
             valStr = val->type->name;
         } else {

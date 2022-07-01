@@ -118,8 +118,6 @@ struct Token {
 ///////////////////////////////////////////////////////////////////////////////
 
 class Tokenizer {
-// The purpose of a Tokenizer is to take a source code presented as a one giant string
-// and produce a list of tokens.
     std::string src;
     int         startPosition       {};
     int         currentPosition     {};

@@ -23,10 +23,10 @@ struct Obj {
 
     static inline void Init(void * inPlace, Type * type) {
         assert(type != nullptr);
-        Obj * obj = (Obj*)inPlace;
-        obj->type = type;
+        Obj * obj        = (Obj*)inPlace;
+        obj->type        = type;
         obj->numOfOwners = 0;
-        obj->flags = 0;
+        obj->flags       = 0;
     }
 
     inline bool Is(Type * ofType) { return type == ofType; }
