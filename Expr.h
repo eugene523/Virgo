@@ -11,8 +11,6 @@ enum class ExprType
 {
     Undefined,
     LoadConstant,
-    GetLocalVariable,
-    SetLocalVariable,
     Eq,
     NotEq,
     Neg,
@@ -37,6 +35,7 @@ enum class ExprType
     For,
     ForC,
     ForIn,
+    Dot,
     NameAccess,
     FieldAccess,
     CallAccess,
@@ -82,19 +81,6 @@ struct ExprBinary : Expr {
 struct ExprLoadConstant : Expr {
     uint id;
     ExprLoadConstant(uint id, uint line);
-    void Compile(ByteCode & bc) override;
-};
-
-struct ExprGetLocalVariable : Expr {
-    uint id;
-    explicit ExprGetLocalVariable(uint id, uint line);
-    void Compile(ByteCode & bc) override;
-};
-
-struct ExprSetLocalVariable : Expr {
-    uint id;
-    Expr * valueExpr;
-    explicit ExprSetLocalVariable(uint id, Expr * valueExpr, uint line);
     void Compile(ByteCode & bc) override;
 };
 
@@ -246,7 +232,7 @@ enum class ForType
     Undefined,
     Ordinary,
     CStyled,
-    Foreach
+    ForIn
 };
 
 struct ExprFor : Expr {
@@ -271,8 +257,20 @@ struct ExprFor : Expr {
     void CorrectSkips(ByteCode & bc);
 };
 
+struct ExprDot : Expr {
+    Expr * target{};
+    uint fieldNameId;
+    Expr * value{};
+    bool isAssignment{};
+
+    ExprDot(uint fieldNameId, uint line);
+    ExprDot(Expr * target, uint fieldNameId, uint line);
+    void SetValueExpr(Expr * value_);
+    void Compile(ByteCode & bc);
+};
+
 struct ExprAssert : Expr {
-    Expr * checkingExpr{};
+    Expr * checkingExpr;
     uint lineId;
     uint messageId;
 

@@ -316,13 +316,14 @@ Expr * Parser::Parse_Assignment() {
     Expr * a = Parse_Accessor();
     int savedLine = CurrentLine();
 
-    Expr * b {nullptr};
+    Expr * b = nullptr;
     switch (CurrentToken()->type) {
         case TokenType::Equal:
             currentPosition++;
             b = Parse_Logical();
-            //return new ExprSetLocalVariable((ExprAccess*)a, b, savedLine);
-            return new ExprSetLocalVariable(((ExprGetLocalVariable*)a)->id, b, savedLine);
+            assert(a->exprType == ExprType::Dot);
+            ((ExprDot*)a)->SetValueExpr(b);
+            return a;
 
         case TokenType::PlusEq:
             currentPosition++;
@@ -579,15 +580,17 @@ Expr * Parser::Parse_Term() {
 }
 
 Expr * Parser::Parse_Accessor() {
-    // E -> A ~ ~ ~ ~ ... ~
-    // where A is an identifier
-    // where ~ is a pair of parentheses () or brackets [] or just a dot.
+/*
+    E -> A ~ ~ ~ ~ ... ~
+    where A is an identifier
+    where ~ is a pair of parentheses () or brackets [] or just a dot.
+*/
 
-    if (CurrentToken()->type != TokenType::Identifier)
+    auto * tok = CurrentToken();
+    if (tok->type != TokenType::Identifier)
         ReportError("Undefined accessor term.", CurrentLine());
 
-    Token * t = CurrentToken();
-    Expr * a = new ExprGetLocalVariable(t->constantId, CurrentLine());
+    Expr * a = new ExprDot(tok->constantId, CurrentLine());
     currentPosition++;
 
 //    t = CurrentToken();

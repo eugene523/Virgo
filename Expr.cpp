@@ -48,27 +48,6 @@ void ExprLoadConstant::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGetLocalVariable::ExprGetLocalVariable(uint id, uint line):
-Expr(ExprType::GetLocalVariable, line), id{id} {}
-
-void ExprGetLocalVariable::Compile(ByteCode & bc) {
-    bc.Write_Line(line);
-    bc.Write_GetLocalVariable(id);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-ExprSetLocalVariable::ExprSetLocalVariable(uint id, Expr * valueExpr, uint line):
-Expr(ExprType::GetLocalVariable, line), id{id}, valueExpr{valueExpr} {}
-
-void ExprSetLocalVariable::Compile(ByteCode & bc) {
-    bc.Write_Line(line);
-    valueExpr->Compile(bc);
-    bc.Write_SetLocalVariable(id);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 ExprEq::ExprEq(Expr * a, Expr * b, uint line):
 ExprBinary{ExprType::Eq, a, b, line} {}
 
@@ -255,8 +234,8 @@ void ExprAddEq::Compile(ByteCode & bc) {
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Add);
-    assert(a->exprType == ExprType::GetLocalVariable);
-    uint id = ((ExprGetLocalVariable*)a)->id;
+    assert(a->exprType == ExprType::Dot);
+    uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
 }
 
@@ -270,8 +249,8 @@ void ExprSubEq::Compile(ByteCode & bc) {
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Sub);
-    assert(a->exprType == ExprType::GetLocalVariable);
-    uint id = ((ExprGetLocalVariable*)a)->id;
+    assert(a->exprType == ExprType::Dot);
+    uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
 }
 
@@ -285,8 +264,8 @@ void ExprMulEq::Compile(ByteCode & bc) {
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Mul);
-    assert(a->exprType == ExprType::GetLocalVariable);
-    uint id = ((ExprGetLocalVariable*)a)->id;
+    assert(a->exprType == ExprType::Dot);
+    uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
 }
 
@@ -300,8 +279,8 @@ void ExprDivEq::Compile(ByteCode & bc) {
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Div);
-    assert(a->exprType == ExprType::GetLocalVariable);
-    uint id = ((ExprGetLocalVariable*)a)->id;
+    assert(a->exprType == ExprType::Dot);
+    uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
 }
 
@@ -315,8 +294,8 @@ void ExprPowEq::Compile(ByteCode & bc) {
     a->Compile(bc);
     b->Compile(bc);
     bc.Write_OpCode(OpCode::Pow);
-    assert(a->exprType == ExprType::GetLocalVariable);
-    uint id = ((ExprGetLocalVariable*)a)->id;
+    assert(a->exprType == ExprType::Dot);
+    uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
 }
 
@@ -769,6 +748,46 @@ void ExprFor::CorrectBreaks(ByteCode & bc) {
 
 void ExprFor::CorrectSkips(ByteCode & bc) {
     CorrectSkipsRecursive(body, bc);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ExprDot::ExprDot(uint fieldNameId, uint line) :
+Expr(ExprType::Dot, line), fieldNameId{fieldNameId} {}
+
+ExprDot::ExprDot(Expr * target, uint fieldNameId, uint line) :
+Expr(ExprType::Dot, line), target{target}, fieldNameId{fieldNameId} {}
+
+void ExprDot::SetValueExpr(Expr * value_) {
+    value = value_;
+    isAssignment = true;
+}
+
+void ExprDot::Compile(ByteCode & bc) {
+    bc.Write_Line(line);
+    if (!isAssignment) {
+        if (target == nullptr) {
+            bc.Write_GetLocalVariable(fieldNameId);
+            return;
+        } else {
+            /*
+            target->Compile(bc);
+            bc.Write_GetField(fieldNameId);
+            */
+        }
+        return;
+    }
+
+    if (target == nullptr) {
+        value->Compile(bc);
+        bc.Write_SetLocalVariable(fieldNameId);
+    } else {
+        target->Compile(bc);
+        value->Compile(bc);
+        /*
+        bc.Write_SetField(fieldNameId);
+        */
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
