@@ -1,0 +1,51 @@
+Object hierarchy.
+
+Common, Utils, Mem, Type, Obj
+
+None, Error, Bool, Int, Real, Str
+
+VM, Context, ByteCode
+
+Expr, Tokenizer, Parser
+
+
+Calling function.
+
+Assume we have a function: f(a, b, c). This expression is represented as:
+
+                       [ExprCall]
+                         /    \
+                        /      \
+                    [Expr]    [ExprArgList]
+
+Here we present some pictures of stack for different phases of function execution.
+An asterisk (*) denotes a pointer to object, i.e. Obj*. A caret (^) denotes current stack top.
+
+Just before function call, we place a pointer to function (f*),
+then its arguments (a*, b*, c*) and finally a number of passed arguments (n).
+-----|----------------------------|
+     | f* | a* | b* | c* | n_args |
+-----|----------------------------|
+                                  ^
+
+Then we should execute a bytecode instruction 'Call'.
+This instruction saves the current state of execution by placing a pointer to the current bytecode (bc*) 
+and writing its current position (bc_pos).
+Then VM starts eecuting bytecode of the function.
+After calling:
+-----|-------------------------------------------|
+     | f* | a* | b* | c* | n_args | bc* | bc_pos |
+-----|-------------------------------------------|
+                                                 ^
+
+Just before a function return we should have a result object
+-----|-------------------------------------------|-----------|
+     | f* | a* | b* | c* | n_args | bc* | bc_pos | ctx* | r* |
+-----|-------------------------------------------|-----------|
+                                                             ^
+
+After return:
+-----|----|
+     | r* |
+-----|----|
+          ^
