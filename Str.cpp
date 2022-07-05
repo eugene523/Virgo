@@ -19,19 +19,7 @@ const char * str_concat(const char * a, const char * b) {
     return c;
 }
 
-Obj * Str_Add(Obj * self, Obj * other) {
-    assert(self->Is(Str::t));
-    const char * selfVal = ((Str*)self)->val;
-    if (other->Is(Str::t))
-    {
-        const char * otherVal = ((Str*)other)->val;
-        const char * concatenated = str_concat(selfVal, otherVal);
-        return (Obj*)Str::New(concatenated);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Str_Eq(Obj * self, Obj * other) {
+Obj * Str_Equal(Obj * self, Obj * other) {
     assert(self->Is(Str::t));
     if (self == other)
         return (Obj*)Bool::True;
@@ -45,11 +33,16 @@ Obj * Str_Eq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Str_NotEq(Obj * self, Obj * other) {
-    Obj * result = Str_Eq(self, other);
-    if (result->Is(Error::t))
-        return result;
-    return (Obj*)(((Bool*)result)->Invert());
+Obj * Str_Add(Obj * self, Obj * other) {
+    assert(self->Is(Str::t));
+    const char * selfVal = ((Str*)self)->val;
+    if (other->Is(Str::t))
+    {
+        const char * otherVal = ((Str*)other)->val;
+        const char * concatenated = str_concat(selfVal, otherVal);
+        return (Obj*)Str::New(concatenated);
+    }
+    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
 std::string Str_DebugStr(Obj * self) {
@@ -87,9 +80,8 @@ Type * Str::t;
 void Str::InitType() {
     Str::t = new Type("str");
     auto mt = Str::t->methodTable;
+    mt->Equal    = &Str_Equal;
     mt->Add      = &Str_Add;
-    mt->Eq       = &Str_Eq;
-    mt->NotEq    = &Str_NotEq;
     mt->DebugStr = &Str_DebugStr;
     //mt->Get     = &Str_Get;
 }

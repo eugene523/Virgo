@@ -7,7 +7,7 @@
 
 const char * ERROR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
 
-Obj * Bool_Eq(Obj * self, Obj * other) {
+Obj * Bool_Equal(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
@@ -18,24 +18,13 @@ Obj * Bool_Eq(Obj * self, Obj * other) {
     return (Obj*)Bool::New(selfVal == otherVal);
 }
 
-Obj * Bool_NotEq(Obj * self, Obj * other) {
-    assert(self->Is(Bool::t));
-
-    if (!(other->Is(Bool::t)))
-        return (Obj*)Bool::New(true);
-
-    bool selfVal = ((Bool*)self)->val;
-    bool otherVal = ((Bool*)other)->val;
-    return (Obj*)Bool::New(selfVal != otherVal);
-}
-
-Obj * Bool_Not(Obj * self) {
+Obj * Bool::Not(Obj * self) {
     assert(self->Is(Bool::t));
     bool selfVal = ((Bool*)self)->val;
     return (Obj*)Bool::New(!selfVal);
 }
 
-Obj * Bool_And(Obj * self, Obj * other) {
+Obj * Bool::And(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
@@ -46,7 +35,7 @@ Obj * Bool_And(Obj * self, Obj * other) {
     return (Obj*)Bool::New(selfVal && otherVal);
 }
 
-Obj * Bool_Or(Obj * self, Obj * other) {
+Obj * Bool::Or(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
@@ -73,11 +62,7 @@ Bool * Bool::False;
 void Bool::InitType() {
     Bool::t = new Type("bool");
     auto mt = t->methodTable;
-    mt->Eq       = &Bool_Eq;
-    mt->NotEq    = &Bool_NotEq;
-    mt->Not      = &Bool_Not;
-    mt->And      = &Bool_And;
-    mt->Or       = &Bool_Or;
+    mt->Equal    = &Bool_Equal;
     mt->DebugStr = &Bool_DebugStr;
 
     Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));

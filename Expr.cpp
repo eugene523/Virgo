@@ -48,26 +48,26 @@ void ExprLoadConstant::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprEq::ExprEq(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Eq, a, b, line} {}
+ExprEqual::ExprEqual(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Equal, a, b, line} {}
 
-void ExprEq::Compile(ByteCode & bc) {
+void ExprEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Eq);
+    bc.Write_OpCode(OpCode::Equal);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprNotEq::ExprNotEq(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::NotEq, a, b, line} {}
+ExprNotEqual::ExprNotEqual(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::NotEqual, a, b, line} {}
 
-void ExprNotEq::Compile(ByteCode & bc) {
+void ExprNotEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::NotEq);
+    bc.Write_OpCode(OpCode::NotEqual);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -560,24 +560,24 @@ pos_StartFalseBranch -> --------------------------------
 }
 
 void ExprIf::CorrectJumps(ByteCode & bc) {
-    std::vector <Expr*> allExpressions;
-    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
-    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
-    CorrectJumpsRecursive(allExpressions, bc);
+    std::vector <Expr*> all;
+    all.insert(all.end(), trueBranch.begin(), trueBranch.end());
+    all.insert(all.end(), falseBranch.begin(), falseBranch.end());
+    CorrectJumpsRecursive(all, bc);
 }
 
 void ExprIf::CorrectBreaks(ByteCode & bc) {
-    std::vector <Expr*> allExpressions;
-    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
-    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
-    CorrectBreaksRecursive(allExpressions, bc);
+    std::vector <Expr*> all;
+    all.insert(all.end(), trueBranch.begin(), trueBranch.end());
+    all.insert(all.end(), falseBranch.begin(), falseBranch.end());
+    CorrectBreaksRecursive(all, bc);
 }
 
 void ExprIf::CorrectSkips(ByteCode & bc) {
-    std::vector <Expr*> allExpressions;
-    allExpressions.insert(allExpressions.end(), trueBranch.begin(), trueBranch.end());
-    allExpressions.insert(allExpressions.end(), falseBranch.begin(), falseBranch.end());
-    CorrectSkipsRecursive(allExpressions, bc);
+    std::vector <Expr*> all;
+    all.insert(all.end(), trueBranch.begin(), trueBranch.end());
+    all.insert(all.end(), falseBranch.begin(), falseBranch.end());
+    CorrectSkipsRecursive(all, bc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

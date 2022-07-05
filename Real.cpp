@@ -8,7 +8,7 @@
 #include "Error.h"
 #include "ErrorMessages.h"
 
-Obj * Real_Eq(Obj * self, Obj * other) {
+Obj * Real_Equal(Obj * self, Obj * other) {
     if (self == other)
         return (Obj*)Bool::New(true);
 
@@ -23,25 +23,6 @@ Obj * Real_Eq(Obj * self, Obj * other) {
     {
         v_int otherVal = ((Int*)other)->val;
         return (Obj*)Bool::New(selfVal == otherVal);
-    }
-    return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
-}
-
-Obj * Real_NotEq(Obj * self, Obj * other) {
-    if (self == other)
-        return (Obj*)Bool::New(false);
-
-    assert(self->Is(Real::t));
-    v_real selfVal = ((Real*)self)->val;
-    if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)-> val;
-        return (Obj*)Bool::New(selfVal != otherVal);
-    }
-    else if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)->val;
-        return (Obj*)Bool::New(selfVal != otherVal);
     }
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
@@ -212,8 +193,7 @@ Type * Real::t;
 void Real::InitType() {
     Real::t = new Type("real");
     auto mt = t->methodTable;
-    mt->Eq       = &Real_Eq;
-    mt->NotEq    = &Real_NotEq;
+    mt->Equal    = &Real_Equal;
     mt->Neg      = &Real_Neg;
     mt->Add      = &Real_Add;
     mt->Sub      = &Real_Sub;

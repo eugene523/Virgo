@@ -102,8 +102,8 @@ std::map<OpCode, std::string> OpCodeNames =
     { OpCode::LoadConstant,     "LoadConstant"     },
     { OpCode::GetLocalVariable, "GetLocalVariable" },
     { OpCode::SetLocalVariable, "SetLocalVariable" },
-    { OpCode::Eq,               "Eq"               },
-    { OpCode::NotEq,            "NotEq"            },
+    { OpCode::Equal,            "Equal"            },
+    { OpCode::NotEqual,         "NotEqual"         },
     { OpCode::Neg,              "Neg"              },
     { OpCode::Add,              "Add"              },
     { OpCode::Sub,              "Sub"              },
@@ -138,31 +138,31 @@ void ByteCode::Print() {
         std::cout << std::setw(20) << std::left;
         switch (opCode)
         {
-            case OpCode::Noop :
-            case OpCode::NewFrame :
-            case OpCode::CloseFrame :
-            case OpCode::Eq :
-            case OpCode::NotEq :
-            case OpCode::Neg :
-            case OpCode::Add :
-            case OpCode::Sub :
-            case OpCode::Mul :
-            case OpCode::Div :
-            case OpCode::Pow :
-            case OpCode::Gr :
-            case OpCode::GrEq :
-            case OpCode::Ls :
-            case OpCode::LsEq :
-            case OpCode::Not :
-            case OpCode::And :
-            case OpCode::Or :
+            case OpCode::Noop:
+            case OpCode::NewFrame:
+            case OpCode::CloseFrame:
+            case OpCode::Equal:
+            case OpCode::NotEqual:
+            case OpCode::Neg:
+            case OpCode::Add:
+            case OpCode::Sub:
+            case OpCode::Mul:
+            case OpCode::Div:
+            case OpCode::Pow:
+            case OpCode::Gr:
+            case OpCode::GrEq:
+            case OpCode::Ls:
+            case OpCode::LsEq:
+            case OpCode::Not:
+            case OpCode::And:
+            case OpCode::Or:
             case OpCode::Assert :
                 std::cout << OpCodeNames[opCode];
                 break;
 
-            case OpCode::LoadConstant :
-            case OpCode::GetLocalVariable :
-            case OpCode::SetLocalVariable :
+            case OpCode::LoadConstant:
+            case OpCode::GetLocalVariable:
+            case OpCode::SetLocalVariable:
             {
                 OpArg id = *((OpArg*)(bcStream + currPos));
                 currPos += sizeof(OpArg);
@@ -170,8 +170,8 @@ void ByteCode::Print() {
                 break;
             }
 
-            case OpCode::Jump :
-            case OpCode::JumpFalse :
+            case OpCode::Jump:
+            case OpCode::JumpFalse:
             {
                 OpArg toPos = *((OpArg*)(bcStream + currPos));
                 currPos += sizeof(OpArg);

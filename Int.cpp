@@ -9,7 +9,7 @@
 #include "ErrorMessages.h"
 #include "Str.h"
 
-Obj * Int_Eq(Obj * self, Obj * other) {
+Obj * Int_Equal(Obj * self, Obj * other) {
     if (self == other)
         return (Obj*)Bool::New(true);
 
@@ -26,25 +26,6 @@ Obj * Int_Eq(Obj * self, Obj * other) {
         return (Obj*)Bool::New(selfVal == otherVal);
     }
     return (Obj*)Bool::New(false);
-}
-
-Obj * Int_NotEq(Obj * self, Obj * other) {
-    if (self == other)
-        return (Obj*)Bool::New(false);
-
-    assert(self->Is(Int::t));
-    v_int selfVal = ((Int*)self)->val;
-    if (other->Is(Int::t))
-    {
-        v_int otherVal = ((Int*)other)-> val;
-        return (Obj*)Bool::New(selfVal != otherVal);
-    }
-    else if (other->Is(Real::t))
-    {
-        v_real otherVal = ((Real*)other)->val;
-        return (Obj*)Bool::New(selfVal != otherVal);
-    }
-    return (Obj*)Bool::New(true);
 }
 
 Obj * Int_Neg(Obj * self) {
@@ -215,8 +196,7 @@ Type * Int::t;
 void Int::InitType() {
     Int::t = new Type("int");
     auto mt = Int::t->methodTable;
-    mt->Eq       = &Int_Eq;
-    mt->NotEq    = &Int_NotEq;
+    mt->Equal    = &Int_Equal;
     mt->Neg      = &Int_Neg;
     mt->Add      = &Int_Add;
     mt->Sub      = &Int_Sub;

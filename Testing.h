@@ -19,8 +19,8 @@ void RunScript() {
     Init();
 
     std::fstream f;
-    f.open(R"(C:\code\Virgo\Tests\1_arithmetics_int_vars.v)");
-
+    //f.open(R"(C:\code\Virgo\Tests\arithmetics_int_vars.v)");
+    f.open(R"(C:\code\Virgo\Tests\logics.v)");
     //f.open(R"(C:\code\Virgo\Tests\2_if.v)");
     //f.open(R"(C:\code\Virgo\Tests\test.v)");
     std::stringstream s;

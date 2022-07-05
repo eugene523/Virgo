@@ -35,8 +35,8 @@ enum OpCode : OpCode_t
     // Stack     : Obj* (new value)
     // Result    : ---
 
-    Eq,
-    NotEq,
+    Equal,
+    NotEqual,
     Neg,
     Add,
     Sub,

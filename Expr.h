@@ -11,8 +11,8 @@ enum class ExprType
 {
     Undefined,
     LoadConstant,
-    Eq,
-    NotEq,
+    Equal,
+    NotEqual,
     Neg,
     Add,
     Sub,
@@ -84,13 +84,13 @@ struct ExprLoadConstant : Expr {
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprEq : ExprBinary {
-    ExprEq(Expr * a, Expr * b, uint line);
+struct ExprEqual : ExprBinary {
+    ExprEqual(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprNotEq : ExprBinary {
-    ExprNotEq(Expr * a, Expr * b, uint line);
+struct ExprNotEqual : ExprBinary {
+    ExprNotEqual(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 

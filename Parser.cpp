@@ -391,9 +391,9 @@ Expr * Parser::Parse_Equality() {
         currentPosition++;
         Expr * b = Parse_Order();
         if (op->type == TokenType::Equal)
-            a = new ExprEq(a, b, savedLine);
+            a = new ExprEqual(a, b, savedLine);
         else
-            a = new ExprNotEq(a, b, savedLine);
+            a = new ExprNotEqual(a, b, savedLine);
     }
     return a;
 }

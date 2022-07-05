@@ -141,10 +141,10 @@ void VM::Execute(const ByteCode & byteCode) {
         OpCode opCode = bcr.Read_OpCode();
         switch (opCode)
         {
-            case OpCode::Noop :
+            case OpCode::Noop:
                 break;
 
-            case OpCode::NewFrame :
+            case OpCode::NewFrame:
             {
                 objStackTop++;
                 objStack[objStackTop] = new Context();
@@ -152,7 +152,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::CloseFrame :
+            case OpCode::CloseFrame:
             {
                 int lastFramePos = frameStack.top();
                 frameStack.pop();
@@ -161,7 +161,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::LoadConstant :
+            case OpCode::LoadConstant:
             {
                 OpArg id = bcr.Read_OpArg();
                 objStackTop++;
@@ -169,7 +169,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::GetLocalVariable :
+            case OpCode::GetLocalVariable:
             {
                 OpArg  id      = bcr.Read_OpArg();
                 Obj  * name    = GetConstantById(id);
@@ -181,7 +181,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::SetLocalVariable :
+            case OpCode::SetLocalVariable:
             {
                 OpArg  id      = bcr.Read_OpArg();
                 Obj  * name    = GetConstantById(id);
@@ -193,11 +193,11 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Eq :
+            case OpCode::Equal:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->Eq;
+                auto * method = obj_1->type->methodTable->Equal;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "'='");
                 }
@@ -208,22 +208,22 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::NotEq :
+            case OpCode::NotEqual:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->NotEq;
+                auto * method = obj_1->type->methodTable->Equal;
                 if (method == nullptr) {
                     ThrowError_NoSuchOperation(obj_1->type, "'!='");
                 }
                 auto * result = method(obj_1, obj_2);
                 HandlePossibleError(result);
                 objStackTop--;
-                objStack[objStackTop] = result;
+                objStack[objStackTop] = ((Bool*)result)->Invert();
                 break;
             }
 
-            case OpCode::Neg :
+            case OpCode::Neg:
             {
                 auto * obj    = (Obj*)objStack[objStackTop];
                 auto * method = obj->type->methodTable->Neg;
@@ -236,7 +236,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Add :
+            case OpCode::Add:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -251,7 +251,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Sub :
+            case OpCode::Sub:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -266,7 +266,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Mul :
+            case OpCode::Mul:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -281,7 +281,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Div :
+            case OpCode::Div:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -296,7 +296,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Pow :
+            case OpCode::Pow:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -311,7 +311,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Gr :
+            case OpCode::Gr:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -326,7 +326,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::GrEq :
+            case OpCode::GrEq:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -341,7 +341,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Ls :
+            case OpCode::Ls:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -356,7 +356,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::LsEq :
+            case OpCode::LsEq:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
@@ -371,56 +371,44 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Not :
+            case OpCode::Not:
             {
                 auto * obj    = (Obj*)objStack[objStackTop];
-                auto * method = obj->type->methodTable->Not;
-                if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj->type, "'not'");
-                }
-                auto * result = method(obj);
+                auto * result = Bool::Not(obj);
                 HandlePossibleError(result);
                 objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::And :
+            case OpCode::And:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->And;
-                if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "'and'");
-                }
-                auto * result = method(obj_1, obj_2);
+                auto * result = Bool::And(obj_1, obj_2);
                 HandlePossibleError(result);
                 objStackTop--;
                 objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Or :
+            case OpCode::Or:
             {
                 auto * obj_2  = (Obj*)objStack[objStackTop];
                 auto * obj_1  = (Obj*)objStack[objStackTop - 1];
-                auto * method = obj_1->type->methodTable->Or;
-                if (method == nullptr) {
-                    ThrowError_NoSuchOperation(obj_1->type, "'or'");
-                }
-                auto * result = method(obj_1, obj_2);
+                auto * result = Bool::Or(obj_1, obj_2);
                 HandlePossibleError(result);
                 objStackTop--;
                 objStack[objStackTop] = result;
                 break;
             }
 
-            case OpCode::Jump :
+            case OpCode::Jump:
             {
                 bcr.Read_OpArg_SetAsPos();
                 break;
             }
 
-            case OpCode::JumpFalse :
+            case OpCode::JumpFalse:
             {
                 auto * obj = (Obj*)objStack[objStackTop];
                 if (obj->type != Bool::t) {
@@ -435,7 +423,7 @@ void VM::Execute(const ByteCode & byteCode) {
                 break;
             }
 
-            case OpCode::Assert :
+            case OpCode::Assert:
             {
                 auto * obj_3 = (Obj*)objStack[objStackTop];     // message
                 auto * obj_2 = (Obj*)objStack[objStackTop - 1]; // line
