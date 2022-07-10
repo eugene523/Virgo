@@ -7,15 +7,15 @@
 enum class ExprType {
     Undefined,
     Add,
-    Sub,
+    Subtract,
     Mul,
     Div,
-    Pow,
-    Neg,
+    Power,
+    Negate,
     Gr,
     GrEq,
-    Ls,
-    LsEq,
+    Less,
+    LessOrEqual,
     And,
     Or,
     Not,
@@ -29,11 +29,11 @@ enum class ExprType {
     Args,
     List,
     Assign,
-    AddEq,
-    SubEq,
+    AddAssign,
+    SubtractAssign,
     MulEq,
     DivEq,
-    PowEq,
+    PowerAssign,
     Skip,
     Break,
     Return,
@@ -76,8 +76,8 @@ struct ExprAdd : ExprBinary {
     Ref Execute() override;
 };
 
-struct ExprSub : ExprBinary {
-    ExprSub(Expr * a, Expr * b, uint line);
+struct ExprSubtract : ExprBinary {
+    ExprSubtract(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 
@@ -91,13 +91,13 @@ struct ExprDiv : ExprBinary {
     Ref Execute() override;
 };
 
-struct ExprPow : ExprBinary {
-    ExprPow(Expr * a, Expr * b, uint line);
+struct ExprPower : ExprBinary {
+    ExprPower(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 
-struct ExprNeg : ExprUnary {
-    ExprNeg(Expr * a, uint line);
+struct ExprNegate : ExprUnary {
+    ExprNegate(Expr * a, uint line);
     Ref Execute() override;
 };
 
@@ -116,7 +116,7 @@ struct ExprLs : ExprBinary {
     Ref Execute() override;
 };
 
-struct ExprLsEq : ExprBinary {
+struct ExprLessOrEqual : ExprBinary {
     ExprLsEq(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
@@ -204,13 +204,13 @@ struct ExprAssign : Expr {
     Ref Execute() override;
 };
 
-struct ExprAddEq : ExprBinary {
-    ExprAddEq(Expr * a, Expr * b, uint line);
+struct ExprAddAssign : ExprBinary {
+    ExprAddAssign(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 
-struct ExprSubEq : ExprBinary {
-    ExprSubEq(Expr * a, Expr * b, uint line);
+struct ExprSubtractAssign : ExprBinary {
+    ExprSubtractAssign(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 
@@ -224,8 +224,8 @@ struct ExprDivEq : ExprBinary {
     Ref Execute() override;
 };
 
-struct ExprPowEq : ExprBinary {
-    ExprPowEq(Expr * a, Expr * b, uint line);
+struct ExprPowerAssign : ExprBinary {
+    ExprPowerAssign(Expr * a, Expr * b, uint line);
     Ref Execute() override;
 };
 

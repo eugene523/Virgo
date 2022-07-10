@@ -27,7 +27,7 @@ Obj * Real_Equal(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Neg(Obj * self) {
+Obj * Real_Negate(Obj * self) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     return (Obj*)Real::New(-selfVal);
@@ -49,7 +49,7 @@ Obj * Real_Add(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Sub(Obj * self, Obj * other) {
+Obj * Real_Subtract(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -65,7 +65,7 @@ Obj * Real_Sub(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Mul(Obj * self, Obj * other) {
+Obj * Real_Multiply(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -81,7 +81,7 @@ Obj * Real_Mul(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Div(Obj * self, Obj * other) {
+Obj * Real_Divide(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -101,7 +101,7 @@ Obj * Real_Div(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Pow(Obj * self, Obj * other) {
+Obj * Real_Power(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -117,7 +117,7 @@ Obj * Real_Pow(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Gr(Obj * self, Obj * other) {
+Obj * Real_Greater(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -133,7 +133,7 @@ Obj * Real_Gr(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_GrEq(Obj * self, Obj * other) {
+Obj * Real_GreaterOrEqual(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -149,7 +149,7 @@ Obj * Real_GrEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_Ls(Obj * self, Obj * other) {
+Obj * Real_Less(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -165,7 +165,7 @@ Obj * Real_Ls(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Real_LsEq(Obj * self, Obj * other) {
+Obj * Real_LessOrEqual(Obj * self, Obj * other) {
     assert(self->Is(Real::t));
     v_real selfVal = ((Real*)self)->val;
     if (other->Is(Real::t))
@@ -193,18 +193,18 @@ Type * Real::t;
 void Real::InitType() {
     Real::t = new Type("real");
     auto mt = t->methodTable;
-    mt->Equal    = &Real_Equal;
-    mt->Neg      = &Real_Neg;
-    mt->Add      = &Real_Add;
-    mt->Sub      = &Real_Sub;
-    mt->Mul      = &Real_Mul;
-    mt->Div      = &Real_Div;
-    mt->Pow      = &Real_Pow;
-    mt->Gr       = &Real_Gr;
-    mt->GrEq     = &Real_GrEq;
-    mt->Ls       = &Real_Ls;
-    mt->LsEq     = &Real_LsEq;
-    mt->DebugStr = &Real_DebugStr;
+    mt->Equal          = &Real_Equal;
+    mt->Negate         = &Real_Negate;
+    mt->Add            = &Real_Add;
+    mt->Subtract       = &Real_Subtract;
+    mt->Multiply       = &Real_Multiply;
+    mt->Divide         = &Real_Divide;
+    mt->Power          = &Real_Power;
+    mt->Greater        = &Real_Greater;
+    mt->GreaterOrEqual = &Real_GreaterOrEqual;
+    mt->Less           = &Real_Less;
+    mt->LessOrEqual    = &Real_LessOrEqual;
+    mt->DebugStr       = &Real_DebugStr;
 }
 
 void Real::New(void * inPlace, v_real value) {

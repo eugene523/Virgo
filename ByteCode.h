@@ -11,11 +11,11 @@ using OpArg    = uint32_t;
 
 enum OpCode : OpCode_t
 {
-    Noop,
-    NewFrame,
-    CloseFrame,
+    NoOperation,
+    NewContext,
+    CloseContext,
 
-    LoadConstant,
+    PushConstant,
     // Loads constant taken from the global pool of constants on the stack.
     // Arguments : id (global identifier of a constant)
     // Stack     : ---
@@ -37,22 +37,25 @@ enum OpCode : OpCode_t
 
     Equal,
     NotEqual,
-    Neg,
+    Negate,
     Add,
-    Sub,
-    Mul,
-    Div,
-    Pow,
-    Gr,
-    GrEq,
-    Ls,
-    LsEq,
+    Subtract,
+    Multiply,
+    Divide,
+    Power,
+    Greater,
+    GreaterOrEqual,
+    Less,
+    LessOrEqual,
     Not,
     And,
     Or,
     Jump,
-    JumpFalse,
+    JumpIfFalse,
     Assert,
+    PushInt32,
+    SaveByteCodePosition,
+    ReadByteCodePosition,
 };
 
 struct ByteCode {
@@ -68,17 +71,31 @@ struct ByteCode {
     ~ByteCode();
 
     void Enlarge();
+
+    /*
     void Write_OpCode(OpCode opCode);
     void Write_OpArg(OpArg opArg);
+    void Write_int32(int32_t val);
+    */
+
+    template<class T>
+    void Write(T val) {
+        if ((maxSize - pos) < sizeof(T))
+            Enlarge();
+        *((T*)(bcStream + pos)) = val;
+        pos += sizeof(T);
+    }
+
     uint Reserve_OpCode_OpArg();
     void Write_OpCode_OpArg_AtPos(uint atPos, OpCode opCode, OpArg opArg);
-    void Write_NewFrame();
-    void Write_CloseFrame();
-    void Write_LoadConstant(OpArg id);
+    void Write_NewContext();
+    void Write_CloseContext();
+    void Write_PushConstant(OpArg id);
     void Write_GetLocalVariable(OpArg id);
     void Write_SetLocalVariable(OpArg id);
+    void Write_PushInt32(int32_t val);
     void Write_Jump(OpArg toPos);
-    void Write_JumpFalse(OpArg toPos);
+    void Write_JumpIfFalse(OpArg toPos);
     void Write_Line(uint line);
 
     void Print();
@@ -102,6 +119,12 @@ struct ByteCodeReader {
         OpArg opArg = *((OpArg*)(bcStream + pos));
         pos += sizeof(OpArg);
         return opArg;
+    }
+
+    inline int32_t Read_int32() {
+        int32_t i = *((int32_t*)(bcStream + pos));
+        pos += sizeof(int32_t);
+        return i;
     }
 
     inline void Read_OpArg_SetAsPos() {

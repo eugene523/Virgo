@@ -4,10 +4,34 @@
 #include <map>
 #include <cstdlib>
 #include <iostream>
+#include <cassert>
 #include "Mem.h"
 #include "Obj.h"
 #include "Error.h"
 #include "ByteCode.h"
+
+struct ExecStack
+{
+    std::byte *       objStack{};
+    uint              objStackTop{};
+    static const uint OBJ_STACK_MAX_SIZE;
+    static const uint CELL_SIZE;
+    std::stack<uint>  frameStack;
+    Context *         lastContext{};
+
+    ExecStack();
+    ~ExecStack();
+
+    void CheckStackOverflow();
+    void NewContext();
+    void CloseContext();
+    void PushObj(Obj * obj);
+    Obj * PopObj();
+    Context * GetLastContext();
+    void PrintFrames();
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 struct VM {
     static uint                        nextId;

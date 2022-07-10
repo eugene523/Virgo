@@ -18,41 +18,41 @@ enum class TokenType {
     Undefined,
 
     // Different kinds of brackets
-    L_Parenthesis, // (
-    R_Parenthesis, // )
-    L_Bracket,     // [
-    R_Bracket,     // ]
+    L_Parenthesis,  // (
+    R_Parenthesis,  // )
+    L_Bracket,      // [
+    R_Bracket,      // ]
 
     // Single character tokens
-    Comma,         // ,
-    Dot,           // .
-    Colon,         // :
-    Semicolon,     // ;
-    Plus,          // +
-    Minus,         // -
-    Star,          // *
-    Slash,         // /
-    Caret,         // ^
+    Comma,          // ,
+    Dot,            // .
+    Colon,          // :
+    Semicolon,      // ;
+    Plus,           // +
+    Minus,          // -
+    Star,           // *
+    Slash,          // /
+    Caret,          // ^
 
     // One or two character tokens
-    Equal,         // =
-    BangEqual,     // !=
-    Greater,       // >
-    GreaterEqual,  // >=
-    Less,          // <
-    LessEqual,     // <=
+    Equal,          // =
+    NotEqual,       // !=
+    Greater,        // >
+    GreaterOrEqual, // >=
+    Less,           // <
+    LessOrEqual,    // <=
 
-    PlusEq,        // +=
-    MinusEq,       // -=
-    MultEq,        // *=
-    DivEq,         // /=
-    PowEq,         // ^=
+    AddAssign,      // +=
+    SubtractAssign, // -=
+    MultiplyAssign, // *=
+    DivideAssign,   // /=
+    PowerAssign,    // ^=
 
     // Literals
     Int,
-    Real,          // 5.1, 0.314e+1
-    String,        // "It's Britney, bitch!"
-    Identifier,    // SomeVariableName
+    Real,           // 5.1, 0.314e+1
+    String,         // "It's Britney, bitch!"
+    Identifier,     // SomeVariableName
 
     // Keywords
     None,
@@ -90,11 +90,13 @@ std::string SubStr(const std::string & str, int start, int endExcluded);
 struct Token {
     const TokenType type;
 
-    // 'lexeme' is a piece of text, that represents some entity.
-    // An entity can be:
-    //    some constant values: '123', '3.57e+12', "It's Britney, bitch!", 'variableName'.
-    //    keywords: 'if', 'else', 'for', etc.
-    //    some symbols like braces, brackets, slashes, etc.
+    /*
+    'lexeme' is a piece of text, that represents some entity.
+    An entity can be:
+        some constant values: '123', '3.57e+12', "It's Britney, bitch!", 'variableName'.
+        keywords: 'if', 'else', 'for', etc.
+        some symbols like braces, brackets, slashes, etc.
+    */
     const std::string lexeme;
 
     // If 'lexeme' represents some constant value like integer, real, string,

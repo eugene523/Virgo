@@ -5,34 +5,34 @@
 
 std::map<TokenType, std::string> TokenTypeNames =
 {
-    { TokenType::Undefined,     "Undefined"        },
+    { TokenType::Undefined,      "Undefined"       },
 
-    { TokenType::L_Parenthesis, "L_Parenthesis"    },
-    { TokenType::R_Parenthesis, "R_Parenthesis"    },
-    { TokenType::L_Bracket,     "L_Bracket"        },
-    { TokenType::R_Bracket,     "R_Bracket"        },
+    { TokenType::L_Parenthesis,  "L_Parenthesis"   },
+    { TokenType::R_Parenthesis,  "R_Parenthesis"   },
+    { TokenType::L_Bracket,      "L_Bracket"       },
+    { TokenType::R_Bracket,      "R_Bracket"       },
 
-    { TokenType::Comma,         "Comma"            },
-    { TokenType::Dot,           "Dot"              },
-    { TokenType::Semicolon,     "Semicolon"        },
-    { TokenType::Plus,          "Plus"             },
-    { TokenType::Minus,         "Minus"            },
-    { TokenType::Star,          "Star"             },
-    { TokenType::Slash,         "Slash"            },
-    { TokenType::Caret,         "Caret"            },
+    { TokenType::Comma,          "Comma"           },
+    { TokenType::Dot,            "Dot"             },
+    { TokenType::Semicolon,      "Semicolon"       },
+    { TokenType::Plus,           "Plus"            },
+    { TokenType::Minus,          "Minus"           },
+    { TokenType::Star,           "Star"            },
+    { TokenType::Slash,          "Slash"           },
+    { TokenType::Caret,          "Caret"           },
 
-    { TokenType::Equal,         "Equal"            },
-    { TokenType::BangEqual,     "BangEqual"        },
-    { TokenType::Greater,       "Greater"          },
-    { TokenType::GreaterEqual,  "GreaterEqual"     },
-    { TokenType::Less,          "Less"             },
-    { TokenType::LessEqual,     "LessEqual"        },
+    { TokenType::Equal,          "Equal"           },
+    { TokenType::NotEqual,       "NotEqual"        },
+    { TokenType::Greater,        "Greater"         },
+    { TokenType::GreaterOrEqual, "GreaterOrEqual"  },
+    { TokenType::Less,           "Less"            },
+    { TokenType::LessOrEqual,    "LessOrEqual"     },
 
-    { TokenType::PlusEq,        "PlusEq"           },
-    { TokenType::MinusEq,       "MinusEq"          },
-    { TokenType::MultEq,        "MultEq"           },
-    { TokenType::DivEq,         "DivEq"            },
-    { TokenType::PowEq,         "PowEq"            },
+    { TokenType::AddAssign,      "AddAssign"       },
+    { TokenType::SubtractAssign, "SubtractAssign"  },
+    { TokenType::MultiplyAssign, "MultiplyAssign"  },
+    { TokenType::DivideAssign,   "DivideAssign"    },
+    { TokenType::PowerAssign,    "PowerAssign"     },
 
     { TokenType::Int,           "Int"              },
     { TokenType::Real,          "Real"             },
@@ -196,9 +196,11 @@ bool Tokenizer::Match(char expected) {
 void Tokenizer::Process_NewLine() {
     currentLine++;
 
-    // If the number of currently opened parentheses, brackets or braces
-    // is more than zero, that means that expression continues
-    // and we should skip any whitespaces and return.
+    /*
+    If the number of currently opened parentheses, brackets or braces
+    is more than zero, that means that expression continues
+    and we should skip any whitespaces and return.
+    */
     if (n_opened > 0) {
         while (Match(' ')) ;
         return;
@@ -233,7 +235,7 @@ void Tokenizer::Process_NewLine() {
 }
 
 void Tokenizer::Process_Comment() {
-/*
+    /*
     One line comment starts with one symbol "#" like this:
     # This is a comment.
 
@@ -246,7 +248,7 @@ void Tokenizer::Process_Comment() {
 
     It's possible (but not recommended) to have unclosed
     multiline comment if it ends with EOF.
-*/
+    */
     if (Peek() == '#') {
         // Multiline comment.
         // Notice that we have already processed one '#" character in global switch loop.
@@ -349,11 +351,13 @@ void Tokenizer::Process_Word() {
 }
 
 void Tokenizer::Process_EndOfFile() {
-    // It is possible that code file ends without exiting
-    // from nesting scopes ('if', 'for', declarations, etc).
-    // To ensure that all scopes are closed we add
-    // additional ExitScope tokens
-    // according to the current nesting level.
+    /*
+    It is possible that code file ends without exiting
+    from nesting scopes ('if', 'for', declarations, etc).
+    To ensure that all scopes are closed we add
+    additional ExitScope tokens
+    according to the current nesting level.
+    */
     for (int i = 0; i < currentNestingLevel; i++)
         tokens.push_back(new Token(TokenType::ExitScope, currentLine));
     tokens.push_back(new Token(TokenType::EndOfFile, currentLine));
@@ -399,23 +403,23 @@ void Tokenizer::ScanToken() {
             break;
 
         case '+' :
-            Match('=') ? AddToken(TokenType::PlusEq) : AddToken(TokenType::Plus);
+            Match('=') ? AddToken(TokenType::AddAssign) : AddToken(TokenType::Plus);
             break;
 
         case '-' :
-            Match('=') ? AddToken(TokenType::MinusEq) : AddToken(TokenType::Minus);
+            Match('=') ? AddToken(TokenType::SubtractAssign) : AddToken(TokenType::Minus);
             break;
 
         case '*' :
-            Match('=') ? AddToken(TokenType::MultEq) : AddToken(TokenType::Star);
+            Match('=') ? AddToken(TokenType::MultiplyAssign) : AddToken(TokenType::Star);
             break;
 
         case '/' :
-            Match('=') ? AddToken(TokenType::DivEq) : AddToken(TokenType::Slash);
+            Match('=') ? AddToken(TokenType::DivideAssign) : AddToken(TokenType::Slash);
             break;
 
         case '^' :
-            Match('=') ? AddToken(TokenType::PowEq) : AddToken(TokenType::Caret);
+            Match('=') ? AddToken(TokenType::PowerAssign) : AddToken(TokenType::Caret);
             break;
 
         case '=' :
@@ -423,15 +427,15 @@ void Tokenizer::ScanToken() {
             break;
 
         case '!' :
-            Match('=') ? AddToken(TokenType::BangEqual) : ReportError("Unexpected character.");
+            Match('=') ? AddToken(TokenType::NotEqual) : ReportError("Unexpected character.");
             break;
 
         case '>' :
-            Match('=') ? AddToken(TokenType::GreaterEqual) : AddToken(TokenType::Greater);
+            Match('=') ? AddToken(TokenType::GreaterOrEqual) : AddToken(TokenType::Greater);
             break;
 
         case '<' :
-            Match('=') ? AddToken(TokenType::LessEqual) : AddToken(TokenType::Less);
+            Match('=') ? AddToken(TokenType::LessOrEqual) : AddToken(TokenType::Less);
             break;
 
         case '#' :

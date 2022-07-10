@@ -444,30 +444,30 @@ Expr * Parser::Parse_Assignment() {
             b = Parse_Logical();
             return new ExprAssign((ExprAccess*)a, b, savedLine);
 
-        case TokenType::PlusEq:
+        case TokenType::AddAssign:
             currentPosition++;
             b = Parse_Logical();
-            return new ExprAddEq(a, b, savedLine);
+            return new ExprAddAssign(a, b, savedLine);
 
-        case TokenType::MinusEq:
+        case TokenType::SubtractAssign:
             currentPosition++;
             b = Parse_Logical();
             return new ExprSubEq(a, b, savedLine);
 
-        case TokenType::MultEq:
+        case TokenType::MultiplyAssign:
             currentPosition++;
             b = Parse_Logical();
             return new ExprMulEq(a, b, savedLine);
 
-        case TokenType::DivEq:
+        case TokenType::DivideAssign:
             currentPosition++;
             b = Parse_Logical();
-            return new ExprDivEq(a, b, savedLine);
+            return new ExprDivideAssign(a, b, savedLine);
 
-        case TokenType::PowEq:
+        case TokenType::PowerAssign:
             currentPosition++;
             b = Parse_Logical();
-            return new ExprPowEq(a, b, savedLine);
+            return new ExprPowerAssign(a, b, savedLine);
 
         default:
             return a; // Declaration or function call
@@ -604,18 +604,18 @@ Expr * Parser::Parse_Order() {
     Expr * a = Parse_Add();
     Token * op = CurrentToken();
     if (op->type == TokenType::Greater ||
-        op->type == TokenType::GreaterEqual ||
+        op->type == TokenType::GreaterOrEqual ||
         op->type == TokenType::Less ||
-        op->type == TokenType::LessEqual)
+        op->type == TokenType::LessOrEqual)
     {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Add();
         switch(op->type) {
             case TokenType::Greater :      a = new ExprGr(a, b, savedLine);   break;
-            case TokenType::GreaterEqual : a = new ExprGrEq(a, b, savedLine); break;
+            case TokenType::GreaterOrEqual : a = new ExprGreaterOrEqual(a, b, savedLine); break;
             case TokenType::Less :         a = new ExprLs(a, b, savedLine);   break;
-            case TokenType::LessEqual :    a = new ExprLsEq(a, b, savedLine); break;
+            case TokenType::LessOrEqual :    a = new ExprLessOrEqual(a, b, savedLine); break;
             default: break;
         }
     }
@@ -646,7 +646,7 @@ Expr * Parser::Parse_Add() {
 Expr * Parser::Parse_Mult() {
     // M -> P ~ P ~ P ~ ... ~ P
     // where ~ is (*, /)
-    Expr * a = Parse_Pow();
+    Expr * a = Parse_Power();
     Token * op = CurrentToken();
     while (op->type == TokenType::Star ||
            op->type == TokenType::Slash ||
@@ -654,7 +654,7 @@ Expr * Parser::Parse_Mult() {
     {
         int savedLine = CurrentLine();
         currentPosition++;
-        Expr * b = Parse_Pow();
+        Expr * b = Parse_Power();
         switch (op->type) {
             case TokenType::Star :  a = new ExprMul(a, b, savedLine); break;
             case TokenType::Slash : a = new ExprDiv(a, b, savedLine); break;
@@ -665,7 +665,7 @@ Expr * Parser::Parse_Mult() {
     return a;
 }
 
-Expr * Parser::Parse_Pow() {
+Expr * Parser::Parse_Power() {
     // P -> T ^ T ^ T ^ ... ^ T
     Expr * a = Parse_Term();
     Token * op = CurrentToken();
@@ -673,7 +673,7 @@ Expr * Parser::Parse_Pow() {
         int savedLine = CurrentLine();
         currentPosition++;
         Expr * b = Parse_Term();
-        a = new ExprPow(a, b, savedLine);
+        a = new ExprPower(a, b, savedLine);
         op = CurrentToken();
     }
     return a;
@@ -718,7 +718,7 @@ Expr * Parser::Parse_Term() {
         if (op == TokenType::Not)
             a = new ExprNot(a, savedLine);
         else // Minus
-            a = new ExprNeg(a, savedLine);
+            a = new ExprNegate(a, savedLine);
         return a;
     }
 

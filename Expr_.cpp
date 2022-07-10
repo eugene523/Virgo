@@ -211,20 +211,20 @@ Ref ExprDiv::Execute() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPow::ExprPow(Expr * a, Expr * b, uint line) :
-ExprBinary{ExprType::Pow, a, b, line} {}
+ExprPower::ExprPower(Expr * a, Expr * b, uint line) :
+ExprBinary{ExprType::Power, a, b, line} {}
 
-Ref ExprPow::Execute() {
-    EXPR_BINARY_IMPL(Pow, "^")
+Ref ExprPower::Execute() {
+    EXPR_BINARY_IMPL(Power, "^")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprNeg::ExprNeg(Expr * a, uint line) :
-ExprUnary{ExprType::Neg, a, line} {}
+ExprNegate::ExprNegate(Expr * a, uint line) :
+ExprUnary{ExprType::Negate, a, line} {}
 
-Ref ExprNeg::Execute() {
-    EXPR_UNARY_IMPL(Neg, "-")
+Ref ExprNegate::Execute() {
+    EXPR_UNARY_IMPL(Negate, "-")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -656,11 +656,11 @@ Ref ExprDivEq::Execute() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line) :
-ExprBinary{ExprType::PowEq, a, b, line} {}
+ExprPowerAssign::ExprPowerAssign(Expr * a, Expr * b, uint line) :
+ExprBinary{ExprType::PowerAssign, a, b, line} {}
 
-Ref ExprPowEq::Execute() {
-    EXPR_BINARY_EQ_IMPL(Pow, "^")
+Ref ExprPowerAssign::Execute() {
+    EXPR_BINARY_EQ_IMPL(Power, "^")
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

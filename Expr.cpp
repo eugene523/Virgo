@@ -38,12 +38,12 @@ ExprBinary::~ExprBinary() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLoadConstant::ExprLoadConstant(uint id, uint line):
-Expr(ExprType::LoadConstant, line), id{id} {}
+ExprPushConstant::ExprPushConstant(uint id, uint line):
+Expr(ExprType::PushConstant, line), id{id} {}
 
-void ExprLoadConstant::Compile(ByteCode & bc) {
+void ExprPushConstant::Compile(ByteCode & bc) {
     bc.Write_Line(line);
-    bc.Write_LoadConstant(id);
+    bc.Write_PushConstant(id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ void ExprEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Equal);
+    bc.Write<OpCode>(OpCode::Equal);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,18 +67,18 @@ void ExprNotEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::NotEqual);
+    bc.Write<OpCode>(OpCode::NotEqual);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprNeg::ExprNeg(Expr * a, uint line):
-ExprUnary{ExprType::Neg, a, line} {}
+ExprNegate::ExprNegate(Expr * a, uint line):
+ExprUnary{ExprType::Negate, a, line} {}
 
-void ExprNeg::Compile(ByteCode & bc) {
+void ExprNegate::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
-    bc.Write_OpCode(OpCode::Neg);
+    bc.Write<OpCode>(OpCode::Negate);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,103 +90,103 @@ void ExprAdd::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Add);
+    bc.Write<OpCode>(OpCode::Add);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSub::ExprSub(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Sub, a, b, line} {}
+ExprSubtract::ExprSubtract(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Subtract, a, b, line} {}
 
-void ExprSub::Compile(ByteCode & bc) {
+void ExprSubtract::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Sub);
+    bc.Write<OpCode>(OpCode::Subtract);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprMul::ExprMul(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Mul, a, b, line} {}
+ExprMultiply::ExprMultiply(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Multiply, a, b, line} {}
 
-void ExprMul::Compile(ByteCode & bc) {
+void ExprMultiply::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Mul);
+    bc.Write<OpCode>(OpCode::Multiply);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprDiv::ExprDiv(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Div, a, b, line} {}
+ExprDivide::ExprDivide(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Divide, a, b, line} {}
 
-void ExprDiv::Compile(ByteCode & bc) {
+void ExprDivide::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Div);
+    bc.Write<OpCode>(OpCode::Divide);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPow::ExprPow(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Pow, a, b, line} {}
+ExprPower::ExprPower(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Power, a, b, line} {}
 
-void ExprPow::Compile(ByteCode & bc) {
+void ExprPower::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Pow);
+    bc.Write<OpCode>(OpCode::Power);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGr::ExprGr(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Gr, a, b, line} {}
+ExprGreater::ExprGreater(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Greater, a, b, line} {}
 
-void ExprGr::Compile(ByteCode & bc) {
+void ExprGreater::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Gr);
+    bc.Write<OpCode>(OpCode::Greater);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprGrEq::ExprGrEq(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::GrEq, a, b, line} {}
+ExprGreaterOrEqual::ExprGreaterOrEqual(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::GreaterOrEqual, a, b, line} {}
 
-void ExprGrEq::Compile(ByteCode & bc) {
+void ExprGreaterOrEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::GrEq);
+    bc.Write<OpCode>(OpCode::GreaterOrEqual);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLs::ExprLs(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::Ls, a, b, line} {}
+ExprLess::ExprLess(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::Less, a, b, line} {}
 
-void ExprLs::Compile(ByteCode & bc) {
+void ExprLess::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Ls);
+    bc.Write<OpCode>(OpCode::Less);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprLsEq::ExprLsEq(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::LsEq, a, b, line} {}
+ExprLessOrEqual::ExprLessOrEqual(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::LessOrEqual, a, b, line} {}
 
-void ExprLsEq::Compile(ByteCode & bc) {
+void ExprLessOrEqual::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::LsEq);
+    bc.Write<OpCode>(OpCode::LessOrEqual);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +197,7 @@ ExprUnary{ExprType::Not, a, line} {}
 void ExprNot::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
-    bc.Write_OpCode(OpCode::Not);
+    bc.Write<OpCode>(OpCode::Not);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +209,7 @@ void ExprAnd::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::And);
+    bc.Write<OpCode>(OpCode::And);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,19 +221,19 @@ void ExprOr::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Or);
+    bc.Write<OpCode>(OpCode::Or);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprAddEq::ExprAddEq(Expr * a, Expr * b, uint line):
-ExprBinary{ExprType::AddEq, a, b, line} {}
+ExprAddAssign::ExprAddAssign(Expr * a, Expr * b, uint line):
+ExprBinary{ExprType::AddAssign, a, b, line} {}
 
-void ExprAddEq::Compile(ByteCode & bc) {
+void ExprAddAssign::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Add);
+    bc.Write<OpCode>(OpCode::Add);
     assert(a->exprType == ExprType::Dot);
     uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
@@ -241,14 +241,14 @@ void ExprAddEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprSubEq::ExprSubEq(Expr * a, Expr * b, uint line):
-ExprBinary(ExprType::SubEq, a, b, line) {}
+ExprSubtractAssign::ExprSubtractAssign(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::SubtractAssign, a, b, line) {}
 
-void ExprSubEq::Compile(ByteCode & bc) {
+void ExprSubtractAssign::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Sub);
+    bc.Write<OpCode>(OpCode::Subtract);
     assert(a->exprType == ExprType::Dot);
     uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
@@ -256,14 +256,14 @@ void ExprSubEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprMulEq::ExprMulEq(Expr * a, Expr * b, uint line):
-ExprBinary(ExprType::MulEq, a, b, line) {}
+ExprMultiplyAssign::ExprMultiplyAssign(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::MultiplyAssign, a, b, line) {}
 
-void ExprMulEq::Compile(ByteCode & bc) {
+void ExprMultiplyAssign::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Mul);
+    bc.Write<OpCode>(OpCode::Multiply);
     assert(a->exprType == ExprType::Dot);
     uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
@@ -271,14 +271,14 @@ void ExprMulEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprDivEq::ExprDivEq(Expr * a, Expr * b, uint line):
-ExprBinary(ExprType::DivEq, a, b, line) {}
+ExprDivideAssign::ExprDivideAssign(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::DivideAssign, a, b, line) {}
 
-void ExprDivEq::Compile(ByteCode & bc) {
+void ExprDivideAssign::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Div);
+    bc.Write<OpCode>(OpCode::Divide);
     assert(a->exprType == ExprType::Dot);
     uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
@@ -286,14 +286,14 @@ void ExprDivEq::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ExprPowEq::ExprPowEq(Expr * a, Expr * b, uint line):
-ExprBinary(ExprType::PowEq, a, b, line) {}
+ExprPowerAssign::ExprPowerAssign(Expr * a, Expr * b, uint line):
+ExprBinary(ExprType::PowerAssign, a, b, line) {}
 
-void ExprPowEq::Compile(ByteCode & bc) {
+void ExprPowerAssign::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     a->Compile(bc);
     b->Compile(bc);
-    bc.Write_OpCode(OpCode::Pow);
+    bc.Write<OpCode>(OpCode::Power);
     assert(a->exprType == ExprType::Dot);
     uint id = ((ExprDot*)a)->fieldNameId;
     bc.Write_SetLocalVariable(id);
@@ -468,7 +468,7 @@ void ExprIf::AddFalseExpr(Expr * expr) {
 }
 
 void ExprIf::Compile(ByteCode & bc) {
-/**********************************************************
+/*
 
 Variant 1: No false-branch.
 
@@ -477,12 +477,12 @@ Code:
         true-branch-code
 
 Diagram:
-                        -------------------------------
+                        --------------------------------
                         |
                         | CONDITION CODE
                         |
   pos_AfterCondition -> --------------------------------
-                        | JumpFalse pos_AfterIf
+                        | JumpIfFalse pos_AfterIf
                         --------------------------------
                         |
                         | TRUE BRANCH CODE
@@ -491,8 +491,9 @@ Diagram:
                         |
                         | AFTER 'if' CODE
                         |
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-***********************************************************
+*********************************************************************
 
 Variant 2: Has false-branch.
 
@@ -508,7 +509,7 @@ Diagram:
                         | CONDITION CODE
                         |
   pos_AfterCondition -> --------------------------------
-                        | JumpFalse pos_StartFalseBranch
+                        | JumpIfFalse pos_StartFalseBranch
                         --------------------------------
                         |
                         | TRUE BRANCH CODE
@@ -523,15 +524,15 @@ pos_StartFalseBranch -> --------------------------------
                         |
                         | AFTER 'if' CODE
                         |
-
-**********************************************************/
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
     bc.Write_Line(line);
 
     // Compiling condition
     condition->Compile(bc);
 
-    // Reserving space for JumpFalse instruction
+    // Reserving space for JumpIfFalse instruction
     uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling true-branch
@@ -541,14 +542,14 @@ pos_StartFalseBranch -> --------------------------------
 
     if (falseBranch.empty()) {
         uint pos_AfterIf = bc.pos;
-        bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterIf);
+        bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpIfFalse, pos_AfterIf);
         return;
     }
 
     // Reserving space for Jump instruction
     uint pos_AfterTrueBranch = bc.Reserve_OpCode_OpArg();
     uint pos_StartFalseBranch = bc.pos;
-    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_StartFalseBranch);
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpIfFalse, pos_StartFalseBranch);
 
     // Compiling false-branch
     for (size_t i = 0; i < falseBranch.size(); i++) {
@@ -636,7 +637,7 @@ Diagram:
                         | CONDITION CODE
                         |
   pos_AfterCondition -> --------------------------------
-                        | JumpFalse pos_AfterFor
+                        | JumpIfFalse pos_AfterFor
                         --------------------------------
                         |
                         | BODY CODE
@@ -657,7 +658,7 @@ Diagram:
     // Compiling condition
     condition->Compile(bc);
 
-    // Reserving space for JumpFalse instruction
+    // Reserving space for JumpIfFalse instruction
     uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling loop body expressions
@@ -668,7 +669,7 @@ Diagram:
     bc.Write_Jump(pos_StartCondition);
 
     pos_AfterFor = bc.pos;
-    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpIfFalse, pos_AfterFor);
 }
 
 void ExprFor::Compile_CStyled(ByteCode & bc) {
@@ -688,7 +689,7 @@ Diagram:
                         | CONDITION CODE
                         |
   pos_AfterCondition -> --------------------------------
-                        | JumpFalse pos_AfterFor
+                        | JumpIfFalse pos_AfterFor
                         --------------------------------
                         |
                         | BODY CODE
@@ -717,7 +718,7 @@ Diagram:
     // Compiling condition
     condition->Compile(bc);
 
-    // Reserving space for JumpFalse instruction
+    // Reserving space for JumpIfFalse instruction
     uint pos_AfterCondition = bc.Reserve_OpCode_OpArg();
 
     // Compiling loop body expressions
@@ -735,7 +736,7 @@ Diagram:
     bc.Write_Jump(pos_StartCondition);
 
     pos_AfterFor = bc.pos;
-    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpFalse, pos_AfterFor);
+    bc.Write_OpCode_OpArg_AtPos(pos_AfterCondition, OpCode::JumpIfFalse, pos_AfterFor);
 }
 
 void ExprFor::CorrectJumps(ByteCode & bc) {
@@ -792,15 +793,32 @@ void ExprDot::Compile(ByteCode & bc) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+ExprArgs::ExprArgs(uint line):
+Expr(ExprType::Args, line) {}
+
+void ExprArgs::AddArgExpr(Expr * arg) {
+    args.push_back(arg);
+}
+
+void ExprArgs::Compile(ByteCode & bc) {
+    uint numOfArgs = args.size();
+    for (uint i = 0; i < numOfArgs; i++) {
+        args[i]->Compile(bc);
+    }
+    bc.Write_PushInt32((int32_t)numOfArgs);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 ExprAssert::ExprAssert(Expr * checkingExpr, uint line, uint lineId, uint messageId) :
 Expr(ExprType::Assert, line), checkingExpr{checkingExpr}, lineId{lineId}, messageId{messageId} {}
 
 void ExprAssert::Compile(ByteCode & bc) {
     bc.Write_Line(line);
     checkingExpr->Compile(bc);
-    bc.Write_LoadConstant(lineId);
-    bc.Write_LoadConstant(messageId);
-    bc.Write_OpCode(OpCode::Assert);
+    bc.Write_PushConstant(lineId);
+    bc.Write_PushConstant(messageId);
+    bc.Write<OpCode>(OpCode::Assert);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -832,11 +850,11 @@ uint ExprScript::GetLabelPos(std::string labelName, uint jumpLine) {
 }
 
 void ExprScript::Compile(ByteCode & bc) {
-    bc.Write_NewFrame();
+    bc.Write_NewContext();
     for (size_t i = 0; i < expressions.size(); i++) {
         expressions[i]->Compile(bc);
     }
-    //bc.Write_CloseFrame();
+    //bc.Write_CloseContext();
     CorrectJumpsRecursive(expressions, bc);
     CorrectBreaksRecursive(expressions, bc);
     CorrectSkipsRecursive(expressions, bc);

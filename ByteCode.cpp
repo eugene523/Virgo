@@ -24,20 +24,6 @@ void ByteCode::Enlarge() {
     maxSize = newMaxSize;
 }
 
-void ByteCode::Write_OpCode(OpCode opCode) {
-    if ((maxSize - pos) < sizeof(OpCode))
-        Enlarge();
-    *((OpCode*)(bcStream + pos)) = opCode;
-    pos += sizeof(OpCode);
-}
-
-void ByteCode::Write_OpArg(OpArg opArg) {
-    if ((maxSize - pos) < sizeof(OpArg))
-        Enlarge();
-    *((OpArg*)(bcStream + pos)) = opArg;
-    pos += sizeof(OpArg);
-}
-
 uint ByteCode::Reserve_OpCode_OpArg() {
     uint savedPos = pos;
     uint numOfReservedBytes = sizeof(OpCode) + sizeof(OpArg);
@@ -53,37 +39,42 @@ void ByteCode::Write_OpCode_OpArg_AtPos(uint atPos, OpCode opCode, OpArg opArg) 
     *((OpArg*)(bcStream + atPos + sizeof(OpCode))) = opArg;
 }
 
-void ByteCode::Write_NewFrame() {
-    Write_OpCode(OpCode::NewFrame);
+void ByteCode::Write_NewContext() {
+    Write<OpCode>(OpCode::NewContext);
 }
 
-void ByteCode::Write_CloseFrame() {
-    Write_OpCode(OpCode::CloseFrame);
+void ByteCode::Write_CloseContext() {
+    Write<OpCode>(OpCode::CloseContext);
 }
 
-void ByteCode::Write_LoadConstant(OpArg id) {
-    Write_OpCode(OpCode::LoadConstant);
-    Write_OpArg(id);
+void ByteCode::Write_PushConstant(OpArg id) {
+    Write<OpCode>(OpCode::PushConstant);
+    Write<OpArg>(id);
 }
 
 void ByteCode::Write_GetLocalVariable(OpArg id) {
-    Write_OpCode(OpCode::GetLocalVariable);
-    Write_OpArg(id);
+    Write<OpCode>(OpCode::GetLocalVariable);
+    Write<OpArg>(id);
 }
 
 void ByteCode::Write_SetLocalVariable(OpArg id) {
-    Write_OpCode(OpCode::SetLocalVariable);
-    Write_OpArg(id);
+    Write<OpCode>(OpCode::SetLocalVariable);
+    Write<OpArg>(id);
+}
+
+void ByteCode::Write_PushInt32(int32_t val) {
+    Write<OpCode>(OpCode::PushInt32);
+    Write<int32_t>(val);
 }
 
 void ByteCode::Write_Jump(OpArg toPos) {
-    Write_OpCode(OpCode::Jump);
-    Write_OpArg(toPos);
+    Write<OpCode>(OpCode::Jump);
+    Write<OpArg>(toPos);
 }
 
-void ByteCode::Write_JumpFalse(OpArg toPos) {
-    Write_OpCode(OpCode::JumpFalse);
-    Write_OpArg(toPos);
+void ByteCode::Write_JumpIfFalse(OpArg toPos) {
+    Write<OpCode>(OpCode::JumpIfFalse);
+    Write<OpArg>(toPos);
 }
 
 void ByteCode::Write_Line(uint line) {
@@ -96,29 +87,29 @@ void ByteCode::Write_Line(uint line) {
 
 std::map<OpCode, std::string> OpCodeNames =
 {
-    { OpCode::Noop,             "Noop"             },
-    { OpCode::NewFrame,         "NewFrame"         },
-    { OpCode::CloseFrame,       "CloseFrame"       },
-    { OpCode::LoadConstant,     "LoadConstant"     },
+    { OpCode::NoOperation,      "NoOperation"      },
+    { OpCode::NewContext,       "NewContext"       },
+    { OpCode::CloseContext,     "CloseContext"     },
+    { OpCode::PushConstant,     "PushConstant"     },
     { OpCode::GetLocalVariable, "GetLocalVariable" },
     { OpCode::SetLocalVariable, "SetLocalVariable" },
     { OpCode::Equal,            "Equal"            },
     { OpCode::NotEqual,         "NotEqual"         },
-    { OpCode::Neg,              "Neg"              },
+    { OpCode::Negate,           "Negate"           },
     { OpCode::Add,              "Add"              },
-    { OpCode::Sub,              "Sub"              },
-    { OpCode::Mul,              "Mul"              },
-    { OpCode::Div,              "Div"              },
-    { OpCode::Pow,              "Pow"              },
-    { OpCode::Gr,               "Gr"               },
-    { OpCode::GrEq,             "GrEq"             },
-    { OpCode::Ls,               "Ls"               },
-    { OpCode::LsEq,             "LsEq"             },
+    { OpCode::Subtract,         "Subtract"         },
+    { OpCode::Multiply,         "Multiply"         },
+    { OpCode::Divide,           "Divide"           },
+    { OpCode::Power,            "Power"            },
+    { OpCode::Greater,          "Greater"          },
+    { OpCode::GreaterOrEqual,   "GreaterOrEqual"   },
+    { OpCode::Less,             "Less"             },
+    { OpCode::LessOrEqual,      "LessOrEqual"      },
     { OpCode::Not,              "Not"              },
     { OpCode::And,              "And"              },
     { OpCode::Or,               "Or"               },
     { OpCode::Jump,             "Jump"             },
-    { OpCode::JumpFalse,        "JumpFalse"        },
+    { OpCode::JumpIfFalse,      "JumpIfFalse"      },
     { OpCode::Assert,           "Assert"           },
 };
 
@@ -138,21 +129,21 @@ void ByteCode::Print() {
         std::cout << std::setw(20) << std::left;
         switch (opCode)
         {
-            case OpCode::Noop:
-            case OpCode::NewFrame:
-            case OpCode::CloseFrame:
+            case OpCode::NoOperation:
+            case OpCode::NewContext:
+            case OpCode::CloseContext:
             case OpCode::Equal:
             case OpCode::NotEqual:
-            case OpCode::Neg:
+            case OpCode::Negate:
             case OpCode::Add:
-            case OpCode::Sub:
-            case OpCode::Mul:
-            case OpCode::Div:
-            case OpCode::Pow:
-            case OpCode::Gr:
-            case OpCode::GrEq:
-            case OpCode::Ls:
-            case OpCode::LsEq:
+            case OpCode::Subtract:
+            case OpCode::Multiply:
+            case OpCode::Divide:
+            case OpCode::Power:
+            case OpCode::Greater:
+            case OpCode::GreaterOrEqual:
+            case OpCode::Less:
+            case OpCode::LessOrEqual:
             case OpCode::Not:
             case OpCode::And:
             case OpCode::Or:
@@ -160,7 +151,7 @@ void ByteCode::Print() {
                 std::cout << OpCodeNames[opCode];
                 break;
 
-            case OpCode::LoadConstant:
+            case OpCode::PushConstant:
             case OpCode::GetLocalVariable:
             case OpCode::SetLocalVariable:
             {
@@ -171,7 +162,7 @@ void ByteCode::Print() {
             }
 
             case OpCode::Jump:
-            case OpCode::JumpFalse:
+            case OpCode::JumpIfFalse:
             {
                 OpArg toPos = *((OpArg*)(bcStream + currPos));
                 currPos += sizeof(OpArg);

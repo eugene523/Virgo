@@ -28,7 +28,7 @@ class Parser {
     Expr *  Parse_Order();
     Expr *  Parse_Add();
     Expr *  Parse_Mult();
-    Expr *  Parse_Pow();
+    Expr *  Parse_Power();
     Expr *  Parse_Term();
     Expr *  Parse_Accessor();
     static void ReportError(const std::string & errorMessage, uint line);

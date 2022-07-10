@@ -28,7 +28,7 @@ Obj * Int_Equal(Obj * self, Obj * other) {
     return (Obj*)Bool::New(false);
 }
 
-Obj * Int_Neg(Obj * self) {
+Obj * Int_Negate(Obj * self) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)-> val;
     return (Obj*)Int::New(-selfVal);
@@ -50,7 +50,7 @@ Obj * Int_Add(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Sub(Obj * self, Obj * other) {
+Obj * Int_Subtract(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -66,7 +66,7 @@ Obj * Int_Sub(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Mul(Obj * self, Obj * other) {
+Obj * Int_Multiply(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -82,7 +82,7 @@ Obj * Int_Mul(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Div(Obj * self, Obj * other) {
+Obj * Int_Divide(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -104,7 +104,7 @@ Obj * Int_Div(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Pow(Obj * self, Obj * other) {
+Obj * Int_Power(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -120,7 +120,7 @@ Obj * Int_Pow(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Gr(Obj * self, Obj * other) {
+Obj * Int_Greater(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -136,7 +136,7 @@ Obj * Int_Gr(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_GrEq(Obj * self, Obj * other) {
+Obj * Int_GreaterOrEqual(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -152,7 +152,7 @@ Obj * Int_GrEq(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_Ls(Obj * self, Obj * other) {
+Obj * Int_Less(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -168,7 +168,7 @@ Obj * Int_Ls(Obj * self, Obj * other) {
     return (Obj*)Error::New(ERROR_INCOMPATIBLE_TYPES);
 }
 
-Obj * Int_LsEq(Obj * self, Obj * other) {
+Obj * Int_LessOrEqual(Obj * self, Obj * other) {
     assert(self->Is(Int::t));
     v_int selfVal = ((Int*)self)->val;
     if (other->Is(Int::t))
@@ -196,18 +196,18 @@ Type * Int::t;
 void Int::InitType() {
     Int::t = new Type("int");
     auto mt = Int::t->methodTable;
-    mt->Equal    = &Int_Equal;
-    mt->Neg      = &Int_Neg;
-    mt->Add      = &Int_Add;
-    mt->Sub      = &Int_Sub;
-    mt->Mul      = &Int_Mul;
-    mt->Div      = &Int_Div;
-    mt->Pow      = &Int_Pow;
-    mt->Gr       = &Int_Gr;
-    mt->GrEq     = &Int_GrEq;
-    mt->Ls       = &Int_Ls;
-    mt->LsEq     = &Int_LsEq;
-    mt->DebugStr = &Int_DebugStr;
+    mt->Equal          = &Int_Equal;
+    mt->Negate         = &Int_Negate;
+    mt->Add            = &Int_Add;
+    mt->Subtract       = &Int_Subtract;
+    mt->Multiply       = &Int_Multiply;
+    mt->Divide         = &Int_Divide;
+    mt->Power          = &Int_Power;
+    mt->Greater        = &Int_Greater;
+    mt->GreaterOrEqual = &Int_GreaterOrEqual;
+    mt->Less           = &Int_Less;
+    mt->LessOrEqual    = &Int_LessOrEqual;
+    mt->DebugStr       = &Int_DebugStr;
 }
 
 void Int::New(void * inPlace, v_int value) {

@@ -10,19 +10,19 @@
 enum class ExprType
 {
     Undefined,
-    LoadConstant,
+    PushConstant,
     Equal,
     NotEqual,
-    Neg,
+    Negate,
     Add,
-    Sub,
-    Mul,
-    Div,
-    Pow,
-    Gr,
-    GrEq,
-    Ls,
-    LsEq,
+    Subtract,
+    Multiply,
+    Divide,
+    Power,
+    Greater,
+    GreaterOrEqual,
+    Less,
+    LessOrEqual,
     Not,
     And,
     Or,
@@ -33,23 +33,14 @@ enum class ExprType
     Return,
     If,
     For,
-    ForC,
-    ForIn,
     Dot,
-    NameAccess,
-    FieldAccess,
-    CallAccess,
-    ArgPair,
     Args,
-    List,
     Assign,
-    AddEq,
-    SubEq,
-    MulEq,
-    DivEq,
-    PowEq,
-    Call,
-    Define,
+    AddAssign,
+    SubtractAssign,
+    MultiplyAssign,
+    DivideAssign,
+    PowerAssign,
     Assert,
     Script,
 };
@@ -78,9 +69,9 @@ struct ExprBinary : Expr {
     ~ExprBinary() override;
 };
 
-struct ExprLoadConstant : Expr {
+struct ExprPushConstant : Expr {
     uint id;
-    ExprLoadConstant(uint id, uint line);
+    ExprPushConstant(uint id, uint line);
     void Compile(ByteCode & bc) override;
 };
 
@@ -94,8 +85,8 @@ struct ExprNotEqual : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprNeg : ExprUnary {
-    ExprNeg(Expr * a, uint line);
+struct ExprNegate : ExprUnary {
+    ExprNegate(Expr * a, uint line);
     void Compile(ByteCode & bc) override;
 };
 
@@ -104,43 +95,43 @@ struct ExprAdd : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprSub : ExprBinary {
-    ExprSub(Expr * a, Expr * b, uint line);
+struct ExprSubtract : ExprBinary {
+    ExprSubtract(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprMul : ExprBinary {
-    ExprMul(Expr * a, Expr * b, uint line);
+struct ExprMultiply : ExprBinary {
+    ExprMultiply(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprDiv : ExprBinary {
-    ExprDiv(Expr * a, Expr * b, uint line);
+struct ExprDivide : ExprBinary {
+    ExprDivide(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprPow : ExprBinary {
-    ExprPow(Expr * a, Expr * b, uint line);
+struct ExprPower : ExprBinary {
+    ExprPower(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprGr : ExprBinary {
-    ExprGr(Expr * a, Expr * b, uint line);
+struct ExprGreater : ExprBinary {
+    ExprGreater(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprGrEq : ExprBinary {
-    ExprGrEq(Expr * a, Expr * b, uint line);
+struct ExprGreaterOrEqual : ExprBinary {
+    ExprGreaterOrEqual(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprLs : ExprBinary {
-    ExprLs(Expr * a, Expr * b, uint line);
+struct ExprLess : ExprBinary {
+    ExprLess(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprLsEq : ExprBinary {
-    ExprLsEq(Expr * a, Expr * b, uint line);
+struct ExprLessOrEqual : ExprBinary {
+    ExprLessOrEqual(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
@@ -159,28 +150,28 @@ struct ExprOr : ExprBinary {
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprAddEq : ExprBinary {
-    ExprAddEq(Expr * a, Expr * b, uint line);
+struct ExprAddAssign : ExprBinary {
+    ExprAddAssign(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprSubEq : ExprBinary {
-    ExprSubEq(Expr * a, Expr * b, uint line);
+struct ExprSubtractAssign : ExprBinary {
+    ExprSubtractAssign(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprMulEq : ExprBinary {
-    ExprMulEq(Expr * a, Expr * b, uint line);
+struct ExprMultiplyAssign : ExprBinary {
+    ExprMultiplyAssign(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprDivEq : ExprBinary {
-    ExprDivEq(Expr * a, Expr * b, uint line);
+struct ExprDivideAssign : ExprBinary {
+    ExprDivideAssign(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
-struct ExprPowEq : ExprBinary {
-    ExprPowEq(Expr * a, Expr * b, uint line);
+struct ExprPowerAssign : ExprBinary {
+    ExprPowerAssign(Expr * a, Expr * b, uint line);
     void Compile(ByteCode & bc) override;
 };
 
@@ -266,7 +257,14 @@ struct ExprDot : Expr {
     ExprDot(uint fieldNameId, uint line);
     ExprDot(Expr * target, uint fieldNameId, uint line);
     void SetValueExpr(Expr * value_);
-    void Compile(ByteCode & bc);
+    void Compile(ByteCode & bc) override;
+};
+
+struct ExprArgs : Expr {
+    std::vector<Expr*> args;
+    ExprArgs(uint line);
+    void AddArgExpr(Expr * arg);
+    void Compile(ByteCode & bc) override;
 };
 
 struct ExprAssert : Expr {

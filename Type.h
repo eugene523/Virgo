@@ -11,16 +11,16 @@ struct MethodTable {
     Obj * (*Equal)  (Obj * self, Obj * other) {};
     Obj * (*ToStr)  (Obj * self) {};
 
-    Obj * (*Neg)    (Obj * self) {};
-    Obj * (*Add)    (Obj * self, Obj * other) {};
-    Obj * (*Sub)    (Obj * self, Obj * other) {};
-    Obj * (*Mul)    (Obj * self, Obj * other) {};
-    Obj * (*Div)    (Obj * self, Obj * other) {};
-    Obj * (*Pow)    (Obj * self, Obj * other) {};
-    Obj * (*Gr)     (Obj * self, Obj * other) {};
-    Obj * (*GrEq)   (Obj * self, Obj * other) {};
-    Obj * (*Ls)     (Obj * self, Obj * other) {};
-    Obj * (*LsEq)   (Obj * self, Obj * other) {};
+    Obj * (*Negate)         (Obj * self) {};
+    Obj * (*Add)            (Obj * self, Obj * other) {};
+    Obj * (*Subtract)       (Obj * self, Obj * other) {};
+    Obj * (*Multiply)       (Obj * self, Obj * other) {};
+    Obj * (*Divide)         (Obj * self, Obj * other) {};
+    Obj * (*Power)          (Obj * self, Obj * other) {};
+    Obj * (*Greater)        (Obj * self, Obj * other) {};
+    Obj * (*GreaterOrEqual) (Obj * self, Obj * other) {};
+    Obj * (*Less)           (Obj * self, Obj * other) {};
+    Obj * (*LessOrEqual)    (Obj * self, Obj * other) {};
 
     // Used for debugging.
     std::string (*DebugStr) (Obj * self) {};
