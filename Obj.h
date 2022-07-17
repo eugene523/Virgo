@@ -5,52 +5,32 @@
 #include <string>
 #include <memory>
 #include <bitset>
-#include "Common.h"
-#include "Type.h"
-#include "Mem.h"
 
-// This is actually a header for any object.
+struct Type;
+
+enum ObjFlags
+{
+    IsMarked,
+    IsConstant,
+};
+
+// We do inherit all types from this object.
 struct Obj {
-    std::uint32_t numOfOwners{};
-
-    enum
-    {
-        Flag_IsMarked
-    };
-    std::bitset<32> flags;
-
+    std::bitset<64> flags{};
     Type * type{};
 
-    static inline void Init(void * inPlace, Type * type) {
-        assert(type != nullptr);
-        Obj * obj        = (Obj*)inPlace;
-        obj->type        = type;
-        obj->numOfOwners = 0;
-        obj->flags       = 0;
-    }
+    explicit Obj(Type * type_);
 
-    inline bool Is(Type * ofType) { return type == ofType; }
+    Type * GetType();
+    bool Is(Type * ofType);
 
-    inline void IncOwners() { numOfOwners++; }
-    inline void DecOwners() { numOfOwners--; }
+    bool GetFlag_IsMarked();
+    void SetFlag_IsMarked(bool value);
 
-    inline bool GetFlag_IsMarked() { return flags[Flag_IsMarked]; }
-    inline void ResetFlag_IsMarked() { flags[Flag_IsMarked] = false; }
+    bool GetFlag_IsConstant();
+    void SetFlag_IsConstant(bool value);
 
-    inline void Mark() {
-        flags[Flag_IsMarked] = true;
-        auto markMethod = type->methodTable->Mark;
-        if (markMethod == nullptr)
-            return;
-        markMethod(this);
-    }
-
-    inline void Delete() {
-        auto deleteMethod = type->methodTable->Delete;
-        if (deleteMethod == nullptr)
-            return;
-        deleteMethod(this);
-    }
+    void Delete();
 };
 
 #endif //VIRGO_OBJ_H

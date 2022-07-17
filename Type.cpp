@@ -2,7 +2,8 @@
 #include <utility>
 #include "Type.h"
 
-Type::Type(std::string name) : name{std::move(name)} {
+Type::Type(std::string name) :
+Obj{nullptr}, name{std::move(name)} {
     methodTable = new MethodTable();
 }
 

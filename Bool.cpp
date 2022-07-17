@@ -5,17 +5,18 @@
 #include "Error.h"
 #include "Str.h"
 
-const char * ERROR_LOGICAL_EXPR_WRONG_TYPE = "Logical expressions can only be performed on objects of a boolean type.";
+const char * ERROR_LOGICAL_EXPR_WRONG_TYPE =
+"Logical expressions can only be performed on objects of a boolean type.";
 
-Obj * Bool_Equal(Obj * self, Obj * other) {
+void Bool_Equal(Obj * self, Obj * other) {
     assert(self->Is(Bool::t));
 
     if (!(other->Is(Bool::t)))
-        return (Obj*)Bool::New(false);
+        return false;
 
-    bool selfVal = ((Bool*)self)->val;
+    bool selfVal  = ((Bool*)self)->val;
     bool otherVal = ((Bool*)other)->val;
-    return (Obj*)Bool::New(selfVal == otherVal);
+    return selfVal == otherVal;
 }
 
 Obj * Bool::Not(Obj * self) {
@@ -59,17 +60,18 @@ Bool * Bool::True;
 
 Bool * Bool::False;
 
+Bool::Bool(bool value) : Obj{Bool::t}, value{value} {}
+
 void Bool::InitType() {
-    Bool::t = new Type("bool");
-    auto mt = t->methodTable;
-    mt->Equal    = &Bool_Equal;
+    Bool::t      = new Type("bool");
+    auto mt      = t->methodTable;
     mt->DebugStr = &Bool_DebugStr;
+}
 
-    Bool::True = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
-    Obj::Init(Bool::True, Bool::t);
-    Bool::True->val = true;
+void Bool::InitConstants() {
+    std::byte * inPlace = Heap::GetChunk_Constant(sizeof(Bool));
+    Bool::True = new (inPlace) Bool(true);
 
-    Bool::False = (Bool*)Heap::GetChunk_Constant(sizeof(Bool));
-    Obj::Init(Bool::False, Bool::t);
-    Bool::False->val = false;
+    inPlace = Heap::GetChunk_Constant(sizeof(Bool));
+    Bool::False = new (inPlace) Bool(false);
 }

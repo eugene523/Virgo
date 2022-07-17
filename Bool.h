@@ -4,15 +4,17 @@
 #include "Obj.h"
 #include "Mem.h"
 
-struct Bool {
-    Obj obj;
+struct Bool : Obj {
     bool val {false};
+
+    explicit Bool(bool value);
 
     static Type * t;
     static Bool * True;
     static Bool * False;
 
     static void InitType();
+    static void InitConstants();
 
     static inline Bool * New(bool value) {
         return value ? Bool::True : Bool::False;

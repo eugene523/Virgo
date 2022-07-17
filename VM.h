@@ -15,7 +15,7 @@ struct ExecStack
     std::byte *       objStack{};
     uint              objStackTop{};
     static const uint OBJ_STACK_MAX_SIZE;
-    static const uint CELL_SIZE;
+    static const uint STACK_UNIT;
     std::stack<uint>  frameStack;
     Context *         lastContext{};
 

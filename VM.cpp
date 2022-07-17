@@ -11,7 +11,7 @@
 
 const uint ExecStack::OBJ_STACK_MAX_SIZE = 8 * 1024 * 1024; // 8 Mb
 
-const uint ExecStack::CELL_SIZE = 8;
+const uint ExecStack::STACK_UNIT = 8;
 
 ExecStack::ExecStack() {
     objStack = (std::byte*)calloc(OBJ_STACK_MAX_SIZE, 1);
@@ -33,7 +33,7 @@ void ExecStack::NewContext() {
     auto * context = new Context();
     *((Context**)(objStack + objStackTop)) = context;
     frameStack.push(objStackTop);
-    objStackTop += CELL_SIZE;
+    objStackTop += STACK_UNIT;
     lastContext = context;
 }
 
@@ -53,12 +53,12 @@ void ExecStack::CloseContext() {
 void ExecStack::PushObj(Obj * obj) {
     CheckStackOverflow();
     *((Obj**)(objStack + objStackTop)) = obj;
-    objStackTop += CELL_SIZE;
+    objStackTop += STACK_UNIT;
 }
 
 Obj * ExecStack::PopObj() {
     assert(objStackTop > 0);
-    objStackTop -= CELL_SIZE;
+    objStackTop -= STACK_UNIT;
     return *((Obj**)(objStack + objStackTop));
 }
 
